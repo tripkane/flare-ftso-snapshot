@@ -1,0 +1,35 @@
+name: Daily FTSO Snapshot
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-driver
+          pip install selenium beautifulsoup4
+
+      - name: Run scraper
+        run: python snapshot.py
+
+      - name: Commit results
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@users.noreply.github.com'
+          git add daily_snapshots/
+          git commit -m "Daily snapshot $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
