@@ -11,7 +11,8 @@ def init_driver():
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    return webdriver.Chrome(options=options)
+    options.binary_location = "/usr/bin/chromium-browser"
+    return webdriver.Chrome(executable_path="/usr/bin/chromedriver", options=options)
 
 def scrape_flaremetrics(driver):
     driver.get("https://flaremetrics.io/songbird")
