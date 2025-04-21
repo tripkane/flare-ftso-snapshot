@@ -25,7 +25,6 @@
 </head>
 <body>
   <header>
-    <img src="https://flare.xyz/assets/brand/flare-logo-horizontal-light.svg" alt="Flare Logo"/>
     <h1>FTSO Snapshot Dashboard</h1>
   </header>
   <div id="controls">
@@ -58,7 +57,9 @@
       const data=await Promise.all(urls.map(u=>fetch(u).then(r=>r.json())));
       snapshots=data.map(s=>({date:s.date,providers:s.providers}));
       allProviders=Array.from(new Set(snapshots.flatMap(s=>s.providers.map(p=>p.name)))).sort();
-      updateProviderList(); renderChart();
+      updateProviderList();
+      renderChart();
+    }
     }
     function updateProviderList(){
       const regOnly=document.getElementById('registeredOnly').checked;
