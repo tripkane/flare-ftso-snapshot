@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import time
+from selenium.webdriver.chrome.service import Service
 
 def init_driver():
     options = Options()
@@ -12,7 +13,9 @@ def init_driver():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.binary_location = "/usr/bin/chromium-browser"
-    return webdriver.Chrome(executable_path="/usr/bin/chromedriver", options=options)
+
+    service = Service("/usr/bin/chromedriver")
+    return webdriver.Chrome(service=service, options=options)
 
 def scrape_flaremetrics(driver):
     driver.get("https://flaremetrics.io/songbird")
