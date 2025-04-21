@@ -1,29 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FTSO Snapshot Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 1rem; background: #f5f5f5; color: #333; }
-    h1 { text-align: center; }
-    #controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 1rem; }
-    #controls label, select, input[type="checkbox"] { font-size: 0.9rem; }
-    #chart-container, #table-container { max-width: 1000px; margin: 1rem auto; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    canvas { width:100% !important; height:auto !important; }
-    table { width:100%; border-collapse: collapse; margin-top:1rem; }
-    th, td { border:1px solid #ddd; padding:0.5rem; text-align:left; }
-    th { background:#eee; cursor: pointer; }
-    #status { text-align:center; color:red; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Open Sans',sans-serif;background:#121212;color:#eee;}
+    header{background:#1e1e1e;padding:1rem;display:flex;align-items:center;justify-content:center;gap:1rem;}
+    header img{height:40px;} header h1{color:#1db954;font-size:1.5rem;}
+    #controls{display:flex;flex-wrap:wrap;gap:1rem;background:#1e1e1e;padding:1rem;border-radius:8px;max-width:1000px;margin:1rem auto;}
+    #controls label{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:#ccc;}
+    select,input[type=checkbox],input[type=range]{padding:.5rem;background:#2a2a2a;border:1px solid #333;color:#eee;border-radius:4px;}
+    select[multiple]{height:6rem;}
+    #status{text-align:center;margin-top:.5rem;color:#f55;}
+    #chart-container,#table-container{background:#1e1e1e;padding:1rem;border-radius:8px;max-width:1000px;margin:1rem auto;box-shadow:0 2px 8px rgba(0,0,0,.5);}
+    canvas{width:100% !important;height:auto !important;}
+    table{width:100%;border-collapse:collapse;margin-top:1rem;}
+    th,td{padding:.75rem;text-align:left;border-bottom:1px solid #333;}
+    th{background:#2a2a2a;cursor:pointer;}
+    tr:hover{background:#2a2a2a;}
+    .slider-label{width:150px;display:inline-block;color:#ccc;}
   </style>
 </head>
 <body>
-  <h1>FTSO Snapshot Dashboard</h1>
+  <header>
+    <img src="https://flare.xyz/assets/brand/flare-logo-horizontal-light.svg" alt="Flare Logo"/>
+    <h1>FTSO Snapshot Dashboard</h1>
+  </header>
   <div id="controls">
-    <label>Provider: <select id="providerSelect"></select></label>
-    <label>Metric(s):
-      <select id="metricSelect" multiple size="4">
+    <label>Providers
+      <select id="providerSelect" multiple>
+        <option value="All">All (Top 10 by Reward Rate)</option>
+      </select>
+    </label>
+    <label>Metrics
+      <select id="metricSelect" multiple>
         <option value="vote_power">Vote Power</option>
         <option value="vote_power_locked">Locked Vote Power</option>
         <option value="vote_power_pct">Vote Power %</option>
@@ -32,100 +45,110 @@
         <option value="reward_rate">Reward Rate</option>
       </select>
     </label>
-    <label><input type="checkbox" id="registeredOnly"> Registered Only</label>
-    <label><input type="checkbox" id="showAverages"> Show Averages</label>
+    <label><input type="checkbox" id="registeredOnly"/> Registered Only</label>
+    <label><input type="checkbox" id="showAverages"/> Show Averages</label>
+    <label class="slider-label">Min Vote Power:</label>
+      <input type="range" id="votePowerThreshold" min="0" max="1000000000" step="1000000" value="0"/>
+    <label class="slider-label">Min Avg Reward:</label>
+      <input type="range" id="avgRewardThreshold" min="0" max="100" step="0.1" value="0"/>
   </div>
   <div id="status"></div>
   <div id="chart-container"><canvas id="ftsoChart"></canvas></div>
-  <div id="table-container">
-    <table id="dataTable">
-      <thead><tr><th>Date</th><th>Value</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <div id="table-container"><table id="dataTable"><thead><tr><th>Date</th><th>Value</th></tr></thead><tbody></tbody></table></div>
   <script>
-    let snapshots = [];
-    let providerList = [];
-
-    async function fetchSnapshotDates() {
-      const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
-      const files = await res.json();
-      return files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
+    let snapshots=[],providerList=[];
+    async function fetchSnapshotDates(){
+      const res=await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
+      const files=await res.json();
+      return files.filter(f=>f.name.endsWith('.json')).map(f=>f.download_url);
     }
-
-    async function fetchSnapshots() {
-      const urls = await fetchSnapshotDates();
-      const data = await Promise.all(urls.map(u => fetch(u).then(r=>r.json())));
-      snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
-      providerList = [...new Set(snapshots.flatMap(s => s.providers.map(p=>p.name)))].sort();
+    async function fetchSnapshots(){
+      const urls=await fetchSnapshotDates();
+      const data=await Promise.all(urls.map(u=>fetch(u).then(r=>r.json())));
+      snapshots=data.map(s=>({date:s.date,providers:s.providers}));
+      providerList=Array.from(new Set(snapshots.flatMap(s=>s.providers.map(p=>p.name)))).sort();
+      populateProviderDropdown();
+      renderChart();
     }
-
-    function populateProviderDropdown() {
-      const sel = document.getElementById('providerSelect'); sel.innerHTML='';
-      providerList.forEach(n=>{ let o=new Option(n,n); sel.append(o); });
+    function populateProviderDropdown(){
+      const sel=document.getElementById('providerSelect'); sel.innerHTML='';
+      sel.append(new Option('All','All'));
+      providerList.forEach(n=>sel.append(new Option(n,n)));
     }
-
-    function getSeries(provider, metric, registeredOnly) {
-      return snapshots.map(s => {
-        const p = s.providers.find(x=>x.name===provider);
-        const val = p && (!registeredOnly||p.registered==='Yes') ? parseFloat((p[metric]||0).toString().replace(/,/g,'')) : null;
-        return {date: s.date, value: val};
+    function getSeriesByProvider(provider,metric,registeredOnly){
+      return snapshots.map(s=>{
+        const p=s.providers.find(x=>x.name===provider);
+        let val=p&&(!registeredOnly||p.registered==='Yes')?parseFloat((p[metric]||0).toString().replace(/,/g,'')):null;
+        return{date:s.date,value:val};
       }).filter(d=>d.value!==null);
     }
-
-    function computeAverage(series, days) {
-      const now = series.length;
-      const slice = series.slice(Math.max(0, now-days));
-      const sum = slice.reduce((a,c)=>a+c.value,0);
+    function computeAvg(series,days){
+      const slice=series.slice(-days);
+      const sum=slice.reduce((a,c)=>a+c.value,0);
       return sum/slice.length;
     }
-
     let chart;
-    function renderChart() {
-      const provider = document.getElementById('providerSelect').value;
-      const metrics = [...document.getElementById('metricSelect').selectedOptions].map(o=>o.value);
-      const registeredOnly = document.getElementById('registeredOnly').checked;
-      const showAvg = document.getElementById('showAverages').checked;
-      const datasets = [];
-      metrics.forEach(m=>{
-        const series = getSeries(provider,m,registeredOnly);
-        datasets.push({ label: m, data: series.map(d=>d.value), fill:false, tension:0.2 });
-        if(showAvg) {
-          const avg7 = computeAverage(series,7);
-          datasets.push({ label: m+' (7d avg)', data: series.map(_=>avg7), borderDash:[5,5], fill:false });
-          const avg30 = computeAverage(series,30);
-          datasets.push({ label: m+' (30d avg)', data: series.map(_=>avg30), borderDash:[2,2], fill:false });
+    function renderChart(){
+      const selProviders=[...document.getElementById('providerSelect').selectedOptions].map(o=>o.value);
+      const metrics=[...document.getElementById('metricSelect').selectedOptions].map(o=>o.value);
+      const regOnly=document.getElementById('registeredOnly').checked;
+      const showAvg=document.getElementById('showAverages').checked;
+      const vpThresh=parseFloat(document.getElementById('votePowerThreshold').value);
+      const avgThresh=parseFloat(document.getElementById('avgRewardThreshold').value);
+
+      let providersToPlot=selProviders.includes('All')?providerList:selProviders;
+      const latest=snapshots[snapshots.length-1].providers;
+      providersToPlot=providersToPlot.filter(name=>{const p=latest.find(x=>x.name===name);return p?parseFloat(p.vote_power.replace(/,/g,''))>=vpThresh:true;});
+      if(selProviders.includes('All')){
+        providersToPlot=latest.sort((a,b)=>parseFloat(b.reward_rate)-parseFloat(a.reward_rate)).slice(0,10).map(p=>p.name);
+      }
+
+      const labels=snapshots.map(s=>s.date);
+      const datasets=[];
+      providersToPlot.forEach(provider=>{
+        metrics.forEach(metric=>{
+          const series=getSeriesByProvider(provider,metric,regOnly);
+          if(!series.length) return;
+          const isPercent=metric.includes('pct');
+          const yAxis=isPercent?'y-percent':'y-power';
+          // daily
+          datasets.push({ label:`${provider} - ${metric}`, data:series.map(d=>d.value), fill:false, tension:0.2, yAxisID:yAxis });
+          // averages
+          if(showAvg){
+            const avg7=computeAvg(series,7);
+            if(avg7>=avgThresh){
+              datasets.push({ label:`${provider} - ${metric} (7d avg)`, data:series.map(_=>avg7), borderDash:[5,5], fill:false, yAxisID:yAxis });
+            }
+            const avg30=computeAvg(series,30);
+            if(avg30>=avgThresh){
+              datasets.push({ label:`${provider} - ${metric} (30d avg)`, data:series.map(_=>avg30), borderDash:[2,2], fill:false, yAxisID:yAxis });
+            }
+          }
+        });
+      });
+      const ctx=document.getElementById('ftsoChart').getContext('2d');
+      if(chart) chart.destroy();
+      chart=new Chart(ctx,{
+        type:'line',
+        data:{ labels, datasets },
+        options:{
+          responsive:true,
+          scales:{
+            'y-power':{ type:'linear', position:'left', title:{display:true,text:'Values (millions)'}, ticks:{callback:val=>val>=1000000?(val/1000000)+'M':val}},
+            'y-percent':{ type:'linear', position:'right', title:{display:true,text:'Percent (%)'}, ticks:{callback:val=>val+'%'}}
+          },
+          plugins:{ legend:{labels:{color:'#eee'}} }
         }
       });
-      const labels = snapshots.map(s=>s.date);
-      const ctx = document.getElementById('ftsoChart').getContext('2d');
-      if(chart) chart.destroy();
-      chart = new Chart(ctx,{ type:'line', data:{ labels, datasets }, options:{ responsive:true } });
-      renderTable(provider, metrics, registeredOnly);
+      renderTable(providersToPlot,metrics,regOnly);
     }
-
-    function renderTable(provider, metrics, registeredOnly) {
-      const tbody = document.querySelector('#dataTable tbody'); tbody.innerHTML='';
-      const rows = getSeries(provider, metrics[0], registeredOnly);
-      rows.forEach((r,i)=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${r.date}</td><td>${r.value}</td>`;
-        tbody.append(tr);
-      });
+    function renderTable(providers,metrics,regOnly){
+      const tbody=document.querySelector('#dataTable tbody'); tbody.innerHTML='';
+      const series=getSeriesByProvider(providers[0],metrics[0],regOnly);
+      series.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${r.date}</td><td>${r.value}</td>`;tbody.append(tr);});
     }
-
-    document.getElementById('providerSelect').addEventListener('change',renderChart);
-    document.getElementById('metricSelect').addEventListener('change',renderChart);
-    document.getElementById('registeredOnly').addEventListener('change',renderChart);
-    document.getElementById('showAverages').addEventListener('change',renderChart);
-
-    (async()=>{
-      document.getElementById('status').textContent='Loading data...';
-      await fetchSnapshots();
-      populateProviderDropdown();
-      document.getElementById('status').textContent='';
-      renderChart();
-    })();
+    ['providerSelect','metricSelect','registeredOnly','showAverages','votePowerThreshold','avgRewardThreshold'].forEach(id=>document.getElementById(id).addEventListener('input',renderChart));
+    fetchSnapshots();
   </script>
 </body>
 </html>
