@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FTSO Snapshot Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    #chart-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+    #controls {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin: 0 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>FTSO Snapshot Dashboard</h1>
+
+  <div id="controls">
+    <label for="providerSelect">Select Provider:</label>
+    <select id="providerSelect"></select>
+    <label for="metricSelect">Select Metric:</label>
+    <select id="metricSelect">
+      <option value="vote_power">Voting Power</option>
+      <option value="reward_rate">Reward Rate</option>
+    </select>
+  </div>
+
+  <div id="chart-container">
+    <canvas id="ftsoChart"></canvas>
+  </div>
+
+  <script>
+    let snapshots = [];
+    let providerList = new Set();
+
+    async function fetchSnapshotDates() {
+      const response = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
+      const files = await response.json();
+      return files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
+    }
+
+    async function fetchSnapshots() {
+      const urls = await fetchSnapshotDates();
+      const data = await Promise.all(urls.map(url => fetch(url).then(res => res.json())));
+      data.forEach((snap, index) => {
+        const date = urls[index].match(/(\d{4}-\d{2}-\d{2})/)[1];
+        snap.date = date;
+        snap.providers.forEach(p => providerList.add(p.name));
+      });
+      snapshots = data;
+    }
+
+    function populateProviderDropdown() {
+      const select = document.getElementById('providerSelect');
+      [...providerList].sort().forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+    }
+
+    function getProviderData(providerName, metric) {
+      return snapshots.map(snap => {
+        const p = snap.providers.find(p => p.name === providerName);
+        return {
+          date: snap.date,
+          value: p ? p[metric] : 0,
+          registered: p ? p.registered : false
+        };
+      });
+    }
+
+    function renderChart() {
+      const providerName = document.getElementById('providerSelect').value;
+      const metric = document.getElementById('metricSelect').value;
+      const data = getProviderData(providerName, metric);
+
+      const ctx = document.getElementById('ftsoChart').getContext('2d');
+      if (window.ftsoChart) window.ftsoChart.destroy();
+      window.ftsoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(d => d.date),
+          datasets: [{
+            label: `${metric.replace('_', ' ')} - ${providerName}`,
+            data: data.map(d => d.value),
+            borderColor: data[0].registered ? 'green' : 'red',
+            tension: 0.2,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: `FTSO Provider ${metric.replace('_', ' ')} Over Time`
+            }
+          }
+        }
+      });
+    }
+
+    document.getElementById('providerSelect').addEventListener('change', renderChart);
+    document.getElementById('metricSelect').addEventListener('change', renderChart);
+
+    (async function init() {
+      await fetchSnapshots();
+      populateProviderDropdown();
+      renderChart();
+    })();
+  </script>
+</body>
+</html>
