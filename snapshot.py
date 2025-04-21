@@ -4,7 +4,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
 import json
 import os
 import datetime
@@ -23,18 +22,21 @@ def scrape_table(driver, url, expected_columns):
     print(f"Scraping: {url}")
     driver.get(url)
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "tbody")))
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    rows = soup.select("table tbody tr")
+    rows = driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
     print(f"Found {len(rows)} rows")
     data = {}
     for i, row in enumerate(rows):
-        cols = row.find_all("td")
+        cols = row.find_elements(By.TAG_NAME, "td")
         print(f"Row {i+1}: {len(cols)} columns")
         if cols:
-            name = cols[0].get_text(strip=True)
+            name = driver.execute_script("return arguments[0].innerText", cols[0]).strip()
             print(f" → First column text: {name}")
             if name and len(cols) >= len(expected_columns):
-                data[name] = {expected_columns[i]: cols[i].get_text(strip=True) for i in range(1, len(expected_columns))}
+                values = {}
+                for j in range(1, len(expected_columns)):
+                    text = driver.execute_script("return arguments[0].innerText", cols[j]).strip()
+                    values[expected_columns[j]] = text
+                data[name] = values
     print(f"Scraped {len(data)} providers from this table")
     return data
 
