@@ -128,21 +128,24 @@
       const columns=[];
       providers.forEach(provider=>{metrics.forEach(metric=>{columns.push({provider,metric});const th=document.createElement('th');th.textContent=`${provider} - ${metric}`;headerRow.append(th);});});
       const tbody=document.getElementById('tableBody'); tbody.innerHTML='';
+      // Precompute series map for each provider-metric
+      const seriesMap = {};
+      providers.forEach(provider=>{
+        metrics.forEach(metric=>{
+          seriesMap[provider+metric] = getSeries(provider,metric,regOnly);
+        });
+      });
       snapshots.forEach(snap=>{
         const tr=document.createElement('tr');
         const tdDate=document.createElement('td'); tdDate.textContent=snap.date; tr.append(tdDate);
         columns.forEach(col=>{
           const td=document.createElement('td');
-          const p=snap.providers.find(x=>x.name===col.provider);
-          let val=p&&(!regOnly||p.registered==='Yes')?p[col.metric]:null;
-          td.textContent=val!==null?val:'';
+          const series = seriesMap[col.provider+col.metric];
+          const entry = series.find(d=>d.date===snap.date);
+          const val = entry ? (col.metric==='reward_rate' ? (entry.value*100).toFixed(2)+'%' : entry.value) : '';
+          td.textContent = val;
           tr.append(td);
         });
         tbody.append(tr);
       });
     }
-    ['providerSelect','metricSelect','registeredOnly','showAverages','votePowerThreshold','avgRewardThreshold'].forEach(id=>document.getElementById(id).addEventListener('input',renderChart));
-    fetchSnapshots();
-  </script>
-</body>
-</html>
