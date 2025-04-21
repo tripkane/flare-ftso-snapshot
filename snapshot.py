@@ -18,12 +18,12 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-# Helper to clean and extract all numeric matches
+# Helper to extract numeric sequences
 
 def extract_numbers(text):
     return re.findall(r"[0-9][0-9,]*", text)
 
-# Helper to clean and extract all percentage matches
+# Helper to extract percentage sequences
 
 def extract_percentages(text):
     return re.findall(r"[0-9][0-9.,]*%", text)
@@ -35,7 +35,7 @@ def scrape_flaremetrics(driver):
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    # Table columns: #, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
+    # Table columns: # (rank), Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
     for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
         if len(cols) >= 7:
@@ -47,23 +47,33 @@ def scrape_flaremetrics(driver):
             raw_reward = cols[5].get_text("", strip=True)
             registered = cols[6].get_text(strip=True)
 
-            # Extract two vote power values: current and locked
+            # Extract vote power and locked vote power
             vote_numbers = extract_numbers(raw_vote)
-            vote_power = vote_numbers[0] if len(vote_numbers) > 0 else ''
-            vote_power_locked = vote_numbers[1] if len(vote_numbers) > 1 else ''
+            if len(vote_numbers) >= 2:
+                vote_power = vote_numbers[0]
+                vote_power_locked = vote_numbers[1]
+            else:
+                # detect repeated sequence
+                m = re.match(r"^([0-9,]+)\1", raw_vote)
+                if m:
+                    vote_power = m.group(1)
+                    vote_power_locked = m.group(1)
+                else:
+                    vote_power = vote_numbers[0] if vote_numbers else ''
+                    vote_power_locked = ''
 
-            # Extract two percentage values for vote power
+            # Extract vote percent and locked percent
             vote_pcts = extract_percentages(raw_vote_pct)
             vote_power_pct = vote_pcts[0] if len(vote_pcts) > 0 else ''
             vote_power_pct_locked = vote_pcts[1] if len(vote_pcts) > 1 else ''
 
-            # 24h change
+            # 24h change percent
             change_24h_pcts = extract_percentages(raw_change_24h)
             change_24h_pct = change_24h_pcts[0] if change_24h_pcts else ''
 
             # Reward rate
             reward_numbers = extract_numbers(raw_reward)
-            reward_rate = reward_numbers[0] if len(reward_numbers) > 0 else ''
+            reward_rate = reward_numbers[0] if reward_numbers else ''
 
             providers.append({
                 "rank": rank,
