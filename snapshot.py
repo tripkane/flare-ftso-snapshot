@@ -1,12 +1,11 @@
+import json
+import datetime
+import os
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import json
-import os
-import datetime
+from bs4 import BeautifulSoup
 
 # Initialize headless browser
 def init_driver():
@@ -18,64 +17,43 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-def scrape_table(driver, url, expected_columns):
-    print(f"Scraping: {url}")
+# Scrape flaremetrics.io
+
+def scrape_flaremetrics(driver):
+    url = "https://flaremetrics.io/songbird"
     driver.get(url)
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "tbody")))
-    rows = driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
-    print(f"Found {len(rows)} rows")
-    data = {}
-    for i, row in enumerate(rows):
-        cols = row.find_elements(By.TAG_NAME, "td")
-        print(f"Row {i+1}: {len(cols)} columns")
-        if cols:
-            name = driver.execute_script("return arguments[0].innerText", cols[0]).strip()
-            print(f" → First column text: {name}")
-            if name and len(cols) >= len(expected_columns):
-                values = {}
-                for j in range(1, len(expected_columns)):
-                    text = driver.execute_script("return arguments[0].innerText", cols[j]).strip()
-                    values[expected_columns[j]] = text
-                data[name] = values
-    print(f"Scraped {len(data)} providers from this table")
-    return data
+    time.sleep(5)  # wait for data to load
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    providers = []
+    for row in soup.select("table tbody tr"):
+        cols = row.find_all("td")
+        if len(cols) >= 3:
+            providers.append({
+                "name": cols[0].get_text(strip=True),
+                "vote_power": cols[1].get_text(strip=True),
+                "reward_rate": cols[2].get_text(strip=True)
+            })
+    return providers
 
-def scrape_all_tabs(driver):
-    minimal_cols = ["provider", "ftso_anchor_feeds", "ftso_latency_feeds", "fdc", "staking", "passes", "eligible_for_reward"]
-    fsp_cols = ["provider", "fsp_participating", "direct_earnings", "fee_rewards", "delegation_rewards", "delegation_reward_rate", "delegation_weight", "delegation_rate", "staking_rewards", "staking_reward_rate", "staking_weight", "fee", "uptime_signed", "rewards_signed"]
-    ftso_cols = ["provider", "ftso_participating", "primary", "secondary", "availability"]
-
-    urls = {
-        "minimal": ("https://flare-systems-explorer.flare.network/providers?tab=minimalConditions", minimal_cols),
-        "fsp": ("https://flare-systems-explorer.flare.network/providers?tab=fsp&asc=false&sortBy=display_name", fsp_cols),
-        "ftso": ("https://flare-systems-explorer.flare.network/providers?tab=ftso&asc=false&sortBy=display_name", ftso_cols),
-    }
-
-    all_data = {}
-    for label, (url, columns) in urls.items():
-        tab_data = scrape_table(driver, url, columns)
-        for name, values in tab_data.items():
-            if name not in all_data:
-                all_data[name] = {"name": name}
-            all_data[name].update(values)
-
-    return list(all_data.values())
+# Save snapshot
 
 def save_snapshot(data):
     today = datetime.date.today().isoformat()
-    filename = f"daily_snapshots/ftso_snapshot_{today}.json"
     os.makedirs("daily_snapshots", exist_ok=True)
-    with open(filename, "w") as f:
+    filename = f"daily_snapshots/ftso_snapshot_{today}.json"
+    with open(filename, 'w') as f:
         json.dump({"date": today, "providers": data}, f, indent=2)
     print(f"Snapshot saved: {filename}")
+
+# Main entrypoint
 
 def main():
     driver = init_driver()
     try:
-        data = scrape_all_tabs(driver)
-        save_snapshot(data)
+        data = scrape_flaremetrics(driver)
     finally:
         driver.quit()
+    save_snapshot(data)
 
 if __name__ == '__main__':
     main()
