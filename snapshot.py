@@ -18,15 +18,20 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-# Helper to extract numeric sequences
+# Helpers for extracting numbers and decimals
 
 def extract_numbers(text):
-    return re.findall(r"[0-9][0-9,]*", text)
+    """Extract integer sequences from text, preserving commas."""
+    return re.findall(r"\d[\d,]*", text)
 
-# Helper to extract percentage sequences
-
-def extract_percentages(text):
-    return re.findall(r"[0-9][0-9.,]*%", text)
+def extract_decimal(text):
+    """Extract a floating-point number from text."""
+    m = re.search(r"\d+\.\d+", text)
+    if m:
+        return m.group(0)
+    # Fallback: remove non-digit and non-dot characters
+    cleaned = re.sub(r"[^0-9.]", "", text)
+    return cleaned
 
 # Scrape flaremetrics.io (Songbird network)
 def scrape_flaremetrics(driver):
@@ -35,7 +40,7 @@ def scrape_flaremetrics(driver):
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    # Table columns: # (rank), Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
+    # Table columns: rank, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
     for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
         if len(cols) >= 7:
@@ -48,32 +53,30 @@ def scrape_flaremetrics(driver):
             registered = cols[6].get_text(strip=True)
 
             # Extract vote power and locked vote power
-            vote_numbers = extract_numbers(raw_vote)
-            if len(vote_numbers) >= 2:
-                vote_power = vote_numbers[0]
-                vote_power_locked = vote_numbers[1]
+            vote_nums = extract_numbers(raw_vote)
+            if len(vote_nums) >= 2:
+                vote_power = vote_nums[0]
+                vote_power_locked = vote_nums[1]
             else:
-                # detect repeated sequence
-                m = re.match(r"^([0-9,]+)\1", raw_vote)
+                m = re.match(r"^([0-9,]+?)\1$", raw_vote)
                 if m:
                     vote_power = m.group(1)
                     vote_power_locked = m.group(1)
                 else:
-                    vote_power = vote_numbers[0] if vote_numbers else ''
+                    vote_power = vote_nums[0] if vote_nums else ''
                     vote_power_locked = ''
 
-            # Extract vote percent and locked percent
-            vote_pcts = extract_percentages(raw_vote_pct)
-            vote_power_pct = vote_pcts[0] if len(vote_pcts) > 0 else ''
-            vote_power_pct_locked = vote_pcts[1] if len(vote_pcts) > 1 else ''
+            # Extract vote power percentages
+            pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
+            vote_power_pct = pcts[0] if len(pcts) > 0 else ''
+            vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
 
             # 24h change percent
-            change_24h_pcts = extract_percentages(raw_change_24h)
-            change_24h_pct = change_24h_pcts[0] if change_24h_pcts else ''
+            change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
+            change_24h_pct = change_pcts[0] if change_pcts else ''
 
-            # Reward rate
-            reward_numbers = extract_numbers(raw_reward)
-            reward_rate = reward_numbers[0] if reward_numbers else ''
+            # Reward rate as decimal
+            reward_rate = extract_decimal(raw_reward)
 
             providers.append({
                 "rank": rank,
