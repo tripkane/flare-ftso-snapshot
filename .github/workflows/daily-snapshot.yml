@@ -2,20 +2,16 @@ name: Daily FTSO Snapshot
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * *'  # Runs every day at 00:00 UTC
   workflow_dispatch:
 
 jobs:
-  run-snapshot:
+  snapshot:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+        uses: actions/checkout@v2
 
       - name: Install dependencies
         run: |
@@ -23,13 +19,18 @@ jobs:
           sudo apt-get install -y chromium-browser chromium-chromedriver
           pip install -r requirements.txt
 
-      - name: Run scraper
+      - name: Run snapshot.py
         run: python snapshot.py
 
-      - name: Commit results
+      - name: Configure git
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@users.noreply.github.com'
-          git add daily_snapshots/
-          git commit -m "Daily snapshot $(date +'%Y-%m-%d')" || echo "No changes to commit"
+
+      - name: Commit results
+        run: |
+          git add .
+          git commit -m "Daily snapshot $(date +'%Y-%m-%d')"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
