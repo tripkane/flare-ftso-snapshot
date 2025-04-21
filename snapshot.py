@@ -2,8 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from bs4 import BeautifulSoup
-import time
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import json
 import os
 import datetime
@@ -18,88 +18,40 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-# Scrape Minimal Conditions tab
-def scrape_minimal_conditions(driver):
-    url = "https://flare-systems-explorer.flare.network/providers?tab=minimalConditions"
+def scrape_table(driver, url, expected_columns):
     driver.get(url)
-    time.sleep(10)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    rows = soup.select("table tbody tr")
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "tbody")))
+    rows = driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
     data = {}
     for row in rows:
-        cols = row.find_all("td")
-        if len(cols) >= 7:
-            name = cols[0].get_text(strip=True)
-            data[name] = {
-                "ftso_anchor_feeds": cols[1].get_text(strip=True),
-                "ftso_latency_feeds": cols[2].get_text(strip=True),
-                "fdc": cols[3].get_text(strip=True),
-                "staking": cols[4].get_text(strip=True),
-                "passes": cols[5].get_text(strip=True),
-                "eligible_for_reward": cols[6].get_text(strip=True)
-            }
+        cols = row.find_elements(By.TAG_NAME, "td")
+        if len(cols) >= len(expected_columns):
+            name = cols[0].text.strip()
+            if name:
+                data[name] = {expected_columns[i]: cols[i].text.strip() for i in range(1, len(expected_columns))}
     return data
 
-# Scrape FSP tab
-def scrape_fsp_tab(driver):
-    url = "https://flare-systems-explorer.flare.network/providers?tab=fsp&asc=false&sortBy=display_name"
-    driver.get(url)
-    time.sleep(10)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    rows = soup.select("table tbody tr")
-    data = {}
-    for row in rows:
-        cols = row.find_all("td")
-        if len(cols) >= 14:
-            name = cols[0].get_text(strip=True)
-            data[name] = {
-                "fsp_participating": cols[1].get_text(strip=True),
-                "direct_earnings": cols[2].get_text(strip=True),
-                "fee_rewards": cols[3].get_text(strip=True),
-                "delegation_rewards": cols[4].get_text(strip=True),
-                "delegation_reward_rate": cols[5].get_text(strip=True),
-                "delegation_weight": cols[6].get_text(strip=True),
-                "delegation_rate": cols[7].get_text(strip=True),
-                "staking_rewards": cols[8].get_text(strip=True),
-                "staking_reward_rate": cols[9].get_text(strip=True),
-                "staking_weight": cols[10].get_text(strip=True),
-                "fee": cols[11].get_text(strip=True),
-                "uptime_signed": cols[12].get_text(strip=True),
-                "rewards_signed": cols[13].get_text(strip=True)
-            }
-    return data
+def scrape_all_tabs(driver):
+    minimal_cols = ["provider", "ftso_anchor_feeds", "ftso_latency_feeds", "fdc", "staking", "passes", "eligible_for_reward"]
+    fsp_cols = ["provider", "fsp_participating", "direct_earnings", "fee_rewards", "delegation_rewards", "delegation_reward_rate", "delegation_weight", "delegation_rate", "staking_rewards", "staking_reward_rate", "staking_weight", "fee", "uptime_signed", "rewards_signed"]
+    ftso_cols = ["provider", "ftso_participating", "primary", "secondary", "availability"]
 
-# Scrape FTSO tab
-def scrape_ftso_tab(driver):
-    url = "https://flare-systems-explorer.flare.network/providers?tab=ftso&asc=false&sortBy=display_name"
-    driver.get(url)
-    time.sleep(10)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    rows = soup.select("table tbody tr")
-    data = {}
-    for row in rows:
-        cols = row.find_all("td")
-        if len(cols) >= 5:
-            name = cols[0].get_text(strip=True)
-            data[name] = {
-                "ftso_participating": cols[1].get_text(strip=True),
-                "primary": cols[2].get_text(strip=True),
-                "secondary": cols[3].get_text(strip=True),
-                "availability": cols[4].get_text(strip=True)
-            }
-    return data
+    urls = {
+        "minimal": ("https://flare-systems-explorer.flare.network/providers?tab=minimalConditions", minimal_cols),
+        "fsp": ("https://flare-systems-explorer.flare.network/providers?tab=fsp&asc=false&sortBy=display_name", fsp_cols),
+        "ftso": ("https://flare-systems-explorer.flare.network/providers?tab=ftso&asc=false&sortBy=display_name", ftso_cols),
+    }
 
-# Merge all scraped data
-def merge_provider_data(*dicts):
-    merged = {}
-    for data in dicts:
-        for name, values in data.items():
-            if name not in merged:
-                merged[name] = {"name": name}
-            merged[name].update(values)
-    return list(merged.values())
+    all_data = {}
+    for label, (url, columns) in urls.items():
+        tab_data = scrape_table(driver, url, columns)
+        for name, values in tab_data.items():
+            if name not in all_data:
+                all_data[name] = {"name": name}
+            all_data[name].update(values)
 
-# Save snapshot JSON
+    return list(all_data.values())
+
 def save_snapshot(data):
     today = datetime.date.today().isoformat()
     filename = f"daily_snapshots/ftso_snapshot_{today}.json"
@@ -108,15 +60,11 @@ def save_snapshot(data):
         json.dump({"date": today, "providers": data}, f, indent=2)
     print(f"Snapshot saved: {filename}")
 
-# Main flow
 def main():
     driver = init_driver()
     try:
-        minimal_data = scrape_minimal_conditions(driver)
-        fsp_data = scrape_fsp_tab(driver)
-        ftso_data = scrape_ftso_tab(driver)
-        all_data = merge_provider_data(minimal_data, fsp_data, ftso_data)
-        save_snapshot(all_data)
+        data = scrape_all_tabs(driver)
+        save_snapshot(data)
     finally:
         driver.quit()
 
