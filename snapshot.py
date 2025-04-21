@@ -18,6 +18,16 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
+# Helper to clean and extract all numeric matches
+
+def extract_numbers(text):
+    return re.findall(r"[0-9][0-9,]*", text)
+
+# Helper to clean and extract all percentage matches
+
+def extract_percentages(text):
+    return re.findall(r"[0-9][0-9.,]*%", text)
+
 # Scrape flaremetrics.io (Songbird network)
 def scrape_flaremetrics(driver):
     url = "https://flaremetrics.io/songbird"
@@ -25,28 +35,44 @@ def scrape_flaremetrics(driver):
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    # Table columns: # (rank), Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
+    # Table columns: #, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
     for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
         if len(cols) >= 7:
             rank = cols[0].get_text(strip=True)
             name = cols[1].get_text(strip=True)
-            raw_vote = cols[2].get_text(strip=True)
-            raw_vote_pct = cols[3].get_text(strip=True)
-            raw_change_24h = cols[4].get_text(strip=True)
-            raw_reward = cols[5].get_text(strip=True)
+            raw_vote = cols[2].get_text("", strip=True)
+            raw_vote_pct = cols[3].get_text("", strip=True)
+            raw_change_24h = cols[4].get_text("", strip=True)
+            raw_reward = cols[5].get_text("", strip=True)
             registered = cols[6].get_text(strip=True)
-            # Clean numeric values
-            vote_power = re.sub(r"[^0-9.,]", "", raw_vote)
-            vote_power_pct = re.sub(r"[^0-9.,%-]", "", raw_vote_pct)
-            change_24h = re.sub(r"[^0-9.,%-]", "", raw_change_24h)
-            reward_rate = re.sub(r"[^0-9.,]", "", raw_reward)
+
+            # Extract two vote power values: current and locked
+            vote_numbers = extract_numbers(raw_vote)
+            vote_power = vote_numbers[0] if len(vote_numbers) > 0 else ''
+            vote_power_locked = vote_numbers[1] if len(vote_numbers) > 1 else ''
+
+            # Extract two percentage values for vote power
+            vote_pcts = extract_percentages(raw_vote_pct)
+            vote_power_pct = vote_pcts[0] if len(vote_pcts) > 0 else ''
+            vote_power_pct_locked = vote_pcts[1] if len(vote_pcts) > 1 else ''
+
+            # 24h change
+            change_24h_pcts = extract_percentages(raw_change_24h)
+            change_24h_pct = change_24h_pcts[0] if change_24h_pcts else ''
+
+            # Reward rate
+            reward_numbers = extract_numbers(raw_reward)
+            reward_rate = reward_numbers[0] if len(reward_numbers) > 0 else ''
+
             providers.append({
                 "rank": rank,
                 "name": name,
                 "vote_power": vote_power,
+                "vote_power_locked": vote_power_locked,
                 "vote_power_pct": vote_power_pct,
-                "change_24h_pct": change_24h,
+                "vote_power_pct_locked": vote_power_pct_locked,
+                "change_24h_pct": change_24h_pct,
                 "reward_rate": reward_rate,
                 "registered": registered
             })
