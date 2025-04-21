@@ -1,31 +1,4 @@
 {
   "date": "2025-04-21",
-  "providers": [
-    {
-      "name": "",
-      "ftso_anchor_feeds": "",
-      "ftso_latency_feeds": "0xDe40...6cA9DA0xDe403...56cA9",
-      "fdc": "NO",
-      "staking": "NO",
-      "passes": "NO",
-      "eligible_for_reward": "NO",
-      "fsp_participating": "",
-      "direct_earnings": "0xf7fa...0436DA0xf7faC...b0436",
-      "fee_rewards": "NO",
-      "delegation_rewards": "/",
-      "delegation_reward_rate": "/",
-      "delegation_weight": "/",
-      "delegation_rate": "/",
-      "staking_rewards": "/",
-      "staking_reward_rate": "/",
-      "staking_weight": "/",
-      "fee": "/",
-      "uptime_signed": "/",
-      "rewards_signed": "/",
-      "ftso_participating": "",
-      "primary": "0xf7fa...0436DA0xf7faC...b0436",
-      "secondary": "NO",
-      "availability": "/"
-    }
-  ]
+  "providers": []
 }
