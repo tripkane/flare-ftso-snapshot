@@ -1,0 +1,907 @@
+{
+  "date": "2025-04-21",
+  "flaremetrics": [
+    {
+      "provider": "1",
+      "vote_power": "Atlas TSO",
+      "reward_rate": "417,608,455417,608,455Locked Vote Power"
+    },
+    {
+      "provider": "2",
+      "vote_power": "Bifrost Wallet",
+      "reward_rate": "383,025,578383,025,578Locked Vote Power"
+    },
+    {
+      "provider": "3",
+      "vote_power": "A-FTSO",
+      "reward_rate": "370,819,308370,819,308Locked Vote Power"
+    },
+    {
+      "provider": "4",
+      "vote_power": "NORTSO",
+      "reward_rate": "334,639,639334,639,639Locked Vote Power"
+    },
+    {
+      "provider": "5",
+      "vote_power": "Flare Dienst",
+      "reward_rate": "273,512,227273,512,227Locked Vote Power"
+    },
+    {
+      "provider": "6",
+      "vote_power": "EvolveFTSO",
+      "reward_rate": "266,406,893266,406,893Locked Vote Power"
+    },
+    {
+      "provider": "7",
+      "vote_power": "AlphaOracle",
+      "reward_rate": "257,087,179257,087,179Locked Vote Power"
+    },
+    {
+      "provider": "8",
+      "vote_power": "PRICEKRAKEN",
+      "reward_rate": "252,121,772252,121,772Locked Vote Power"
+    },
+    {
+      "provider": "9",
+      "vote_power": "Flare Oracle",
+      "reward_rate": "238,242,813238,242,813Locked Vote Power"
+    },
+    {
+      "provider": "10",
+      "vote_power": "EDPFTSO",
+      "reward_rate": "206,220,756206,220,756Locked Vote Power"
+    },
+    {
+      "provider": "11",
+      "vote_power": "ACDTftso",
+      "reward_rate": "198,030,615198,030,615Locked Vote Power"
+    },
+    {
+      "provider": "12",
+      "vote_power": "AU",
+      "reward_rate": "192,126,458192,126,458Locked Vote Power"
+    },
+    {
+      "provider": "13",
+      "vote_power": "Flare.Space",
+      "reward_rate": "188,596,805188,596,805Locked Vote Power"
+    },
+    {
+      "provider": "14",
+      "vote_power": "FlareFi",
+      "reward_rate": "186,460,953186,460,953Locked Vote Power"
+    },
+    {
+      "provider": "15",
+      "vote_power": "Solarius",
+      "reward_rate": "180,496,482180,496,482Locked Vote Power"
+    },
+    {
+      "provider": "16",
+      "vote_power": "FTSO Plus",
+      "reward_rate": "179,838,455179,838,455Locked Vote Power"
+    },
+    {
+      "provider": "17",
+      "vote_power": "FTSO London",
+      "reward_rate": "162,192,274162,192,274Locked Vote Power"
+    },
+    {
+      "provider": "18",
+      "vote_power": "Lena Instruments",
+      "reward_rate": "150,185,252150,185,252Locked Vote Power"
+    },
+    {
+      "provider": "19",
+      "vote_power": "Use Your Spark",
+      "reward_rate": "149,068,608149,068,608Locked Vote Power"
+    },
+    {
+      "provider": "20",
+      "vote_power": "Aureus Ox",
+      "reward_rate": "145,759,950145,759,950Locked Vote Power"
+    },
+    {
+      "provider": "21",
+      "vote_power": "Bushido FTSO",
+      "reward_rate": "139,558,548139,558,548Locked Vote Power"
+    },
+    {
+      "provider": "22",
+      "vote_power": "Flare Beacon",
+      "reward_rate": "132,316,372132,316,372Locked Vote Power"
+    },
+    {
+      "provider": "23",
+      "vote_power": "Aternety",
+      "reward_rate": "119,144,730119,144,730Locked Vote Power"
+    },
+    {
+      "provider": "24",
+      "vote_power": "Envision",
+      "reward_rate": "118,777,016118,777,016Locked Vote Power"
+    },
+    {
+      "provider": "25",
+      "vote_power": "Ivy Oracle",
+      "reward_rate": "110,237,476110,237,476Locked Vote Power"
+    },
+    {
+      "provider": "26",
+      "vote_power": "Defi Oracles",
+      "reward_rate": "95,015,94995,015,949Locked Vote Power"
+    },
+    {
+      "provider": "27",
+      "vote_power": "Xdrops Oracle",
+      "reward_rate": "87,925,59187,925,591Locked Vote Power"
+    },
+    {
+      "provider": "28",
+      "vote_power": "LightFTSO",
+      "reward_rate": "80,110,29480,110,294Locked Vote Power"
+    },
+    {
+      "provider": "29",
+      "vote_power": "InGen.FTSO",
+      "reward_rate": "77,690,14777,690,147Locked Vote Power"
+    },
+    {
+      "provider": "30",
+      "vote_power": "AFOracle",
+      "reward_rate": "69,121,82069,121,820Locked Vote Power"
+    },
+    {
+      "provider": "31",
+      "vote_power": "FTSO PARIS",
+      "reward_rate": "66,279,36966,279,369Locked Vote Power"
+    },
+    {
+      "provider": "32",
+      "vote_power": "Ugly Kitty",
+      "reward_rate": "64,956,12064,956,120Locked Vote Power"
+    },
+    {
+      "provider": "33",
+      "vote_power": "0x48dc...b3a5b0",
+      "reward_rate": "59,515,81459,515,814Locked Vote Power"
+    },
+    {
+      "provider": "34",
+      "vote_power": "4DadsFTSO",
+      "reward_rate": "56,842,83556,842,835Locked Vote Power"
+    },
+    {
+      "provider": "35",
+      "vote_power": "WitterFTSO",
+      "reward_rate": "56,242,05956,242,059Locked Vote Power"
+    },
+    {
+      "provider": "36",
+      "vote_power": "FTSO EU",
+      "reward_rate": "56,195,65856,195,658Locked Vote Power"
+    },
+    {
+      "provider": "37",
+      "vote_power": "Oracle Daemon",
+      "reward_rate": "55,608,11255,608,112Locked Vote Power"
+    },
+    {
+      "provider": "38",
+      "vote_power": "Scintilla",
+      "reward_rate": "50,505,18450,505,184Locked Vote Power"
+    },
+    {
+      "provider": "39",
+      "vote_power": "SolidiFi FTSO",
+      "reward_rate": "50,444,95350,444,953Locked Vote Power"
+    },
+    {
+      "provider": "40",
+      "vote_power": "Knot Nodes",
+      "reward_rate": "49,637,00849,637,008Locked Vote Power"
+    },
+    {
+      "provider": "41",
+      "vote_power": "Tailwind FTSO",
+      "reward_rate": "46,875,63146,875,631Locked Vote Power"
+    },
+    {
+      "provider": "42",
+      "vote_power": "Aimlezz",
+      "reward_rate": "44,211,97044,211,970Locked Vote Power"
+    },
+    {
+      "provider": "43",
+      "vote_power": "Burst FTSO",
+      "reward_rate": "44,108,70544,108,705Locked Vote Power"
+    },
+    {
+      "provider": "44",
+      "vote_power": "sToadz FTSO",
+      "reward_rate": "43,939,45543,939,455Locked Vote Power"
+    },
+    {
+      "provider": "45",
+      "vote_power": "HEWG",
+      "reward_rate": "43,381,29143,381,291Locked Vote Power"
+    },
+    {
+      "provider": "46",
+      "vote_power": "Mickey B Fresh",
+      "reward_rate": "40,788,86040,788,860Locked Vote Power"
+    },
+    {
+      "provider": "47",
+      "vote_power": "uGaenn",
+      "reward_rate": "39,396,82739,396,827Locked Vote Power"
+    },
+    {
+      "provider": "48",
+      "vote_power": "Sun-Dara",
+      "reward_rate": "39,015,95739,015,957Locked Vote Power"
+    },
+    {
+      "provider": "49",
+      "vote_power": "Flaris",
+      "reward_rate": "38,864,03538,864,035Locked Vote Power"
+    },
+    {
+      "provider": "50",
+      "vote_power": "FlareFTSO",
+      "reward_rate": "30,423,39930,423,399Locked Vote Power"
+    },
+    {
+      "provider": "51",
+      "vote_power": "African Proofs",
+      "reward_rate": "30,280,69630,280,696Locked Vote Power"
+    },
+    {
+      "provider": "52",
+      "vote_power": "FTSOCAN",
+      "reward_rate": "29,014,66729,014,667Locked Vote Power"
+    },
+    {
+      "provider": "53",
+      "vote_power": "DataVector",
+      "reward_rate": "28,676,63128,676,631Locked Vote Power"
+    },
+    {
+      "provider": "54",
+      "vote_power": "True FTSO",
+      "reward_rate": "23,656,14023,656,140Locked Vote Power"
+    },
+    {
+      "provider": "55",
+      "vote_power": "Wonderftso",
+      "reward_rate": "23,404,40123,404,401Locked Vote Power"
+    },
+    {
+      "provider": "56",
+      "vote_power": "Sparkles FTSO",
+      "reward_rate": "23,300,80423,300,804Locked Vote Power"
+    },
+    {
+      "provider": "57",
+      "vote_power": "FTSOExpress",
+      "reward_rate": "23,117,90923,117,909Locked Vote Power"
+    },
+    {
+      "provider": "58",
+      "vote_power": "Flare Portal",
+      "reward_rate": "22,674,96922,674,969Locked Vote Power"
+    },
+    {
+      "provider": "59",
+      "vote_power": "Comfy Nodes",
+      "reward_rate": "22,626,93422,626,934Locked Vote Power"
+    },
+    {
+      "provider": "60",
+      "vote_power": "TempestFTSO",
+      "reward_rate": "21,062,88821,062,888Locked Vote Power"
+    },
+    {
+      "provider": "61",
+      "vote_power": "FTSO4ALL",
+      "reward_rate": "20,182,76920,182,769Locked Vote Power"
+    },
+    {
+      "provider": "62",
+      "vote_power": "0xb6b4...c7ae8a",
+      "reward_rate": "20,013,50520,013,505Locked Vote Power"
+    },
+    {
+      "provider": "63",
+      "vote_power": "0xa36b...26e919",
+      "reward_rate": "20,000,00520,000,005Locked Vote Power"
+    },
+    {
+      "provider": "64",
+      "vote_power": "0xa3b8...7149b7",
+      "reward_rate": "20,000,00020,000,000Locked Vote Power"
+    },
+    {
+      "provider": "65",
+      "vote_power": "O1 FTSO",
+      "reward_rate": "10,214,74110,214,741Locked Vote Power"
+    },
+    {
+      "provider": "66",
+      "vote_power": "0x526e...641642",
+      "reward_rate": "1,945,2831,945,283Locked Vote Power"
+    },
+    {
+      "provider": "67",
+      "vote_power": "0xce10...7ffeab",
+      "reward_rate": "1,830,9421,830,942Locked Vote Power"
+    },
+    {
+      "provider": "68",
+      "vote_power": "XTerraMetrics",
+      "reward_rate": "1,624,2851,624,285Locked Vote Power"
+    },
+    {
+      "provider": "69",
+      "vote_power": "0xe6b8...fc2f1b",
+      "reward_rate": "1,511,6901,511,690Locked Vote Power"
+    },
+    {
+      "provider": "70",
+      "vote_power": "0x90c0...5f3432",
+      "reward_rate": "1,149,8101,149,810Locked Vote Power"
+    },
+    {
+      "provider": "71",
+      "vote_power": "0x736e...f6c7c9",
+      "reward_rate": "715,200715,200Locked Vote Power"
+    },
+    {
+      "provider": "72",
+      "vote_power": "0x63ed...afbd01",
+      "reward_rate": "20,00020,000Locked Vote Power"
+    },
+    {
+      "provider": "73",
+      "vote_power": "0x7fbe...f18393",
+      "reward_rate": "10,00010,000Locked Vote Power"
+    },
+    {
+      "provider": "74",
+      "vote_power": "0x3b18...7d558d",
+      "reward_rate": "644644Locked Vote Power"
+    },
+    {
+      "provider": "75",
+      "vote_power": "0x1a34...5ad900",
+      "reward_rate": "400400Locked Vote Power"
+    },
+    {
+      "provider": "76",
+      "vote_power": "0x20d4...d832e8",
+      "reward_rate": "311311Locked Vote Power"
+    },
+    {
+      "provider": "77",
+      "vote_power": "0xeedd...3fa438",
+      "reward_rate": "199199Locked Vote Power"
+    },
+    {
+      "provider": "78",
+      "vote_power": "0x606c...bef483",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "79",
+      "vote_power": "0x6b02...e0f930",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "80",
+      "vote_power": "0x0998...c609f6",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "81",
+      "vote_power": "0x47af...187873",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "82",
+      "vote_power": "0x2778...45c5fd",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "83",
+      "vote_power": "0x8dd6...ba38f1",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "84",
+      "vote_power": "0xc4a1...8b6269",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "85",
+      "vote_power": "0xca0e...ef9933",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "86",
+      "vote_power": "0xadc0...60419a",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "87",
+      "vote_power": "0x6b5a...946c3c",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "88",
+      "vote_power": "0xd43b...344b71",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "89",
+      "vote_power": "0xa1e7...c63a88",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "90",
+      "vote_power": "0x7e8a...a653b5",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "91",
+      "vote_power": "0x82f4...0b0945",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "92",
+      "vote_power": "0xaaa1...09df4a",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "93",
+      "vote_power": "0x3d71...9a38c2",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "94",
+      "vote_power": "0xf2a9...fc6bef",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "95",
+      "vote_power": "0x486a...b86609",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "96",
+      "vote_power": "0x9d26...8b7ddb",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "97",
+      "vote_power": "0x1a69...28770a",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "98",
+      "vote_power": "0xb0e8...f2dfa2",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "99",
+      "vote_power": "0x8938...3187a2",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "provider": "100",
+      "vote_power": "0x55a6...15b9a7",
+      "reward_rate": "0PendingLocked Vote Power"
+    }
+  ],
+  "flare_systems_explorer": [
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    },
+    {
+      "provider": "",
+      "score": ""
+    }
+  ]
+}
