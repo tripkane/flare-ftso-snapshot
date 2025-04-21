@@ -25,20 +25,30 @@ def scrape_flaremetrics(driver):
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
+    # Table columns: # (rank), Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
     for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
-        # Expecting: rank, name, vote power, reward rate, ...
-        if len(cols) >= 4:
+        if len(cols) >= 7:
+            rank = cols[0].get_text(strip=True)
             name = cols[1].get_text(strip=True)
             raw_vote = cols[2].get_text(strip=True)
-            raw_reward = cols[3].get_text(strip=True)
-            # Clean numeric values (remove non-digits except . and ,)
+            raw_vote_pct = cols[3].get_text(strip=True)
+            raw_change_24h = cols[4].get_text(strip=True)
+            raw_reward = cols[5].get_text(strip=True)
+            registered = cols[6].get_text(strip=True)
+            # Clean numeric values
             vote_power = re.sub(r"[^0-9.,]", "", raw_vote)
+            vote_power_pct = re.sub(r"[^0-9.,%-]", "", raw_vote_pct)
+            change_24h = re.sub(r"[^0-9.,%-]", "", raw_change_24h)
             reward_rate = re.sub(r"[^0-9.,]", "", raw_reward)
             providers.append({
+                "rank": rank,
                 "name": name,
                 "vote_power": vote_power,
-                "reward_rate": reward_rate
+                "vote_power_pct": vote_power_pct,
+                "change_24h_pct": change_24h,
+                "reward_rate": reward_rate,
+                "registered": registered
             })
     return providers
 
