@@ -1,4 +1,505 @@
 {
   "date": "2025-04-21",
-  "providers": []
+  "providers": [
+    {
+      "name": "1",
+      "vote_power": "Atlas TSO",
+      "reward_rate": "418,001,538418,001,538Locked Vote Power"
+    },
+    {
+      "name": "2",
+      "vote_power": "Bifrost Wallet",
+      "reward_rate": "382,724,518382,724,518Locked Vote Power"
+    },
+    {
+      "name": "3",
+      "vote_power": "A-FTSO",
+      "reward_rate": "370,877,119370,877,119Locked Vote Power"
+    },
+    {
+      "name": "4",
+      "vote_power": "NORTSO",
+      "reward_rate": "334,796,171334,796,171Locked Vote Power"
+    },
+    {
+      "name": "5",
+      "vote_power": "Flare Dienst",
+      "reward_rate": "273,544,349273,544,349Locked Vote Power"
+    },
+    {
+      "name": "6",
+      "vote_power": "EvolveFTSO",
+      "reward_rate": "266,868,144266,868,144Locked Vote Power"
+    },
+    {
+      "name": "7",
+      "vote_power": "AlphaOracle",
+      "reward_rate": "257,143,041257,143,041Locked Vote Power"
+    },
+    {
+      "name": "8",
+      "vote_power": "PRICEKRAKEN",
+      "reward_rate": "253,282,907253,282,907Locked Vote Power"
+    },
+    {
+      "name": "9",
+      "vote_power": "Flare Oracle",
+      "reward_rate": "238,401,240238,401,240Locked Vote Power"
+    },
+    {
+      "name": "10",
+      "vote_power": "EDPFTSO",
+      "reward_rate": "206,128,423206,128,423Locked Vote Power"
+    },
+    {
+      "name": "11",
+      "vote_power": "ACDTftso",
+      "reward_rate": "198,100,348198,100,348Locked Vote Power"
+    },
+    {
+      "name": "12",
+      "vote_power": "AU",
+      "reward_rate": "192,187,135192,187,135Locked Vote Power"
+    },
+    {
+      "name": "13",
+      "vote_power": "Flare.Space",
+      "reward_rate": "189,062,749189,062,749Locked Vote Power"
+    },
+    {
+      "name": "14",
+      "vote_power": "FlareFi",
+      "reward_rate": "184,888,920184,888,920Locked Vote Power"
+    },
+    {
+      "name": "15",
+      "vote_power": "Solarius",
+      "reward_rate": "180,548,623180,548,623Locked Vote Power"
+    },
+    {
+      "name": "16",
+      "vote_power": "FTSO Plus",
+      "reward_rate": "179,841,958179,841,958Locked Vote Power"
+    },
+    {
+      "name": "17",
+      "vote_power": "FTSO London",
+      "reward_rate": "162,224,970162,224,970Locked Vote Power"
+    },
+    {
+      "name": "18",
+      "vote_power": "Lena Instruments",
+      "reward_rate": "149,964,187149,964,187Locked Vote Power"
+    },
+    {
+      "name": "19",
+      "vote_power": "Use Your Spark",
+      "reward_rate": "149,706,683149,706,683Locked Vote Power"
+    },
+    {
+      "name": "20",
+      "vote_power": "Aureus Ox",
+      "reward_rate": "145,801,398145,801,398Locked Vote Power"
+    },
+    {
+      "name": "21",
+      "vote_power": "Bushido FTSO",
+      "reward_rate": "139,658,398139,658,398Locked Vote Power"
+    },
+    {
+      "name": "22",
+      "vote_power": "Flare Beacon",
+      "reward_rate": "132,593,520132,593,520Locked Vote Power"
+    },
+    {
+      "name": "23",
+      "vote_power": "Aternety",
+      "reward_rate": "119,204,190119,204,190Locked Vote Power"
+    },
+    {
+      "name": "24",
+      "vote_power": "Envision",
+      "reward_rate": "118,801,063118,801,063Locked Vote Power"
+    },
+    {
+      "name": "25",
+      "vote_power": "Ivy Oracle",
+      "reward_rate": "110,264,065110,264,065Locked Vote Power"
+    },
+    {
+      "name": "26",
+      "vote_power": "Defi Oracles",
+      "reward_rate": "93,359,33693,359,336Locked Vote Power"
+    },
+    {
+      "name": "27",
+      "vote_power": "Xdrops Oracle",
+      "reward_rate": "85,768,54985,768,549Locked Vote Power"
+    },
+    {
+      "name": "28",
+      "vote_power": "LightFTSO",
+      "reward_rate": "80,129,51780,129,517Locked Vote Power"
+    },
+    {
+      "name": "29",
+      "vote_power": "InGen.FTSO",
+      "reward_rate": "67,714,79367,714,793Locked Vote Power"
+    },
+    {
+      "name": "30",
+      "vote_power": "FTSO PARIS",
+      "reward_rate": "66,302,64966,302,649Locked Vote Power"
+    },
+    {
+      "name": "31",
+      "vote_power": "Ugly Kitty",
+      "reward_rate": "65,003,31465,003,314Locked Vote Power"
+    },
+    {
+      "name": "32",
+      "vote_power": "AFOracle",
+      "reward_rate": "63,988,96363,988,963Locked Vote Power"
+    },
+    {
+      "name": "33",
+      "vote_power": "4DadsFTSO",
+      "reward_rate": "59,980,36159,980,361Locked Vote Power"
+    },
+    {
+      "name": "34",
+      "vote_power": "0x48dc...b3a5b0",
+      "reward_rate": "59,514,82259,514,822Locked Vote Power"
+    },
+    {
+      "name": "35",
+      "vote_power": "FTSO EU",
+      "reward_rate": "56,223,30756,223,307Locked Vote Power"
+    },
+    {
+      "name": "36",
+      "vote_power": "Oracle Daemon",
+      "reward_rate": "55,613,02955,613,029Locked Vote Power"
+    },
+    {
+      "name": "37",
+      "vote_power": "WitterFTSO",
+      "reward_rate": "52,058,00652,058,006Locked Vote Power"
+    },
+    {
+      "name": "38",
+      "vote_power": "Scintilla",
+      "reward_rate": "51,060,84351,060,843Locked Vote Power"
+    },
+    {
+      "name": "39",
+      "vote_power": "SolidiFi FTSO",
+      "reward_rate": "50,572,24450,572,244Locked Vote Power"
+    },
+    {
+      "name": "40",
+      "vote_power": "Knot Nodes",
+      "reward_rate": "49,546,66649,546,666Locked Vote Power"
+    },
+    {
+      "name": "41",
+      "vote_power": "Tailwind FTSO",
+      "reward_rate": "45,046,85345,046,853Locked Vote Power"
+    },
+    {
+      "name": "42",
+      "vote_power": "Aimlezz",
+      "reward_rate": "44,313,62444,313,624Locked Vote Power"
+    },
+    {
+      "name": "43",
+      "vote_power": "sToadz FTSO",
+      "reward_rate": "43,941,96743,941,967Locked Vote Power"
+    },
+    {
+      "name": "44",
+      "vote_power": "Sun-Dara",
+      "reward_rate": "43,928,25043,928,250Locked Vote Power"
+    },
+    {
+      "name": "45",
+      "vote_power": "HEWG",
+      "reward_rate": "43,382,04743,382,047Locked Vote Power"
+    },
+    {
+      "name": "46",
+      "vote_power": "Mickey B Fresh",
+      "reward_rate": "41,257,29741,257,297Locked Vote Power"
+    },
+    {
+      "name": "47",
+      "vote_power": "Burst FTSO",
+      "reward_rate": "40,785,28840,785,288Locked Vote Power"
+    },
+    {
+      "name": "48",
+      "vote_power": "uGaenn",
+      "reward_rate": "39,400,57939,400,579Locked Vote Power"
+    },
+    {
+      "name": "49",
+      "vote_power": "Flaris",
+      "reward_rate": "38,813,38738,813,387Locked Vote Power"
+    },
+    {
+      "name": "50",
+      "vote_power": "DataVector",
+      "reward_rate": "35,485,04435,485,044Locked Vote Power"
+    },
+    {
+      "name": "51",
+      "vote_power": "FlareFTSO",
+      "reward_rate": "30,423,74130,423,741Locked Vote Power"
+    },
+    {
+      "name": "52",
+      "vote_power": "African Proofs",
+      "reward_rate": "29,440,33129,440,331Locked Vote Power"
+    },
+    {
+      "name": "53",
+      "vote_power": "FTSOCAN",
+      "reward_rate": "29,016,20129,016,201Locked Vote Power"
+    },
+    {
+      "name": "54",
+      "vote_power": "Comfy Nodes",
+      "reward_rate": "26,621,71926,621,719Locked Vote Power"
+    },
+    {
+      "name": "55",
+      "vote_power": "True FTSO",
+      "reward_rate": "23,487,56823,487,568Locked Vote Power"
+    },
+    {
+      "name": "56",
+      "vote_power": "Wonderftso",
+      "reward_rate": "23,404,58623,404,586Locked Vote Power"
+    },
+    {
+      "name": "57",
+      "vote_power": "Sparkles FTSO",
+      "reward_rate": "23,301,12623,301,126Locked Vote Power"
+    },
+    {
+      "name": "58",
+      "vote_power": "FTSOExpress",
+      "reward_rate": "23,118,57123,118,571Locked Vote Power"
+    },
+    {
+      "name": "59",
+      "vote_power": "Flare Portal",
+      "reward_rate": "22,675,04622,675,046Locked Vote Power"
+    },
+    {
+      "name": "60",
+      "vote_power": "TempestFTSO",
+      "reward_rate": "21,063,01421,063,014Locked Vote Power"
+    },
+    {
+      "name": "61",
+      "vote_power": "FTSO4ALL",
+      "reward_rate": "20,182,76920,182,769Locked Vote Power"
+    },
+    {
+      "name": "62",
+      "vote_power": "0xb6b4...c7ae8a",
+      "reward_rate": "20,013,50520,013,505Locked Vote Power"
+    },
+    {
+      "name": "63",
+      "vote_power": "0xa36b...26e919",
+      "reward_rate": "20,000,00520,000,005Locked Vote Power"
+    },
+    {
+      "name": "64",
+      "vote_power": "0xa3b8...7149b7",
+      "reward_rate": "20,000,00020,000,000Locked Vote Power"
+    },
+    {
+      "name": "65",
+      "vote_power": "O1 FTSO",
+      "reward_rate": "10,215,05410,215,054Locked Vote Power"
+    },
+    {
+      "name": "66",
+      "vote_power": "0x526e...641642",
+      "reward_rate": "1,946,7221,946,722Locked Vote Power"
+    },
+    {
+      "name": "67",
+      "vote_power": "0xce10...7ffeab",
+      "reward_rate": "1,832,3081,832,308Locked Vote Power"
+    },
+    {
+      "name": "68",
+      "vote_power": "XTerraMetrics",
+      "reward_rate": "1,624,2851,624,285Locked Vote Power"
+    },
+    {
+      "name": "69",
+      "vote_power": "0xe6b8...fc2f1b",
+      "reward_rate": "1,511,6901,511,690Locked Vote Power"
+    },
+    {
+      "name": "70",
+      "vote_power": "0x90c0...5f3432",
+      "reward_rate": "1,150,2231,150,223Locked Vote Power"
+    },
+    {
+      "name": "71",
+      "vote_power": "0x736e...f6c7c9",
+      "reward_rate": "715,200715,200Locked Vote Power"
+    },
+    {
+      "name": "72",
+      "vote_power": "0x63ed...afbd01",
+      "reward_rate": "20,00020,000Locked Vote Power"
+    },
+    {
+      "name": "73",
+      "vote_power": "0x7fbe...f18393",
+      "reward_rate": "10,00010,000Locked Vote Power"
+    },
+    {
+      "name": "74",
+      "vote_power": "0x3b18...7d558d",
+      "reward_rate": "644644Locked Vote Power"
+    },
+    {
+      "name": "75",
+      "vote_power": "0x1a34...5ad900",
+      "reward_rate": "400400Locked Vote Power"
+    },
+    {
+      "name": "76",
+      "vote_power": "0x20d4...d832e8",
+      "reward_rate": "311311Locked Vote Power"
+    },
+    {
+      "name": "77",
+      "vote_power": "0xeedd...3fa438",
+      "reward_rate": "199199Locked Vote Power"
+    },
+    {
+      "name": "78",
+      "vote_power": "0x606c...bef483",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "79",
+      "vote_power": "0x6b02...e0f930",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "80",
+      "vote_power": "0x0998...c609f6",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "81",
+      "vote_power": "0x47af...187873",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "82",
+      "vote_power": "0x2778...45c5fd",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "83",
+      "vote_power": "0x8dd6...ba38f1",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "84",
+      "vote_power": "0xc4a1...8b6269",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "85",
+      "vote_power": "0xca0e...ef9933",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "86",
+      "vote_power": "0xadc0...60419a",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "87",
+      "vote_power": "0x6b5a...946c3c",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "88",
+      "vote_power": "0xd43b...344b71",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "89",
+      "vote_power": "0xa1e7...c63a88",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "90",
+      "vote_power": "0x7e8a...a653b5",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "91",
+      "vote_power": "0x82f4...0b0945",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "92",
+      "vote_power": "0xaaa1...09df4a",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "93",
+      "vote_power": "0x3d71...9a38c2",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "94",
+      "vote_power": "0xf2a9...fc6bef",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "95",
+      "vote_power": "0x486a...b86609",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "96",
+      "vote_power": "0x9d26...8b7ddb",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "97",
+      "vote_power": "0x1a69...28770a",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "98",
+      "vote_power": "0xb0e8...f2dfa2",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "99",
+      "vote_power": "0x8938...3187a2",
+      "reward_rate": "0PendingLocked Vote Power"
+    },
+    {
+      "name": "100",
+      "vote_power": "0x55a6...15b9a7",
+      "reward_rate": "0PendingLocked Vote Power"
+    }
+  ]
 }
