@@ -4,7 +4,7 @@
     {
       "rank": "1",
       "name": "Atlas TSO",
-      "vote_power": "418,001,618418,001,618",
+      "vote_power": "418,001,668418,001,668",
       "vote_power_pct": "4.90%4.81%%",
       "change_24h_pct": "1.75%",
       "reward_rate": "0.0487.",
@@ -13,7 +13,7 @@
     {
       "rank": "2",
       "name": "Bifrost Wallet",
-      "vote_power": "382,555,144382,555,144",
+      "vote_power": "382,555,239382,555,239",
       "vote_power_pct": "4.49%4.50%%",
       "change_24h_pct": "0.04%",
       "reward_rate": "0.0236.",
@@ -49,7 +49,7 @@
     {
       "rank": "6",
       "name": "EvolveFTSO",
-      "vote_power": "266,868,242266,868,242",
+      "vote_power": "266,868,243266,868,243",
       "vote_power_pct": "3.13%3.14%%",
       "change_24h_pct": "0.17%",
       "reward_rate": "0.0418.",
@@ -58,7 +58,7 @@
     {
       "rank": "7",
       "name": "AlphaOracle",
-      "vote_power": "257,143,226257,143,226",
+      "vote_power": "257,143,337257,143,337",
       "vote_power_pct": "3.02%3.03%%",
       "change_24h_pct": "0.04%",
       "reward_rate": "0.0756.",
@@ -76,7 +76,7 @@
     {
       "rank": "9",
       "name": "Flare Oracle",
-      "vote_power": "238,401,241238,401,241",
+      "vote_power": "238,401,256238,401,256",
       "vote_power_pct": "2.80%2.78%%",
       "change_24h_pct": "0.10%",
       "reward_rate": "0.0436.",
@@ -85,7 +85,7 @@
     {
       "rank": "10",
       "name": "EDPFTSO",
-      "vote_power": "206,128,424206,128,424",
+      "vote_power": "206,128,433206,128,433",
       "vote_power_pct": "2.42%2.45%%",
       "change_24h_pct": "0.27%",
       "reward_rate": "0.0992.",
@@ -112,7 +112,7 @@
     {
       "rank": "13",
       "name": "Flare.Space",
-      "vote_power": "189,062,749189,062,749",
+      "vote_power": "189,062,767189,062,767",
       "vote_power_pct": "2.22%2.19%%",
       "change_24h_pct": "0.31%",
       "reward_rate": "0.0937.",
@@ -121,7 +121,7 @@
     {
       "rank": "14",
       "name": "FlareFi",
-      "vote_power": "184,888,951184,888,951",
+      "vote_power": "184,888,960184,888,960",
       "vote_power_pct": "2.17%2.19%%",
       "change_24h_pct": "0.73%",
       "reward_rate": ".",
@@ -130,7 +130,7 @@
     {
       "rank": "15",
       "name": "Solarius",
-      "vote_power": "180,549,931180,549,931",
+      "vote_power": "180,550,073180,550,073",
       "vote_power_pct": "2.12%2.13%%",
       "change_24h_pct": "0.06%",
       "reward_rate": "0.0950.",
@@ -148,25 +148,25 @@
     {
       "rank": "17",
       "name": "FTSO London",
-      "vote_power": "162,224,970162,224,970",
+      "vote_power": "162,214,224162,214,224",
       "vote_power_pct": "1.90%1.94%%",
-      "change_24h_pct": "1.13%",
+      "change_24h_pct": "1.12%",
       "reward_rate": "0.0841.",
       "registered": "Yes"
     },
     {
       "rank": "18",
       "name": "Lena Instruments",
-      "vote_power": "149,964,187149,964,187",
+      "vote_power": "149,964,781149,964,781",
       "vote_power_pct": "1.76%1.79%%",
-      "change_24h_pct": "0.40%",
+      "change_24h_pct": "0.39%",
       "reward_rate": "0.0486.",
       "registered": "Yes"
     },
     {
       "rank": "19",
       "name": "Use Your Spark",
-      "vote_power": "149,706,683149,706,683",
+      "vote_power": "149,707,033149,707,033",
       "vote_power_pct": "1.76%1.72%%",
       "change_24h_pct": "0.29%",
       "reward_rate": "0.0927.",
@@ -175,7 +175,7 @@
     {
       "rank": "20",
       "name": "Aureus Ox",
-      "vote_power": "145,801,398145,801,398",
+      "vote_power": "145,801,748145,801,748",
       "vote_power_pct": "1.71%1.72%%",
       "change_24h_pct": "0.03%",
       "reward_rate": "0.0950.",
@@ -229,7 +229,7 @@
     {
       "rank": "26",
       "name": "Defi Oracles",
-      "vote_power": "93,359,33693,359,336",
+      "vote_power": "93,359,37493,359,374",
       "vote_power_pct": "1.09%1.08%%",
       "change_24h_pct": "1.94%",
       "reward_rate": "0.0986.",
@@ -238,7 +238,7 @@
     {
       "rank": "27",
       "name": "Xdrops Oracle",
-      "vote_power": "85,769,12185,769,121",
+      "vote_power": "85,769,24385,769,243",
       "vote_power_pct": "1.01%1.15%%",
       "change_24h_pct": "2.24%",
       "reward_rate": "0.0902.",
@@ -292,7 +292,7 @@
     {
       "rank": "33",
       "name": "4DadsFTSO",
-      "vote_power": "59,980,36759,980,367",
+      "vote_power": "59,980,37459,980,374",
       "vote_power_pct": "0.70%0.72%%",
       "change_24h_pct": "5.53%",
       "reward_rate": "0.0657.",
@@ -364,7 +364,7 @@
     {
       "rank": "41",
       "name": "Tailwind FTSO",
-      "vote_power": "45,048,16245,048,162",
+      "vote_power": "45,048,28445,048,284",
       "vote_power_pct": "0.53%0.51%%",
       "change_24h_pct": "3.41%",
       "reward_rate": "0.1057.",
@@ -373,7 +373,7 @@
     {
       "rank": "42",
       "name": "Aimlezz",
-      "vote_power": "44,313,62444,313,624",
+      "vote_power": "44,313,63044,313,630",
       "vote_power_pct": "0.52%0.52%%",
       "change_24h_pct": "0.24%",
       "reward_rate": "0.1039.",
