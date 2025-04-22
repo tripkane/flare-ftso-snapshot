@@ -18,24 +18,20 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-# Helpers for extracting numbers and decimals
+# Helper to extract integer sequences
 
 def extract_numbers(text):
-    """Extract integer sequences from text, preserving commas."""
     return re.findall(r"\d[\d,]*", text)
 
-def extract_decimal(text):
-    """Extract a floating-point number from text."""
-    m = re.search(r"\d+\.\d+", text)
-    if m:
-        return m.group(0)
-    # Fallback: remove non-digit and non-dot characters
-    cleaned = re.sub(r"[^0-9.]", "", text)
-    return cleaned
+# Helper to extract decimal numbers
 
-# Scrape flaremetrics.io (Songbird network)
+def extract_decimal(text):
+    m = re.search(r"\d+\.\d+", text)
+    return m.group(0) if m else re.sub(r"[^0-9.]", "", text)
+
+# Scrape flaremetrics.io main Flare network stats
 def scrape_flaremetrics(driver):
-    url = "https://flaremetrics.io"
+    url = "https://flaremetrics.io/flare"
     driver.get(url)
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -53,20 +49,23 @@ def scrape_flaremetrics(driver):
             registered = cols[6].get_text(strip=True)
 
             # Extract vote power and locked vote power
-            vote_nums = extract_numbers(raw_vote)
-            if len(vote_nums) >= 2:
-                vote_power = vote_nums[0]
-                vote_power_locked = vote_nums[1]
-            else:
-                m = re.match(r"^([0-9,]+?)\1$", raw_vote)
+            nums = extract_numbers(raw_vote)
+            if len(nums) >= 2:
+                vote_power, vote_power_locked = nums[0], nums[1]
+            elif len(nums) == 1:
+                raw = nums[0]
+                m = re.match(r"^(.+?)\1$", raw)
                 if m:
-                    vote_power = m.group(1)
-                    vote_power_locked = m.group(1)
+                    vote_power = vote_power_locked = m.group(1)
                 else:
-                    vote_power = vote_nums[0] if vote_nums else ''
-                    vote_power_locked = ''
+                    # Fallback: split string in half
+                    half = len(raw) // 2
+                    vote_power = raw[:half]
+                    vote_power_locked = raw[half:]
+            else:
+                vote_power = vote_power_locked = ''
 
-            # Extract vote power percentages
+            # Extract percentages
             pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
             vote_power_pct = pcts[0] if len(pcts) > 0 else ''
             vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
@@ -75,7 +74,7 @@ def scrape_flaremetrics(driver):
             change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
             change_24h_pct = change_pcts[0] if change_pcts else ''
 
-            # Reward rate as decimal
+            # Reward rate
             reward_rate = extract_decimal(raw_reward)
 
             providers.append({
