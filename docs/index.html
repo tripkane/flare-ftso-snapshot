@@ -71,6 +71,20 @@
     label {
       font-weight: bold;
     }
+
+    #controls select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      background: #272727;
+      border: 1px solid #333;
+      border-radius: 5px;
+      color: #eee;
+    }
+
+    #controls input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
   </style>
 </head>
 
@@ -161,26 +175,26 @@
       });
     }
 
-    function renderCharts() {
-      const filteredSnapshots = getFilteredSnapshots();
-      renderInvestigativeChart(filteredSnapshots);
-      renderLeaderboard();
-    }
-
     function getFilteredSnapshots() {
       const selectedProviders = Array.from(document.getElementById('providerSelect').selectedOptions).map(opt => opt.value);
-      const minRange = parseFloat(document.getElementById('minRange').value);
-      const maxRange = parseFloat(document.getElementById('maxRange').value);
+      const minRange = parseFloat(document.getElementById('minRange').value) / 100;
+      const maxRange = parseFloat(document.getElementById('maxRange').value) / 100;
       const registeredOnly = document.getElementById('registeredOnly').checked;
 
       return snapshots.map(snapshot => ({
         date: snapshot.date,
         providers: snapshot.providers.filter(provider => {
-          const votePower = parseFloat(provider.vote_power_pct) * 100;
+          const votePower = parseFloat(provider.vote_power_pct);
           const isRegistered = registeredOnly ? provider.registered : true;
           return selectedProviders.includes(provider.name) && votePower >= minRange && votePower <= maxRange && isRegistered;
         })
       }));
+    }
+
+    function renderCharts() {
+      const filteredSnapshots = getFilteredSnapshots();
+      renderInvestigativeChart(filteredSnapshots);
+      renderLeaderboard();
     }
 
     function renderInvestigativeChart(filteredSnapshots) {
@@ -189,8 +203,11 @@
       const datasets = filteredSnapshots.flatMap(snapshot =>
         snapshot.providers.map(provider => ({
           label: provider.name,
-          data: snapshot.providers.map(p => parseFloat(p.vote_power_pct) * 100),
-          borderColor: 'cyan',
+          data: filteredSnapshots.map(s => {
+            const p = s.providers.find(x => x.name === provider.name);
+            return p ? parseFloat(p.vote_power_pct) * 100 : null;
+          }),
+          borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
           fill: false
         }))
       );
@@ -205,7 +222,10 @@
 
     function renderLeaderboard() {
       const ctx = document.getElementById('leaderboardChart').getContext('2d');
-      const leaderboard = calculateLeaderboard();
+      const minRange = parseFloat(document.getElementById('minRange').value) / 100;
+      const maxRange = parseFloat(document.getElementById('maxRange').value) / 100;
+
+      const leaderboard = calculateLeaderboard(minRange, maxRange);
 
       if (leaderboardChart) leaderboardChart.destroy();
       leaderboardChart = new Chart(ctx, {
@@ -222,15 +242,18 @@
       });
     }
 
-    function calculateLeaderboard() {
+    function calculateLeaderboard(minRange, maxRange) {
       const leaderboard = {};
       snapshots.forEach(snapshot => {
         snapshot.providers.forEach(provider => {
-          if (!leaderboard[provider.name]) {
-            leaderboard[provider.name] = { totalRewardRate: 0, count: 0 };
+          const votePower = parseFloat(provider.vote_power_pct);
+          if (votePower >= minRange && votePower <= maxRange) {
+            if (!leaderboard[provider.name]) {
+              leaderboard[provider.name] = { totalRewardRate: 0, count: 0 };
+            }
+            leaderboard[provider.name].totalRewardRate += parseFloat(provider.reward_rate) * 100;
+            leaderboard[provider.name].count++;
           }
-          leaderboard[provider.name].totalRewardRate += parseFloat(provider.reward_rate) * 100;
-          leaderboard[provider.name].count++;
         });
       });
 
