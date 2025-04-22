@@ -1,3 +1,8 @@
+try:
+    import micropip
+except ImportError:
+    pass
+
 import json
 import datetime
 import os
@@ -29,46 +34,50 @@ def extract_decimal(text):
 
 # Scrape flaremetrics.io main Flare network stats
 def scrape_flaremetrics(driver):
-    """Scrape flaremetrics.io Flare network stats using BeautifulSoup."""
     url = "https://flaremetrics.io/flare"
     driver.get(url)
-    time.sleep(5)  # wait for JS
+    time.sleep(5)  # allow JS to render table fully
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    # Iterate table rows
+    # Table columns: rank, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
     for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
         if len(cols) < 7:
             continue
         rank = cols[0].get_text(strip=True)
         name = cols[1].get_text(strip=True)
-        # Vote power extraction via spans
-        vote_cell = cols[2]
-        spans = vote_cell.find_all('span')
-        if len(spans) >= 2:
-            vote_power = spans[0].get_text(strip=True)
-            vote_power_locked = spans[1].get_text(strip=True)
-        else:
-            text = vote_cell.get_text(strip=True)
-            nums = extract_numbers(text)
-            vote_power = nums[0] if nums else ''
-            vote_power_locked = nums[1] if len(nums) > 1 else ''
-        # Percentages and other cells
-        vote_power_pct = cols[3].get_text(strip=True)
-        vote_power_pct_locked = ''
-        pct_spans = cols[3].find_all('span')
-        if len(pct_spans) >= 2:
-            vote_power_pct = pct_spans[0].get_text(strip=True)
-            vote_power_pct_locked = pct_spans[1].get_text(strip=True)
-        change_24h_pct = cols[4].get_text(strip=True)
-        reward_cell = cols[5]
-        # reward rate may include span for tooltip
-        reward_spans = reward_cell.find_all('span')
-        if reward_spans:
-            reward_rate = reward_spans[0].get_text(strip=True)
-        else:
-            reward_rate = reward_cell.get_text(strip=True)
+        raw_vote = cols[2].get_text("", strip=True)
+        raw_vote_pct = cols[3].get_text("", strip=True)
+        raw_change_24h = cols[4].get_text("", strip=True)
+        raw_reward = cols[5].get_text("", strip=True)
         registered = cols[6].get_text(strip=True)
+
+        # Extract vote power and locked vote power
+        nums = extract_numbers(raw_vote)
+        if len(nums) >= 2:
+            vote_power, vote_power_locked = nums[0], nums[1]
+        elif len(nums) == 1:
+            raw = nums[0]
+            # Attempt to split identical or similar halves
+            mid = len(raw) // 2
+            vp1 = raw[:mid]
+            vp2 = raw[mid:]
+            vote_power, vote_power_locked = vp1, vp2
+        else:
+            vote_power = vote_power_locked = ''
+
+        # Extract vote power percentages
+        pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
+        vote_power_pct = pcts[0] if len(pcts) > 0 else ''
+        vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
+
+        # 24h change percent
+        change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
+        change_24h_pct = change_pcts[0] if change_pcts else ''
+
+        # Reward rate
+        reward_rate = extract_decimal(raw_reward)
+
         providers.append({
             "rank": rank,
             "name": name,
