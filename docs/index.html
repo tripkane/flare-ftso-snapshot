@@ -7,7 +7,6 @@
   <title>FTSO Flare Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* General styling */
     body {
       font-family: Arial, sans-serif;
       background: #121212;
@@ -18,14 +17,9 @@
 
     header {
       text-align: center;
-      padding: 1.5rem;
+      padding: 1rem;
       background: #181818;
       border-bottom: 1px solid #222;
-    }
-
-    header img {
-      max-width: 150px;
-      margin-bottom: 1rem;
     }
 
     .container {
@@ -60,28 +54,6 @@
       border-radius: 8px;
     }
 
-    .chart-container table {
-      width: 100%;
-      margin-top: 1rem;
-      border-collapse: collapse;
-      color: #eee;
-    }
-
-    .chart-container table th,
-    .chart-container table td {
-      padding: 0.5rem;
-      border: 1px solid #333;
-      text-align: center;
-    }
-
-    .chart-container table th {
-      background: #232323;
-    }
-
-    .chart-container table tr:hover {
-      background: #222;
-    }
-
     .slider-container {
       display: flex;
       align-items: center;
@@ -99,45 +71,11 @@
     label {
       font-weight: bold;
     }
-
-    #controls {
-      margin-bottom: 2rem;
-      padding: 1rem;
-      border-radius: 8px;
-      background: #202026;
-    }
-
-    #controls select {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.5rem;
-      background: #272727;
-      border: 1px solid #333;
-      border-radius: 5px;
-      color: #eee;
-    }
-
-    #controls input[type="checkbox"] {
-      margin-right: 0.5rem;
-    }
-
-    .flare-green {
-      background: #00E5FF;
-    }
-
-    .flare-blue {
-      background: #003E7E;
-    }
-
-    .flare-orange {
-      background: #FF7300;
-    }
   </style>
 </head>
 
 <body>
   <header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Flare_Network_Logo.png" alt="Flare Logo" />
     <h1>FTSO Flare Dashboard</h1>
   </header>
 
@@ -146,10 +84,9 @@
     <section class="instructions">
       <h2>Instructions</h2>
       <ul>
-        <li>Use the "Select Providers" dropdown to choose one or more providers for analysis.</li>
-        <li>Adjust the voting power slider to filter providers based on their vote power percentage range.</li>
-        <li>The "Registered Only" filter limits the data to only registered providers.</li>
-        <li>The Leaderboard shows the top 10 providers based on their 30-day average reward rate.</li>
+        <li>Select one or more providers to analyze their performance.</li>
+        <li>Use the voting power slider to set a range of interest.</li>
+        <li>Enable the "Registered Only" filter to include only registered providers.</li>
       </ul>
     </section>
 
@@ -182,34 +119,36 @@
       <div class="chart-container">
         <h2>Investigative Chart</h2>
         <canvas id="investigativeChart"></canvas>
-        <table id="investigativeTable"></table>
       </div>
 
       <!-- Leaderboard Chart -->
       <div class="chart-container">
         <h2>Leaderboard</h2>
         <canvas id="leaderboardChart"></canvas>
-        <table id="leaderboardTable"></table>
       </div>
     </section>
   </main>
 
   <script>
-    const snapshots = [];
+    let snapshots = [];
     let providers = [];
     let investigativeChart, leaderboardChart;
 
     async function loadData() {
-      // Fetch snapshot data from the repository
-      const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
-      const files = await res.json();
-      const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
-      const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
-      snapshots.push(...data.map(s => ({ date: s.date, providers: s.providers })));
+      try {
+        const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
+        const files = await res.json();
+        const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
+        const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
+        snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
 
-      providers = [...new Set(snapshots.flatMap(s => s.providers.map(p => p.name)))];
-      populateProviderSelect();
-      renderCharts();
+        providers = [...new Set(snapshots.flatMap(s => s.providers.map(p => p.name)))];
+        populateProviderSelect();
+        renderCharts();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please try again later.');
+      }
     }
 
     function populateProviderSelect() {
@@ -223,22 +162,100 @@
     }
 
     function renderCharts() {
-      // Investigative Chart and Leaderboard rendering logic goes here
-      // (including filtering and data preparation logic)
+      const filteredSnapshots = getFilteredSnapshots();
+      renderInvestigativeChart(filteredSnapshots);
+      renderLeaderboard();
     }
 
-    // Slider event handlers
+    function getFilteredSnapshots() {
+      const selectedProviders = Array.from(document.getElementById('providerSelect').selectedOptions).map(opt => opt.value);
+      const minRange = parseFloat(document.getElementById('minRange').value);
+      const maxRange = parseFloat(document.getElementById('maxRange').value);
+      const registeredOnly = document.getElementById('registeredOnly').checked;
+
+      return snapshots.map(snapshot => ({
+        date: snapshot.date,
+        providers: snapshot.providers.filter(provider => {
+          const votePower = parseFloat(provider.vote_power_pct) * 100;
+          const isRegistered = registeredOnly ? provider.registered : true;
+          return selectedProviders.includes(provider.name) && votePower >= minRange && votePower <= maxRange && isRegistered;
+        })
+      }));
+    }
+
+    function renderInvestigativeChart(filteredSnapshots) {
+      const ctx = document.getElementById('investigativeChart').getContext('2d');
+      const labels = filteredSnapshots.map(s => s.date);
+      const datasets = filteredSnapshots.flatMap(snapshot =>
+        snapshot.providers.map(provider => ({
+          label: provider.name,
+          data: snapshot.providers.map(p => parseFloat(p.vote_power_pct) * 100),
+          borderColor: 'cyan',
+          fill: false
+        }))
+      );
+
+      if (investigativeChart) investigativeChart.destroy();
+      investigativeChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: { responsive: true }
+      });
+    }
+
+    function renderLeaderboard() {
+      const ctx = document.getElementById('leaderboardChart').getContext('2d');
+      const leaderboard = calculateLeaderboard();
+
+      if (leaderboardChart) leaderboardChart.destroy();
+      leaderboardChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: leaderboard.map(entry => entry.name),
+          datasets: [{
+            label: '30-Day Avg Reward Rate (%)',
+            data: leaderboard.map(entry => entry.averageRewardRate),
+            backgroundColor: 'orange'
+          }]
+        },
+        options: { responsive: true }
+      });
+    }
+
+    function calculateLeaderboard() {
+      const leaderboard = {};
+      snapshots.forEach(snapshot => {
+        snapshot.providers.forEach(provider => {
+          if (!leaderboard[provider.name]) {
+            leaderboard[provider.name] = { totalRewardRate: 0, count: 0 };
+          }
+          leaderboard[provider.name].totalRewardRate += parseFloat(provider.reward_rate) * 100;
+          leaderboard[provider.name].count++;
+        });
+      });
+
+      return Object.keys(leaderboard)
+        .map(name => ({
+          name,
+          averageRewardRate: leaderboard[name].totalRewardRate / leaderboard[name].count
+        }))
+        .sort((a, b) => b.averageRewardRate - a.averageRewardRate)
+        .slice(0, 10);
+    }
+
     document.getElementById('minRange').addEventListener('input', () => {
       document.getElementById('minVotePower').textContent = document.getElementById('minRange').value;
       renderCharts();
     });
+
     document.getElementById('maxRange').addEventListener('input', () => {
       document.getElementById('maxVotePower').textContent = document.getElementById('maxRange').value;
       renderCharts();
     });
 
-    // Checkbox event handler
     document.getElementById('registeredOnly').addEventListener('change', renderCharts);
+
+    document.getElementById('providerSelect').addEventListener('change', renderCharts);
 
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
