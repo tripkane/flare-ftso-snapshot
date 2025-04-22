@@ -1,4 +1,824 @@
 {
   "date": "2025-04-22",
-  "providers": []
+  "providers": [
+    {
+      "rank": "1",
+      "name": "Bifrost Wallet",
+      "vote_power": "1,613,312,9081,613,312,908Locked Vote Power",
+      "vote_power_pct": "3.60%3.61%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "0.0313Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "2",
+      "name": "Flare.Space",
+      "vote_power": "1,251,455,3061,251,455,306Locked Vote Power",
+      "vote_power_pct": "2.79%2.76%Locked Vote Power %",
+      "change_24h_pct": "0.12%",
+      "reward_rate": "0.0491Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "3",
+      "name": "AlphaOracle",
+      "vote_power": "1,119,879,9051,119,879,905Locked Vote Power",
+      "vote_power_pct": "2.50%2.49%Locked Vote Power %",
+      "change_24h_pct": "0.55%",
+      "reward_rate": "0.0543Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "4",
+      "name": "Flare Oracle",
+      "vote_power": "1,040,998,5171,040,998,517Locked Vote Power",
+      "vote_power_pct": "2.32%2.32%Locked Vote Power %",
+      "change_24h_pct": "0.01%",
+      "reward_rate": "0.0471Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "5",
+      "name": "NORTSO",
+      "vote_power": "1,033,875,9241,033,875,924Locked Vote Power",
+      "vote_power_pct": "2.31%2.30%Locked Vote Power %",
+      "change_24h_pct": "0.30%",
+      "reward_rate": "0.0540Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "6",
+      "name": "Atlas TSO",
+      "vote_power": "1,031,147,4761,031,147,476Locked Vote Power",
+      "vote_power_pct": "2.30%2.30%Locked Vote Power %",
+      "change_24h_pct": "0.10%",
+      "reward_rate": "0.0546Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "7",
+      "name": "Aternety",
+      "vote_power": "887,959,581887,959,581Locked Vote Power",
+      "vote_power_pct": "1.98%1.98%Locked Vote Power %",
+      "change_24h_pct": "0.19%",
+      "reward_rate": "0.0548Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "8",
+      "name": "EvolveFTSO",
+      "vote_power": "851,995,879851,995,879Locked Vote Power",
+      "vote_power_pct": "1.90%1.87%Locked Vote Power %",
+      "change_24h_pct": "2.04%",
+      "reward_rate": "0.0566Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "9",
+      "name": "EDPFTSO",
+      "vote_power": "851,814,820851,814,820Locked Vote Power",
+      "vote_power_pct": "1.90%1.91%Locked Vote Power %",
+      "change_24h_pct": "0.52%",
+      "reward_rate": "0.0590Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "10",
+      "name": "FlareFi",
+      "vote_power": "783,183,428783,183,428Locked Vote Power",
+      "vote_power_pct": "1.75%1.79%Locked Vote Power %",
+      "change_24h_pct": "1.46%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "11",
+      "name": "Solarius",
+      "vote_power": "754,860,912754,860,912Locked Vote Power",
+      "vote_power_pct": "1.69%1.68%Locked Vote Power %",
+      "change_24h_pct": "0.28%",
+      "reward_rate": "0.0561Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "12",
+      "name": "Flare Dienst",
+      "vote_power": "714,198,935714,198,935Locked Vote Power",
+      "vote_power_pct": "1.59%1.61%Locked Vote Power %",
+      "change_24h_pct": "0.09%",
+      "reward_rate": "0.0513Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "13",
+      "name": "A-FTSO",
+      "vote_power": "651,998,038651,998,038Locked Vote Power",
+      "vote_power_pct": "1.46%1.52%Locked Vote Power %",
+      "change_24h_pct": "4.33%",
+      "reward_rate": "0.0336Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "14",
+      "name": "Flare Beacon",
+      "vote_power": "632,061,210632,061,210Locked Vote Power",
+      "vote_power_pct": "1.41%1.41%Locked Vote Power %",
+      "change_24h_pct": "0.15%",
+      "reward_rate": "0.0558Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "15",
+      "name": "Envision",
+      "vote_power": "608,748,325608,748,325Locked Vote Power",
+      "vote_power_pct": "1.36%1.36%Locked Vote Power %",
+      "change_24h_pct": "0.05%",
+      "reward_rate": "0.0545Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "16",
+      "name": "Stakeway",
+      "vote_power": "599,427,158599,427,158Locked Vote Power",
+      "vote_power_pct": "1.34%1.37%Locked Vote Power %",
+      "change_24h_pct": "2.93%",
+      "reward_rate": "0.0545Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "17",
+      "name": "Aureus Ox",
+      "vote_power": "597,767,939597,767,939Locked Vote Power",
+      "vote_power_pct": "1.33%1.34%Locked Vote Power %",
+      "change_24h_pct": "0.04%",
+      "reward_rate": "0.0570Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "18",
+      "name": "AU",
+      "vote_power": "562,105,358562,105,358Locked Vote Power",
+      "vote_power_pct": "1.25%1.25%Locked Vote Power %",
+      "change_24h_pct": "0.41%",
+      "reward_rate": "0.0515Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "19",
+      "name": "ACDTftso",
+      "vote_power": "554,710,445554,710,445Locked Vote Power",
+      "vote_power_pct": "1.24%1.20%Locked Vote Power %",
+      "change_24h_pct": "3.25%",
+      "reward_rate": "0.0610Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "20",
+      "name": "FTSO Plus",
+      "vote_power": "499,629,212499,629,212Locked Vote Power",
+      "vote_power_pct": "1.12%1.11%Locked Vote Power %",
+      "change_24h_pct": "0.24%",
+      "reward_rate": "0.0584Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "21",
+      "name": "FTSO PARIS",
+      "vote_power": "495,664,612495,664,612Locked Vote Power",
+      "vote_power_pct": "1.11%1.13%Locked Vote Power %",
+      "change_24h_pct": "0.20%",
+      "reward_rate": "0.0604Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "22",
+      "name": "0x5a7f...b223ae",
+      "vote_power": "463,897,822463,897,822Locked Vote Power",
+      "vote_power_pct": "1.04%1.10%Locked Vote Power %",
+      "change_24h_pct": "5.10%",
+      "reward_rate": "0.0713Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "23",
+      "name": "Bushido FTSO",
+      "vote_power": "459,817,007459,817,007Locked Vote Power",
+      "vote_power_pct": "1.03%1.00%Locked Vote Power %",
+      "change_24h_pct": "2.08%",
+      "reward_rate": "0.0613Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "24",
+      "name": "Chainbase Staking",
+      "vote_power": "447,451,301447,451,301Locked Vote Power",
+      "vote_power_pct": "1.00%0.99%Locked Vote Power %",
+      "change_24h_pct": "0.69%",
+      "reward_rate": "0.0458Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "25",
+      "name": "PRICEKRAKEN",
+      "vote_power": "398,720,999398,720,999Locked Vote Power",
+      "vote_power_pct": "0.89%0.93%Locked Vote Power %",
+      "change_24h_pct": "5.81%",
+      "reward_rate": "0.0632Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "26",
+      "name": "Oracle Daemon",
+      "vote_power": "377,415,872377,415,872Locked Vote Power",
+      "vote_power_pct": "0.84%0.85%Locked Vote Power %",
+      "change_24h_pct": "0.06%",
+      "reward_rate": "0.0533Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "27",
+      "name": "Use Your Spark",
+      "vote_power": "356,306,129356,306,129Locked Vote Power",
+      "vote_power_pct": "0.80%0.56%Locked Vote Power %",
+      "change_24h_pct": "0.02%",
+      "reward_rate": "0.0639Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "28",
+      "name": "LightFTSO",
+      "vote_power": "348,665,948348,665,948Locked Vote Power",
+      "vote_power_pct": "0.78%0.78%Locked Vote Power %",
+      "change_24h_pct": "0.18%",
+      "reward_rate": "0.0571Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "29",
+      "name": "FTSO London",
+      "vote_power": "333,678,287333,678,287Locked Vote Power",
+      "vote_power_pct": "0.74%0.84%Locked Vote Power %",
+      "change_24h_pct": "2.62%",
+      "reward_rate": "0.0519Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "30",
+      "name": "Ivy Oracle",
+      "vote_power": "311,657,162311,657,162Locked Vote Power",
+      "vote_power_pct": "0.70%0.69%Locked Vote Power %",
+      "change_24h_pct": "0.33%",
+      "reward_rate": "0.0582Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "31",
+      "name": "Google Cloud",
+      "vote_power": "239,877,279239,877,279Locked Vote Power",
+      "vote_power_pct": "0.54%0.53%Locked Vote Power %",
+      "change_24h_pct": "2.08%",
+      "reward_rate": "0.0619Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "32",
+      "name": "Sun-Dara",
+      "vote_power": "211,436,755211,436,755Locked Vote Power",
+      "vote_power_pct": "0.47%0.43%Locked Vote Power %",
+      "change_24h_pct": "12.05%",
+      "reward_rate": "0.0636Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "33",
+      "name": "AFOracle",
+      "vote_power": "208,342,641208,342,641Locked Vote Power",
+      "vote_power_pct": "0.47%0.46%Locked Vote Power %",
+      "change_24h_pct": "1.16%",
+      "reward_rate": "0.0641Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "34",
+      "name": "Lena Instruments",
+      "vote_power": "197,283,123197,283,123Locked Vote Power",
+      "vote_power_pct": "0.44%0.45%Locked Vote Power %",
+      "change_24h_pct": "1.18%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "35",
+      "name": "DataVector",
+      "vote_power": "188,344,481188,344,481Locked Vote Power",
+      "vote_power_pct": "0.42%0.42%Locked Vote Power %",
+      "change_24h_pct": "1.18%",
+      "reward_rate": "0.0660Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "36",
+      "name": "Ugly Kitty",
+      "vote_power": "187,628,228187,628,228Locked Vote Power",
+      "vote_power_pct": "0.42%0.42%Locked Vote Power %",
+      "change_24h_pct": "0.56%",
+      "reward_rate": "0.0661Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "37",
+      "name": "SolidiFi FTSO",
+      "vote_power": "182,714,234182,714,234Locked Vote Power",
+      "vote_power_pct": "0.41%0.53%Locked Vote Power %",
+      "change_24h_pct": "25.14%",
+      "reward_rate": "0.0581Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "38",
+      "name": "Poseidon FTSO",
+      "vote_power": "174,662,724174,662,724Locked Vote Power",
+      "vote_power_pct": "0.39%0.26%Locked Vote Power %",
+      "change_24h_pct": "18.93%",
+      "reward_rate": "0.0752Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "39",
+      "name": "0x1264...90b8a2",
+      "vote_power": "172,290,836172,290,836Locked Vote Power",
+      "vote_power_pct": "0.38%0.27%Locked Vote Power %",
+      "change_24h_pct": "37.78%",
+      "reward_rate": "0.0798Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "40",
+      "name": "FTSO EU",
+      "vote_power": "171,173,100171,173,100Locked Vote Power",
+      "vote_power_pct": "0.38%0.37%Locked Vote Power %",
+      "change_24h_pct": "1.67%",
+      "reward_rate": "0.0616Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "41",
+      "name": "4DadsFTSO",
+      "vote_power": "166,141,509166,141,509Locked Vote Power",
+      "vote_power_pct": "0.37%0.40%Locked Vote Power %",
+      "change_24h_pct": "0.58%",
+      "reward_rate": "0.0560Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "42",
+      "name": "A41",
+      "vote_power": "165,131,378165,131,378Locked Vote Power",
+      "vote_power_pct": "0.37%0.37%Locked Vote Power %",
+      "change_24h_pct": "0.18%",
+      "reward_rate": "0.0635Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "43",
+      "name": "Scintilla",
+      "vote_power": "163,087,295163,087,295Locked Vote Power",
+      "vote_power_pct": "0.36%0.36%Locked Vote Power %",
+      "change_24h_pct": "0.23%",
+      "reward_rate": "0.0631Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "44",
+      "name": "Defi Oracles",
+      "vote_power": "149,541,246149,541,246Locked Vote Power",
+      "vote_power_pct": "0.33%0.32%Locked Vote Power %",
+      "change_24h_pct": "2.16%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "45",
+      "name": "Burst FTSO",
+      "vote_power": "133,834,859133,834,859Locked Vote Power",
+      "vote_power_pct": "0.30%0.29%Locked Vote Power %",
+      "change_24h_pct": "2.81%",
+      "reward_rate": "0.0675Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "46",
+      "name": "Flaris",
+      "vote_power": "127,636,669127,636,669Locked Vote Power",
+      "vote_power_pct": "0.28%0.31%Locked Vote Power %",
+      "change_24h_pct": "5.99%",
+      "reward_rate": "0.0657Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "47",
+      "name": "Knot Nodes",
+      "vote_power": "120,596,692120,596,692Locked Vote Power",
+      "vote_power_pct": "0.27%0.28%Locked Vote Power %",
+      "change_24h_pct": "3.29%",
+      "reward_rate": "0.0389Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "48",
+      "name": "WitterFTSO",
+      "vote_power": "116,338,004116,338,004Locked Vote Power",
+      "vote_power_pct": "0.26%0.26%Locked Vote Power %",
+      "change_24h_pct": "0.65%",
+      "reward_rate": "0.0673Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "49",
+      "name": "FTSOCAN",
+      "vote_power": "114,420,030114,420,030Locked Vote Power",
+      "vote_power_pct": "0.26%0.26%Locked Vote Power %",
+      "change_24h_pct": "0.48%",
+      "reward_rate": "0.0626Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "50",
+      "name": "True FTSO",
+      "vote_power": "111,644,750111,644,750Locked Vote Power",
+      "vote_power_pct": "0.25%0.23%Locked Vote Power %",
+      "change_24h_pct": "9.92%",
+      "reward_rate": "0.0709Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "51",
+      "name": "FTSO UK",
+      "vote_power": "110,331,324110,331,324Locked Vote Power",
+      "vote_power_pct": "0.25%0.25%Locked Vote Power %",
+      "change_24h_pct": "0.11%",
+      "reward_rate": "0.0685Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "52",
+      "name": "Luganodes",
+      "vote_power": "107,074,876107,074,876Locked Vote Power",
+      "vote_power_pct": "0.24%0.24%Locked Vote Power %",
+      "change_24h_pct": "1.55%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "53",
+      "name": "InGen.FTSO",
+      "vote_power": "106,819,470106,819,470Locked Vote Power",
+      "vote_power_pct": "0.24%0.25%Locked Vote Power %",
+      "change_24h_pct": "5.40%",
+      "reward_rate": "0.0653Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "54",
+      "name": "uGaenn",
+      "vote_power": "104,915,581104,915,581Locked Vote Power",
+      "vote_power_pct": "0.23%0.23%Locked Vote Power %",
+      "change_24h_pct": "0.47%",
+      "reward_rate": "0.0690Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "55",
+      "name": "Restake",
+      "vote_power": "102,218,506102,218,506Locked Vote Power",
+      "vote_power_pct": "0.23%0.30%Locked Vote Power %",
+      "change_24h_pct": "18.99%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "56",
+      "name": "Mickey B Fresh",
+      "vote_power": "102,187,617102,187,617Locked Vote Power",
+      "vote_power_pct": "0.23%0.22%Locked Vote Power %",
+      "change_24h_pct": "3.48%",
+      "reward_rate": "0.0704Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "57",
+      "name": "Ankr",
+      "vote_power": "101,151,615101,151,615Locked Vote Power",
+      "vote_power_pct": "0.23%0.25%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "0.0204Avg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "58",
+      "name": "InfStones",
+      "vote_power": "101,126,077101,126,077Locked Vote Power",
+      "vote_power_pct": "0.23%0.23%Locked Vote Power %",
+      "change_24h_pct": "0.01%",
+      "reward_rate": "0.0416Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "59",
+      "name": "Xdrops Oracle",
+      "vote_power": "100,445,718100,445,718Locked Vote Power",
+      "vote_power_pct": "0.22%0.22%Locked Vote Power %",
+      "change_24h_pct": "0.45%",
+      "reward_rate": "0.0690Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "60",
+      "name": "Tailwind FTSO",
+      "vote_power": "95,544,51595,544,515Locked Vote Power",
+      "vote_power_pct": "0.21%0.14%Locked Vote Power %",
+      "change_24h_pct": "54.18%",
+      "reward_rate": "0.0749Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "61",
+      "name": "HEWG",
+      "vote_power": "95,541,18695,541,186Locked Vote Power",
+      "vote_power_pct": "0.21%0.23%Locked Vote Power %",
+      "change_24h_pct": "6.41%",
+      "reward_rate": "0.0661Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "62",
+      "name": "Kiln",
+      "vote_power": "92,338,40792,338,407Locked Vote Power",
+      "vote_power_pct": "0.21%0.44%Locked Vote Power %",
+      "change_24h_pct": "20.28%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "63",
+      "name": "0xf697...f52835",
+      "vote_power": "90,081,06690,081,066Locked Vote Power",
+      "vote_power_pct": "0.20%0.20%Locked Vote Power %",
+      "change_24h_pct": "2.29%",
+      "reward_rate": "0.0714Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "64",
+      "name": "Last Oracle",
+      "vote_power": "88,095,63788,095,637Locked Vote Power",
+      "vote_power_pct": "0.20%0.11%Locked Vote Power %",
+      "change_24h_pct": "16.32%",
+      "reward_rate": "0.1346Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "65",
+      "name": "O1 FTSO",
+      "vote_power": "86,172,12286,172,122Locked Vote Power",
+      "vote_power_pct": "0.19%0.19%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "66",
+      "name": "African Proofs",
+      "vote_power": "81,613,41781,613,417Locked Vote Power",
+      "vote_power_pct": "0.18%0.18%Locked Vote Power %",
+      "change_24h_pct": "2.18%",
+      "reward_rate": "0.0703Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "67",
+      "name": "Aimlezz",
+      "vote_power": "77,446,32477,446,324Locked Vote Power",
+      "vote_power_pct": "0.17%0.17%Locked Vote Power %",
+      "change_24h_pct": "1.00%",
+      "reward_rate": "0.0704Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "68",
+      "name": "FlareFTSO",
+      "vote_power": "64,493,81064,493,810Locked Vote Power",
+      "vote_power_pct": "0.14%0.15%Locked Vote Power %",
+      "change_24h_pct": "2.59%",
+      "reward_rate": "0.0302Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "69",
+      "name": "Comfy Nodes",
+      "vote_power": "59,109,96259,109,962Locked Vote Power",
+      "vote_power_pct": "0.13%0.10%Locked Vote Power %",
+      "change_24h_pct": "4.89%",
+      "reward_rate": "0.0806Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "70",
+      "name": "sToadz FTSO",
+      "vote_power": "58,137,80058,137,800Locked Vote Power",
+      "vote_power_pct": "0.13%0.12%Locked Vote Power %",
+      "change_24h_pct": "4.97%",
+      "reward_rate": "0.0439Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "71",
+      "name": "0xf141...c6bd49",
+      "vote_power": "53,074,98453,074,984Locked Vote Power",
+      "vote_power_pct": "0.12%0.03%Locked Vote Power %",
+      "change_24h_pct": "196.50%",
+      "reward_rate": "0.4362Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "72",
+      "name": "0xcdea...c5598c",
+      "vote_power": "45,402,94845,402,948Locked Vote Power",
+      "vote_power_pct": "0.10%0.14%Locked Vote Power %",
+      "change_24h_pct": "3.06%",
+      "reward_rate": "0.0531Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "73",
+      "name": "TempestFTSO",
+      "vote_power": "38,297,79638,297,796Locked Vote Power",
+      "vote_power_pct": "0.09%0.09%Locked Vote Power %",
+      "change_24h_pct": "0.28%",
+      "reward_rate": "0.0683Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "74",
+      "name": "Wonderftso",
+      "vote_power": "38,213,20138,213,201Locked Vote Power",
+      "vote_power_pct": "0.09%0.09%Locked Vote Power %",
+      "change_24h_pct": "0.03%",
+      "reward_rate": "0.0635Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "75",
+      "name": "0xdb53...c65b6e",
+      "vote_power": "33,013,31433,013,314Locked Vote Power",
+      "vote_power_pct": "0.07%0.07%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "76",
+      "name": "FTSOExpress",
+      "vote_power": "29,990,73029,990,730Locked Vote Power",
+      "vote_power_pct": "0.07%0.07%Locked Vote Power %",
+      "change_24h_pct": "0.01%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "77",
+      "name": "FocusTSO",
+      "vote_power": "27,589,01527,589,015Locked Vote Power",
+      "vote_power_pct": "0.06%0.06%Locked Vote Power %",
+      "change_24h_pct": "0.01%",
+      "reward_rate": "0.0455Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "78",
+      "name": "0x5cbd...3c78ea",
+      "vote_power": "22,512,66122,512,661Locked Vote Power",
+      "vote_power_pct": "0.05%0.05%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "0.0288Avg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "79",
+      "name": "0x1a34...5ad900",
+      "vote_power": "20,733,68520,733,685Locked Vote Power",
+      "vote_power_pct": "0.05%0.05%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "80",
+      "name": "0x6c7c...45a723",
+      "vote_power": "20,250,30920,250,309Locked Vote Power",
+      "vote_power_pct": "0.05%0.05%Locked Vote Power %",
+      "change_24h_pct": "0.45%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "81",
+      "name": "StakeCapital FTSO",
+      "vote_power": "20,152,75720,152,757Locked Vote Power",
+      "vote_power_pct": "0.04%0.05%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "82",
+      "name": "0x3b18...7d558d",
+      "vote_power": "20,121,92620,121,926Locked Vote Power",
+      "vote_power_pct": "0.04%0.04%Locked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "83",
+      "name": "0xef6f...538ce7",
+      "vote_power": "2,296,2332,296,233Locked Vote Power",
+      "vote_power_pct": "0.01%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "84",
+      "name": "0xdf44...65c59a",
+      "vote_power": "2,048,6272,048,627Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "85",
+      "name": "0x05d8...6e2bdb",
+      "vote_power": "910,670910,670Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "86",
+      "name": "0xa419...92df38",
+      "vote_power": "650,177650,177Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "87",
+      "name": "0x5662...ed255f",
+      "vote_power": "257,535257,535Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "88",
+      "name": "0x24c5...7ee9c9",
+      "vote_power": "44,37344,373Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    },
+    {
+      "rank": "89",
+      "name": "0x526e...641642",
+      "vote_power": "20,00220,002Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "90",
+      "name": "0x0d4f...86f51b",
+      "vote_power": "420420Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "Yes"
+    },
+    {
+      "rank": "91",
+      "name": "0x230e...5e293d",
+      "vote_power": "250250Locked Vote Power",
+      "vote_power_pct": "0.00%PendingLocked Vote Power %",
+      "change_24h_pct": "0.00%",
+      "reward_rate": "N/AAvg. Reward Rate",
+      "registered": "No"
+    }
+  ]
 }
