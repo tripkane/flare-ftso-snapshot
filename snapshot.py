@@ -2,6 +2,7 @@ import json
 import datetime
 import os
 import time
+import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -19,7 +20,7 @@ def init_driver():
 
 # Scrape flaremetrics.io for detailed stats
 def scrape_flaremetrics(driver):
-    url = "https://flaremetrics.io/"
+    url = "https://flaremetrics.io/flare"
     driver.get(url)
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -28,16 +29,54 @@ def scrape_flaremetrics(driver):
     for row in rows:
         cols = row.find_all("td")
         # Expecting 7 columns: rank, name, vote power, vote power %, 24h %, reward rate, registered
-        if len(cols) >= 7:
-            providers.append({
-                "rank": cols[0].get_text(strip=True),
-                "name": cols[1].get_text(strip=True),
-                "vote_power": cols[2].get_text(strip=True),
-                "vote_power_pct": cols[3].get_text(strip=True),
-                "change_24h_pct": cols[4].get_text(strip=True),
-                "reward_rate": cols[5].get_text(strip=True),
-                "registered": cols[6].get_text(strip=True)
-            })
+        if len(cols) < 7:
+            continue
+        # Extract basic texts
+        rank = cols[0].get_text(strip=True)
+        name = cols[1].get_text(strip=True)
+        raw_vote = cols[2].get_text(" ", strip=True)
+        raw_vote_pct = cols[3].get_text(" ", strip=True)
+        raw_change_24h = cols[4].get_text(" ", strip=True)
+        raw_reward = cols[5].get_text(" ", strip=True)
+        registered = cols[6].get_text(strip=True)
+
+        # Extract vote power and locked vote power
+        nums = re.findall(r"\d[\d,]*", raw_vote)
+        if len(nums) >= 2:
+            vote_power = nums[0]
+            vote_power_locked = nums[1]
+        elif len(nums) == 1:
+            raw = nums[0]
+            mid = len(raw) // 2
+            vote_power = raw[:mid]
+            vote_power_locked = raw[mid:]
+        else:
+            vote_power = vote_power_locked = ''
+
+        # Extract vote power percentages
+        pcts = re.findall(r"\d[\d.,]*%", raw_vote_pct)
+        vote_power_pct = pcts[0] if len(pcts) > 0 else ''
+        vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
+
+        # 24h change percent
+        change_pcts = re.findall(r"\d[\d.,]*%", raw_change_24h)
+        change_24h_pct = change_pcts[0] if change_pcts else ''
+
+        # Reward rate (decimal)
+        m = re.search(r"\d+\.?\d*", raw_reward)
+        reward_rate = m.group(0) if m else ''
+
+        providers.append({
+            "rank": rank,
+            "name": name,
+            "vote_power": vote_power,
+            "vote_power_locked": vote_power_locked,
+            "vote_power_pct": vote_power_pct,
+            "vote_power_pct_locked": vote_power_pct_locked,
+            "change_24h_pct": change_24h_pct,
+            "reward_rate": reward_rate,
+            "registered": registered
+        })
     return providers
 
 # Save snapshot to JSON
