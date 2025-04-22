@@ -4,108 +4,433 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FTSO Flare Dashboard</title>
+  <link rel="icon" href="https://flare.network/favicon.ico" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; background: #121212; color: #eee; padding: 1rem; }
-    h1 { text-align: center; margin-bottom: 1rem; }
-    #controls { max-width: 600px; margin: 0 auto 1rem; padding: 1rem; background: #1e1e1e; border-radius: 8px; }
-    #controls label { display: block; margin-bottom: 0.5rem; }
-    select { width: 100%; padding: 0.5rem; background: #2a2a2a; border: 1px solid #333; color: #eee; border-radius: 4px; }
-    #chart-container, #table-container { max-width: 600px; margin: 1rem auto; background: #1e1e1e; padding: 1rem; border-radius: 8px; }
-    canvas { width: 100% !important; height: auto !important; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { padding: 0.5rem; border: 1px solid #333; }
-    th { background: #2a2a2a; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #121212;
+      color: #eee;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #181818;
+      padding: 1.2rem 1rem 1rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid #222;
+    }
+    .container {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 1rem;
+      background: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 5px 25px #0003;
+    }
+    h1 {
+      margin-bottom: 0.25rem;
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+    }
+    p.subtitle {
+      margin-top: 0;
+      color: #aaa;
+      font-size: 1rem;
+    }
+    #controls {
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    label {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+    select,
+    input[type="range"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      background: #272727;
+      border: 1px solid #333;
+      color: #eee;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    select[multiple] {
+      min-height: 90px;
+      background: #222;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .slider-value {
+      min-width: 40px;
+      text-align: right;
+      color: #5fffa7;
+      font-weight: 700;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    #chart-container, #table-container {
+      background: #191919;
+      padding: 1.2rem 1rem 1rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 10px #0002;
+    }
+    canvas {
+      width: 100% !important;
+      max-height: 360px;
+      height: auto !important;
+      background: #131313;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.2rem;
+      background: #161616;
+    }
+    th, td {
+      padding: 0.6rem 0.5rem;
+      border: 1px solid #242424;
+      text-align: center;
+      font-size: 0.98rem;
+    }
+    th {
+      background: #232323;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    tr:hover {
+      background: #222325;
+    }
+    .loading,
+    .error {
+      text-align: center;
+      padding: 2rem 0;
+      font-size: 1.1rem;
+    }
+    .error {
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 0.5rem;
+      }
+      #controls {
+        gap: 1rem;
+      }
+    }
+    .instructions {
+      background: #202026;
+      color: #b3b3c9;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.97rem;
+    }
+    .dark-light-toggle {
+      position: absolute;
+      top: 18px;
+      right: 16px;
+    }
+    .dark-light-toggle button {
+      background: #242424;
+      color: #eee;
+      border: none;
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .dark-mode body {
+      background: #f0f0f0;
+      color: #181818;
+    }
   </style>
 </head>
 <body>
-  <h1>FTSO Flare Dashboard</h1>
-  <div id="controls">
-    <label>
-      Provider:
-      <select id="providerSelect"></select>
-    </label>
-  </div>
-  <div id="chart-container">
-    <canvas id="ftsoChart"></canvas>
-  </div>
-  <div id="table-container">
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Vote Power %</th>
-          <th>24h % Change</th>
-          <th>Reward Rate %</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <header>
+    <div class="dark-light-toggle" aria-label="Toggle dark/light mode">
+      <button id="modeToggle" title="Toggle dark/light mode">🌙</button>
+    </div>
+    <h1>FTSO Flare Dashboard</h1>
+    <p class="subtitle">Track & compare FTSO provider stats with dynamic filters</p>
+  </header>
+  <main class="container" aria-label="Dashboard main content">
+    <div class="instructions" aria-live="polite">
+      <strong>Instructions:</strong> <br>
+      <ul>
+        <li>Select one or more FTSO providers to view their vote power, 24h change, and rewards over time.</li>
+        <li>Filter to only <b>registered</b> providers and/or set a minimum vote power threshold.</li>
+        <li>Hold <kbd>Ctrl</kbd> or <kbd>Cmd</kbd> to select multiple providers.</li>
+        <li>Hover over chart lines for details, and scroll the table for more data.</li>
+      </ul>
+    </div>
+    <section id="controls" aria-label="Dashboard controls">
+      <div>
+        <label for="providerSelect">Providers:</label>
+        <select id="providerSelect" multiple aria-label="Select FTSO providers"></select>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="registeredOnly" aria-label="Registered only"/>
+        <label for="registeredOnly">Show only registered providers</label>
+      </div>
+      <div class="slider-container">
+        <label for="vpSlider">Min Vote Power %:</label>
+        <input type="range" id="vpSlider" min="0" max="100" value="0" step="1" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="slider-value" id="vpValue">0</span>
+      </div>
+    </section>
+
+    <section id="chart-container" aria-label="FTSO Data Chart">
+      <div id="loading" class="loading">Loading data...</div>
+      <div id="error" class="error" style="display:none;"></div>
+      <canvas id="ftsoChart" style="display:none;"></canvas>
+    </section>
+    <section id="table-container" aria-label="FTSO Data Table">
+      <table id="dataTable" aria-describedby="providerSelect">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Provider</th>
+            <th>Registered</th>
+            <th>Vote Power %</th>
+            <th>24h % Change</th>
+            <th>Reward Rate %</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
   <script>
+    // Dark/light mode toggle
+    const modeToggle = document.getElementById('modeToggle');
+    let dark = true;
+    modeToggle.addEventListener('click', () => {
+      dark = !dark;
+      document.body.style.background = dark ? '#121212' : '#fafafa';
+      document.body.style.color = dark ? '#eee' : '#111';
+      modeToggle.textContent = dark ? '🌙' : '☀️';
+    });
+
     let snapshots = [];
-    async function loadData() {
-      const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
-      const files = await res.json();
-      const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
-      const data = await Promise.all(urls.map(u => fetch(u).then(r => r.json())));
-      snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
-      populateProviders();
-      render();
-    }
-    function populateProviders() {
-      const sel = document.getElementById('providerSelect');
-      const names = [...new Set(snapshots.flatMap(s => s.providers.map(p => p.name)))].sort();
-      names.forEach(n => { const o = new Option(n, n); sel.add(o); });
-      if (names.length) sel.value = names[0];
-      sel.addEventListener('change', render);
-    }
-    function getSeries(name, field) {
-      return snapshots.map(s => {
-        const p = s.providers.find(x => x.name === name);
-        let val = p && p[field] ? p[field].replace(/[^0-9.\-]/g, '') : null;
-        val = val !== null ? parseFloat(val) : null;
-        return { date: s.date, value: val };
-      }).filter(d => d.value !== null);
-    }
+    let providers = [];
     let chart;
+    let loadingDiv = document.getElementById('loading');
+    let errorDiv = document.getElementById('error');
+    let providerSelect = document.getElementById('providerSelect');
+    let registeredOnly = document.getElementById('registeredOnly');
+    let vpSlider = document.getElementById('vpSlider');
+    let vpValue = document.getElementById('vpValue');
+
+    async function loadData() {
+      try {
+        loadingDiv.style.display = '';
+        errorDiv.style.display = 'none';
+        document.getElementById('ftsoChart').style.display = 'none';
+
+        const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
+        if (!res.ok) throw new Error('Failed to fetch file list');
+        const files = await res.json();
+        const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
+
+        // Limit to last 45 days for performance (adjust as needed)
+        const slicedUrls = urls.slice(-45);
+        const data = await Promise.all(slicedUrls.map(u => fetch(u).then(r => r.json())));
+        snapshots = data.map(s => ({
+          date: s.date,
+          providers: s.providers
+        }));
+
+        // Extract provider list
+        const all = snapshots.flatMap(s => s.providers.map(p => p.name));
+        providers = [...new Set(all)].sort();
+        populateProviders();
+        loadingDiv.style.display = 'none';
+        document.getElementById('ftsoChart').style.display = '';
+        render();
+      } catch (e) {
+        loadingDiv.style.display = 'none';
+        errorDiv.textContent = "Failed to load data. Please refresh.";
+        errorDiv.style.display = '';
+        console.error(e);
+      }
+    }
+
+    function populateProviders() {
+      providerSelect.innerHTML = '';
+      providers.forEach(n => {
+        const o = new Option(n, n);
+        providerSelect.add(o);
+      });
+      if (providers.length) {
+        providerSelect.selectedIndex = 0;
+      }
+    }
+
+    // Utility: get filtered provider names
+    function getFilteredProviders() {
+      let selected = Array.from(providerSelect.selectedOptions).map(opt => opt.value);
+      if (selected.length === 0) selected = [providers[0]]; // default
+      let filtered = selected;
+
+      // Registered filter
+      if (registeredOnly.checked) {
+        // Only include providers that have 'registered' true in at least one snapshot
+        filtered = filtered.filter(name =>
+          snapshots.some(s =>
+            s.providers.some(p => p.name === name && (p.registered === true || p.registered === "true"))
+          )
+        );
+      }
+      return filtered;
+    }
+
+    // Utility: get series for multiple providers
+    function getSeries(names, field) {
+      return names.map(name => ({
+        name,
+        data: snapshots.map(s => {
+          const p = s.providers.find(x => x.name === name);
+          let val = p && p[field] ? String(p[field]).replace(/[^0-9.\-]/g, '') : null;
+          val = val !== null && val !== "" ? parseFloat(val) : null;
+          return { date: s.date, value: val, registered: p && p.registered, provider: name, p };
+        }).filter(d => d.value !== null)
+      }));
+    }
+
     function render() {
-      const name = document.getElementById('providerSelect').value;
-      const vpPct = getSeries(name, 'vote_power_pct');
-      const change = getSeries(name, 'change_24h_pct');
-      const rate = getSeries(name, 'reward_rate');
+      const names = getFilteredProviders();
+      const minVotePower = parseFloat(vpSlider.value) || 0;
+
+      const vpSeries = getSeries(names, 'vote_power_pct');
+      const changeSeries = getSeries(names, 'change_24h_pct');
+      const rateSeries = getSeries(names, 'reward_rate');
+
+      // Prepare labels (dates)
       const labels = snapshots.map(s => s.date);
+
+      // Filter by vote power
+      function filterProviderByVotePower(providerName) {
+        return snapshots.some(s => {
+          const p = s.providers.find(x => x.name === providerName);
+          let val = p && p['vote_power_pct'] ? parseFloat(String(p['vote_power_pct']).replace(/[^0-9.\-]/g, '')) : null;
+          return val !== null && val >= minVotePower;
+        });
+      }
+      const filteredNames = names.filter(filterProviderByVotePower);
+
+      // Chart.js datasets for each provider
+      const datasets = [];
+      filteredNames.forEach((name, idx) => {
+        const color = ['#65d6ff', '#ffb266', '#a7ff83', '#ffd6e0', '#e066ff', '#ffeb3b', '#ef5350', '#fff176', '#a3a3ff', '#00e676'][idx % 10];
+        const vp = vpSeries.find(s => s.name === name)?.data.map(d => d.value >= minVotePower ? d.value : null) || [];
+        const change = changeSeries.find(s => s.name === name)?.data.map(d => d.value) || [];
+        const rate = rateSeries.find(s => s.name === name)?.data.map(d => d.value !== null ? d.value * 100 : null) || [];
+        datasets.push({
+          label: name + " - Vote Power %",
+          data: vp,
+          borderColor: color,
+          backgroundColor: color + "55",
+          fill: false,
+          tension: 0.2
+        });
+        datasets.push({
+          label: name + " - 24h % Change",
+          data: change,
+          borderColor: color,
+          borderDash: [6, 3],
+          backgroundColor: color + "33",
+          fill: false,
+          tension: 0.2
+        });
+        datasets.push({
+          label: name + " - Reward Rate %",
+          data: rate,
+          borderColor: color,
+          borderDash: [2, 4],
+          backgroundColor: color + "22",
+          fill: false,
+          tension: 0.2
+        });
+      });
+
+      // Draw Chart
       const ctx = document.getElementById('ftsoChart').getContext('2d');
       if (chart) chart.destroy();
       chart = new Chart(ctx, {
         type: 'line',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Vote Power %', data: vpPct.map(d => d.value), borderColor: 'cyan', fill: false },
-            { label: '24h % Change', data: change.map(d => d.value), borderColor: 'orange', fill: false },
-            { label: 'Reward Rate %', data: rate.map(d => d.value * 100), borderColor: 'lime', fill: false }
-          ]
-        },
-        options: { responsive: true, scales: { y: { ticks: { callback: v => v + '%' } } } }
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true, position: 'bottom' }
+          },
+          interaction: { mode: 'nearest', intersect: false },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => v + '%' }
+            }
+          }
+        }
       });
+
+      // Render Table
       const tbody = document.querySelector('#dataTable tbody');
       tbody.innerHTML = '';
-      const series = snapshots;
-      series.forEach(s => {
-        const p = s.providers.find(x => x.name === name);
-        if (!p) return;
-        const row = document.createElement('tr');
-        const cells = [
-          s.date,
-          p.vote_power_pct,
-          p.change_24h_pct,
-          (parseFloat(p.reward_rate) * 100).toFixed(2) + '%'
-        ];
-        cells.forEach(c => { const td = document.createElement('td'); td.textContent = c; row.append(td); });
-        tbody.append(row);
+      snapshots.forEach(s => {
+        filteredNames.forEach(name => {
+          const p = s.providers.find(x => x.name === name);
+          if (!p) return;
+          let vpct = p.vote_power_pct ? String(p.vote_power_pct).replace(/[^0-9.\-]/g, '') : "";
+          let vpval = vpct !== "" ? parseFloat(vpct) : null;
+          if (vpval === null || vpval < minVotePower) return;
+          const row = document.createElement('tr');
+          const cells = [
+            s.date,
+            name,
+            p.registered === true || p.registered === "true" ? "Yes" : "No",
+            p.vote_power_pct,
+            p.change_24h_pct,
+            (parseFloat(p.reward_rate) * 100).toFixed(2) + '%'
+          ];
+          cells.forEach(c => {
+            const td = document.createElement('td');
+            td.textContent = c;
+            row.append(td);
+          });
+          tbody.append(row);
+        });
       });
     }
+
+    // Event listeners
+    providerSelect.addEventListener('change', render);
+    registeredOnly.addEventListener('change', render);
+    vpSlider.addEventListener('input', () => {
+      vpValue.textContent = vpSlider.value;
+      render();
+    });
+
+    // Set initial slider value
+    vpValue.textContent = vpSlider.value;
+
+    // Load data on page load
     loadData();
   </script>
 </body>
