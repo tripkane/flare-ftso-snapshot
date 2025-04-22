@@ -1,13 +1,7 @@
-try:
-    import micropip
-except ImportError:
-    pass
-
 import json
 import datetime
 import os
 import time
-import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -23,72 +17,27 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-# Helper to extract integer sequences
-def extract_numbers(text):
-    return re.findall(r"\d[\d,]*", text)
-
-# Helper to extract decimal numbers
-def extract_decimal(text):
-    m = re.search(r"\d+\.\d+", text)
-    return m.group(0) if m else re.sub(r"[^0-9.]", "", text)
-
-# Scrape flaremetrics.io main Flare network stats
+# Scrape flaremetrics.io for detailed stats
 def scrape_flaremetrics(driver):
-    url = "https://flaremetrics.io/flare"
+    url = "https://flaremetrics.io/"
     driver.get(url)
-    time.sleep(5)  # allow JS to render table fully
+    time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    # Table columns: rank, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
-    for row in soup.select("table tbody tr"):
+    rows = soup.select("table tbody tr")
+    for row in rows:
         cols = row.find_all("td")
-        if len(cols) < 7:
-            continue
-        rank = cols[0].get_text(strip=True)
-        name = cols[1].get_text(strip=True)
-        raw_vote = cols[2].get_text("", strip=True)
-        raw_vote_pct = cols[3].get_text("", strip=True)
-        raw_change_24h = cols[4].get_text("", strip=True)
-        raw_reward = cols[5].get_text("", strip=True)
-        registered = cols[6].get_text(strip=True)
-
-        # Extract vote power and locked vote power
-        nums = extract_numbers(raw_vote)
-        if len(nums) >= 2:
-            vote_power, vote_power_locked = nums[0], nums[1]
-        elif len(nums) == 1:
-            raw = nums[0]
-            # Attempt to split identical or similar halves
-            mid = len(raw) // 2
-            vp1 = raw[:mid]
-            vp2 = raw[mid:]
-            vote_power, vote_power_locked = vp1, vp2
-        else:
-            vote_power = vote_power_locked = ''
-
-        # Extract vote power percentages
-        pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
-        vote_power_pct = pcts[0] if len(pcts) > 0 else ''
-        vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
-
-        # 24h change percent
-        change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
-        change_24h_pct = change_pcts[0] if change_pcts else ''
-
-        # Reward rate
-        reward_rate = extract_decimal(raw_reward)
-
-        providers.append({
-            "rank": rank,
-            "name": name,
-            "vote_power": vote_power,
-            "vote_power_locked": vote_power_locked,
-            "vote_power_pct": vote_power_pct,
-            "vote_power_pct_locked": vote_power_pct_locked,
-            "change_24h_pct": change_24h_pct,
-            "reward_rate": reward_rate,
-            "registered": registered
-        })
+        # Expecting 7 columns: rank, name, vote power, vote power %, 24h %, reward rate, registered
+        if len(cols) >= 7:
+            providers.append({
+                "rank": cols[0].get_text(strip=True),
+                "name": cols[1].get_text(strip=True),
+                "vote_power": cols[2].get_text(strip=True),
+                "vote_power_pct": cols[3].get_text(strip=True),
+                "change_24h_pct": cols[4].get_text(strip=True),
+                "reward_rate": cols[5].get_text(strip=True),
+                "registered": cols[6].get_text(strip=True)
+            })
     return providers
 
 # Save snapshot to JSON
