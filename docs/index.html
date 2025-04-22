@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FTSO Snapshot Dashboard</title>
+  <title>FTSO Flare Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: sans-serif; background: #121212; color: #eee; padding: 1rem; }
     h1 { text-align: center; margin-bottom: 1rem; }
     #controls { max-width: 600px; margin: 0 auto 1rem; padding: 1rem; background: #1e1e1e; border-radius: 8px; }
     #controls label { display: block; margin-bottom: 0.5rem; }
-    select, input[type="checkbox"] { width: 100%; padding: 0.5rem; margin-top: 0.25rem; background: #2a2a2a; border: 1px solid #333; color: #eee; border-radius: 4px; }
+    select { width: 100%; padding: 0.5rem; background: #2a2a2a; border: 1px solid #333; color: #eee; border-radius: 4px; }
     #chart-container, #table-container { max-width: 600px; margin: 1rem auto; background: #1e1e1e; padding: 1rem; border-radius: 8px; }
     canvas { width: 100% !important; height: auto !important; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
@@ -19,24 +19,11 @@
   </style>
 </head>
 <body>
-  <h1>FTSO Snapshot Dashboard</h1>
+  <h1>FTSO Flare Dashboard</h1>
   <div id="controls">
     <label>
-      Registered Only
-      <input type="checkbox" id="registeredOnly" />
-    </label>
-    <label>
-      Provider
+      Provider:
       <select id="providerSelect"></select>
-    </label>
-    <label>
-      Metric
-      <select id="metricSelect">
-        <option value="vote_power">Vote Power</option>
-        <option value="vote_power_pct">Vote Power %</option>
-        <option value="change_24h_pct">24h % Change</option>
-        <option value="reward_rate">Reward Rate</option>
-      </select>
     </label>
   </div>
   <div id="chart-container">
@@ -45,78 +32,81 @@
   <div id="table-container">
     <table id="dataTable">
       <thead>
-        <tr><th>Date</th><th>Value</th></tr>
+        <tr>
+          <th>Date</th>
+          <th>Vote Power %</th>
+          <th>24h % Change</th>
+          <th>Reward Rate %</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
   <script>
-    let snapshots = [], providers = [];
-
-    async function loadSnapshots() {
+    let snapshots = [];
+    async function loadData() {
       const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
       const files = await res.json();
       const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
       const data = await Promise.all(urls.map(u => fetch(u).then(r => r.json())));
       snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
-      providers = [...new Set(snapshots.flatMap(s => s.providers.map(p => p.name)))].sort();
-      populateProviderSelect();
+      populateProviders();
       render();
     }
-
-    function populateProviderSelect() {
+    function populateProviders() {
       const sel = document.getElementById('providerSelect');
-      sel.innerHTML = '';
-      providers.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        sel.append(opt);
-      });
+      const names = [...new Set(snapshots.flatMap(s => s.providers.map(p => p.name)))].sort();
+      names.forEach(n => { const o = new Option(n, n); sel.add(o); });
+      if (names.length) sel.value = names[0];
+      sel.addEventListener('change', render);
     }
-
-    function getSeries(name, metric, regOnly) {
+    function getSeries(name, field) {
       return snapshots.map(s => {
         const p = s.providers.find(x => x.name === name);
-        const val = p && (!regOnly || p.registered === 'Yes') ? parseFloat(p[metric]?.toString().replace(/,/g, '')) : null;
+        let val = p && p[field] ? p[field].replace(/[^0-9.\-]/g, '') : null;
+        val = val !== null ? parseFloat(val) : null;
         return { date: s.date, value: val };
       }).filter(d => d.value !== null);
     }
-
     let chart;
     function render() {
       const name = document.getElementById('providerSelect').value;
-      const metric = document.getElementById('metricSelect').value;
-      const regOnly = document.getElementById('registeredOnly').checked;
-      const series = getSeries(name, metric, regOnly);
-
-      // Chart
+      const vpPct = getSeries(name, 'vote_power_pct');
+      const change = getSeries(name, 'change_24h_pct');
+      const rate = getSeries(name, 'reward_rate');
+      const labels = snapshots.map(s => s.date);
       const ctx = document.getElementById('ftsoChart').getContext('2d');
       if (chart) chart.destroy();
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: series.map(d => d.date),
-          datasets: [{ label: metric, data: series.map(d => d.value), fill: false, tension: 0.2 }]
+          labels,
+          datasets: [
+            { label: 'Vote Power %', data: vpPct.map(d => d.value), borderColor: 'cyan', fill: false },
+            { label: '24h % Change', data: change.map(d => d.value), borderColor: 'orange', fill: false },
+            { label: 'Reward Rate %', data: rate.map(d => d.value * 100), borderColor: 'lime', fill: false }
+          ]
         },
-        options: { responsive: true }
+        options: { responsive: true, scales: { y: { ticks: { callback: v => v + '%' } } } }
       });
-
-      // Table
       const tbody = document.querySelector('#dataTable tbody');
       tbody.innerHTML = '';
-      series.forEach(d => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${d.date}</td><td>${d.value}</td>`;
-        tbody.append(tr);
+      const series = snapshots;
+      series.forEach(s => {
+        const p = s.providers.find(x => x.name === name);
+        if (!p) return;
+        const row = document.createElement('tr');
+        const cells = [
+          s.date,
+          p.vote_power_pct,
+          p.change_24h_pct,
+          (parseFloat(p.reward_rate) * 100).toFixed(2) + '%'
+        ];
+        cells.forEach(c => { const td = document.createElement('td'); td.textContent = c; row.append(td); });
+        tbody.append(row);
       });
     }
-
-    document.getElementById('registeredOnly').addEventListener('change', render);
-    document.getElementById('providerSelect').addEventListener('change', render);
-    document.getElementById('metricSelect').addEventListener('change', render);
-
-    loadSnapshots();
+    loadData();
   </script>
 </body>
 </html>
