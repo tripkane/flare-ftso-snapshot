@@ -35,7 +35,7 @@ def extract_decimal(text):
 
 # Scrape flaremetrics.io (Songbird network)
 def scrape_flaremetrics(driver):
-    url = "https://flaremetrics.io/songbird"
+    url = "https://flaremetrics.io/"
     driver.get(url)
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
