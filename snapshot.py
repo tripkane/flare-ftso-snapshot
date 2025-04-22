@@ -18,65 +18,79 @@ def init_driver():
     service = Service("/usr/bin/chromedriver")
     return webdriver.Chrome(service=service, options=options)
 
-# Scrape flaremetrics.io for detailed stats
+# Helpers for extracting numbers and decimals
+
+def extract_numbers(text):
+    """Extract integer sequences from text, preserving commas."""
+    return re.findall(r"\d[\d,]*", text)
+
+def extract_decimal(text):
+    """Extract a floating-point number from text."""
+    m = re.search(r"\d+\.\d+", text)
+    if m:
+        return m.group(0)
+    # Fallback: remove non-digit and non-dot characters
+    cleaned = re.sub(r"[^0-9.]", "", text)
+    return cleaned
+
+# Scrape flaremetrics.io (Songbird network)
 def scrape_flaremetrics(driver):
-    url = "https://flaremetrics.io/flare"
+    url = "https://flaremetrics.io/songbird"
     driver.get(url)
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    rows = soup.select("table tbody tr")
-    for row in rows:
+    # Table columns: rank, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
+    for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
-        # Expecting 7 columns: rank, name, vote power, vote power %, 24h %, reward rate, registered
-        if len(cols) < 7:
-            continue
-        # Extract basic texts
-        rank = cols[0].get_text(strip=True)
-        name = cols[1].get_text(strip=True)
-        raw_vote = cols[2].get_text(" ", strip=True)
-        raw_vote_pct = cols[3].get_text(" ", strip=True)
-        raw_change_24h = cols[4].get_text(" ", strip=True)
-        raw_reward = cols[5].get_text(" ", strip=True)
-        registered = cols[6].get_text(strip=True)
+        if len(cols) >= 7:
+            rank = cols[0].get_text(strip=True)
+            name = cols[1].get_text(strip=True)
+            raw_vote = cols[2].get_text("", strip=True)
+            raw_vote_pct = cols[3].get_text("", strip=True)
+            raw_change_24h = cols[4].get_text("", strip=True)
+            raw_reward = cols[5].get_text("", strip=True)
+            registered = cols[6].get_text(strip=True)
 
-        # Extract vote power and locked vote power
-        nums = re.findall(r"\d[\d,]*", raw_vote)
-        if len(nums) >= 2:
-            vote_power = nums[0]
-            vote_power_locked = nums[1]
-        elif len(nums) == 1:
-            raw = nums[0]
-            mid = len(raw) // 2
-            vote_power = raw[:mid]
-            vote_power_locked = raw[mid:]
-        else:
-            vote_power = vote_power_locked = ''
+            # Extract vote power and locked vote power
+            vote_nums = extract_numbers(raw_vote)
+            if len(vote_nums) >= 2:
+                vote_power = vote_nums[0]
+                vote_power_locked = vote_nums[1]
+            else:
+                m = re.match(r"^([0-9,]+?)\1$", raw_vote)
 
-        # Extract vote power percentages
-        pcts = re.findall(r"\d[\d.,]*%", raw_vote_pct)
-        vote_power_pct = pcts[0] if len(pcts) > 0 else ''
-        vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
+                if m:
+                    vote_power = m.group(1)
+                    vote_power_locked = m.group(1)
+                else:
+                    vote_power = vote_nums[0] if vote_nums else ''
+                    vote_power_locked = ''
 
-        # 24h change percent
-        change_pcts = re.findall(r"\d[\d.,]*%", raw_change_24h)
-        change_24h_pct = change_pcts[0] if change_pcts else ''
+            # Extract vote power percentages
+            pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
+            vote_power_pct = pcts[0] if len(pcts) > 0 else ''
+            vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
 
-        # Reward rate (decimal)
-        m = re.search(r"\d+\.?\d*", raw_reward)
-        reward_rate = m.group(0) if m else ''
+            # 24h change percent
+            change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
+            change_24h_pct = change_pcts[0] if change_pcts else ''
 
-        providers.append({
-            "rank": rank,
-            "name": name,
-            "vote_power": vote_power,
-            "vote_power_locked": vote_power_locked,
-            "vote_power_pct": vote_power_pct,
-            "vote_power_pct_locked": vote_power_pct_locked,
-            "change_24h_pct": change_24h_pct,
-            "reward_rate": reward_rate,
-            "registered": registered
-        })
+            # Reward rate as decimal
+            reward_rate = extract_decimal(raw_reward)
+
+
+            providers.append({
+                "rank": rank,
+                "name": name,
+                "vote_power": vote_power,
+                "vote_power_locked": vote_power_locked,
+                "vote_power_pct": vote_power_pct,
+                "vote_power_pct_locked": vote_power_pct_locked,
+                "change_24h_pct": change_24h_pct,
+                "reward_rate": reward_rate,
+                "registered": registered
+            })
     return providers
 
 # Save snapshot to JSON
