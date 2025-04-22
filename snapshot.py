@@ -19,75 +19,67 @@ def init_driver():
     return webdriver.Chrome(service=service, options=options)
 
 # Helper to extract integer sequences
-
 def extract_numbers(text):
     return re.findall(r"\d[\d,]*", text)
 
 # Helper to extract decimal numbers
-
 def extract_decimal(text):
     m = re.search(r"\d+\.\d+", text)
     return m.group(0) if m else re.sub(r"[^0-9.]", "", text)
 
 # Scrape flaremetrics.io main Flare network stats
 def scrape_flaremetrics(driver):
+    """Scrape flaremetrics.io Flare network stats using BeautifulSoup."""
     url = "https://flaremetrics.io/flare"
     driver.get(url)
-    time.sleep(5)  # allow JS to render table
+    time.sleep(5)  # wait for JS
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     providers = []
-    # Table columns: rank, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
+    # Iterate table rows
     for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
-        if len(cols) >= 7:
-            rank = cols[0].get_text(strip=True)
-            name = cols[1].get_text(strip=True)
-            raw_vote = cols[2].get_text("", strip=True)
-            raw_vote_pct = cols[3].get_text("", strip=True)
-            raw_change_24h = cols[4].get_text("", strip=True)
-            raw_reward = cols[5].get_text("", strip=True)
-            registered = cols[6].get_text(strip=True)
-
-            # Extract vote power and locked vote power
-            nums = extract_numbers(raw_vote)
-            if len(nums) >= 2:
-                vote_power, vote_power_locked = nums[0], nums[1]
-            elif len(nums) == 1:
-                raw = nums[0]
-                m = re.match(r"^(.+?)\1$", raw)
-                if m:
-                    vote_power = vote_power_locked = m.group(1)
-                else:
-                    # Fallback: split string in half
-                    half = len(raw) // 2
-                    vote_power = raw[:half]
-                    vote_power_locked = raw[half:]
-            else:
-                vote_power = vote_power_locked = ''
-
-            # Extract percentages
-            pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
-            vote_power_pct = pcts[0] if len(pcts) > 0 else ''
-            vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
-
-            # 24h change percent
-            change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
-            change_24h_pct = change_pcts[0] if change_pcts else ''
-
-            # Reward rate
-            reward_rate = extract_decimal(raw_reward)
-
-            providers.append({
-                "rank": rank,
-                "name": name,
-                "vote_power": vote_power,
-                "vote_power_locked": vote_power_locked,
-                "vote_power_pct": vote_power_pct,
-                "vote_power_pct_locked": vote_power_pct_locked,
-                "change_24h_pct": change_24h_pct,
-                "reward_rate": reward_rate,
-                "registered": registered
-            })
+        if len(cols) < 7:
+            continue
+        rank = cols[0].get_text(strip=True)
+        name = cols[1].get_text(strip=True)
+        # Vote power extraction via spans
+        vote_cell = cols[2]
+        spans = vote_cell.find_all('span')
+        if len(spans) >= 2:
+            vote_power = spans[0].get_text(strip=True)
+            vote_power_locked = spans[1].get_text(strip=True)
+        else:
+            text = vote_cell.get_text(strip=True)
+            nums = extract_numbers(text)
+            vote_power = nums[0] if nums else ''
+            vote_power_locked = nums[1] if len(nums) > 1 else ''
+        # Percentages and other cells
+        vote_power_pct = cols[3].get_text(strip=True)
+        vote_power_pct_locked = ''
+        pct_spans = cols[3].find_all('span')
+        if len(pct_spans) >= 2:
+            vote_power_pct = pct_spans[0].get_text(strip=True)
+            vote_power_pct_locked = pct_spans[1].get_text(strip=True)
+        change_24h_pct = cols[4].get_text(strip=True)
+        reward_cell = cols[5]
+        # reward rate may include span for tooltip
+        reward_spans = reward_cell.find_all('span')
+        if reward_spans:
+            reward_rate = reward_spans[0].get_text(strip=True)
+        else:
+            reward_rate = reward_cell.get_text(strip=True)
+        registered = cols[6].get_text(strip=True)
+        providers.append({
+            "rank": rank,
+            "name": name,
+            "vote_power": vote_power,
+            "vote_power_locked": vote_power_locked,
+            "vote_power_pct": vote_power_pct,
+            "vote_power_pct_locked": vote_power_pct_locked,
+            "change_24h_pct": change_24h_pct,
+            "reward_rate": reward_rate,
+            "registered": registered
+        })
     return providers
 
 # Save snapshot to JSON
