@@ -121,7 +121,7 @@
     </section>
 
     <!-- Reward Rate Chart -->
-    <section>
+    <section id="chartContainer" style="overflow-x: auto; white-space: nowrap;">
       <canvas id="rewardRateChart"></canvas>
     </section>
 
@@ -227,7 +227,7 @@
       rewardRateChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: rewardRates.map(r => r.name),
+          labels: rewardRates.map(r => r.name), // Provider names as labels
           datasets: [{
             label: `Reward Rate (%) - ${timeframe}`,
             data: rewardRates.map(r => r.average),
@@ -238,9 +238,26 @@
           responsive: true,
           plugins: {
             legend: { display: true }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                autoSkip: false, // Ensure all labels are shown
+                maxRotation: 45, // Rotate labels for better readability
+                minRotation: 0
+              }
+            },
+            y: {
+              beginAtZero: true
+            }
           }
         }
       });
+
+      // Add horizontal scrolling if the chart overflows
+      const chartContainer = document.getElementById('chartContainer');
+      chartContainer.style.overflowX = 'auto';
     }
 
     function renderTable() {
