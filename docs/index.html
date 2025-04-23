@@ -39,13 +39,13 @@
     }
 
     .slider-container,
-    .slicer-container,
     .checkbox-container {
       flex: 1 1 calc(33.333% - 1rem);
       min-width: 200px;
     }
 
-    .slider-container input[type="range"] {
+    .slider-container input[type="range"],
+    .slider-container input[type="date"] {
       width: 100%;
     }
 
@@ -94,23 +94,24 @@
     <!-- Controls -->
     <section class="controls">
       <div class="slider-container">
-        <label>Vote Power Range (%):</label>
+        <label>Max Voting Power (%):</label>
+        <input type="number" id="minVotePowerInput" min="0" max="100" step="0.1" value="0" />
         <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100" />
+        <div>
+          <label><input type="radio" name="votePowerToggle" value="min" checked /> Min</label>
+          <label><input type="radio" name="votePowerToggle" value="max" /> Max</label>
+        </div>
+      </div>
+      <div class="slider-container">
+        <label>Date Range:</label>
+        <input type="date" id="minDateInput" />
+        <input type="date" id="maxDateInput" />
       </div>
       <div class="checkbox-container">
         <label for="registeredOnly">
           <input type="checkbox" id="registeredOnly" />
           Registered Only
         </label>
-      </div>
-      <div class="slicer-container">
-        <label for="timeframe">Timeframe:</label>
-        <select id="timeframe">
-          <option value="latest">Latest</option>
-          <option value="7-day">7-Day Average</option>
-          <option value="30-day">30-Day Average</option>
-          <option value="cumulative">Cumulative Average</option>
-        </select>
       </div>
     </section>
 
@@ -157,14 +158,29 @@
 
     function getFilteredProviders() {
       const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
+      const minVotePower = parseFloat(document.getElementById('minVotePowerInput').value) || 0;
+      const votePowerToggle = document.querySelector('input[name="votePowerToggle"]:checked').value;
+
+      const minDate = new Date(document.getElementById('minDateInput').value);
+      const maxDate = new Date(document.getElementById('maxDateInput').value);
+
       const registeredOnly = document.getElementById('registeredOnly').checked;
 
       const filtered = snapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
           const votePower = parseFloat(provider.vote_power_pct); // Already in percentage
           const isRegistered = provider.registered.toLowerCase() === "yes"; // Check for "yes" or "no"
+          const providerDate = new Date(snapshot.date);
+
+          const votePowerCondition =
+            votePowerToggle === "max"
+              ? votePower <= maxVotePower
+              : votePower >= minVotePower;
+
           return (
-            votePower <= maxVotePower &&
+            votePowerCondition &&
+            providerDate >= minDate &&
+            providerDate <= maxDate &&
             (!registeredOnly || isRegistered)
           );
         }).map(provider => ({
@@ -309,19 +325,37 @@
       rows.forEach(row => table.tBodies[0].appendChild(row));
     }
 
-    document.getElementById('maxVotePowerInput').addEventListener('input', () => {
-      renderChart();
-      renderTable();
-    });
-    document.getElementById('registeredOnly').addEventListener('change', () => {
-      renderChart();
-      renderTable();
-    });
-    document.getElementById('timeframe').addEventListener('change', renderChart);
+    function initializeDateFilters() {
+      const minDate = new Date(Math.min(...snapshots.map(s => new Date(s.date))));
+      const maxDate = new Date(Math.max(...snapshots.map(s => new Date(s.date))));
+
+      const minDateInput = document.getElementById('minDateInput');
+      const maxDateInput = document.getElementById('maxDateInput');
+
+      minDateInput.min = minDate.toISOString().split('T')[0];
+      minDateInput.max = maxDate.toISOString().split('T')[0];
+      minDateInput.value = minDate.toISOString().split('T')[0];
+
+      maxDateInput.min = minDate.toISOString().split('T')[0];
+      maxDateInput.max = maxDate.toISOString().split('T')[0];
+      maxDateInput.value = maxDate.toISOString().split('T')[0];
+    }
+
+    document.getElementById('minVotePowerInput').addEventListener('input', renderTable);
+    document.getElementById('maxVotePowerInput').addEventListener('input', renderTable);
+    document.getElementById('minDateInput').addEventListener('change', renderTable);
+    document.getElementById('maxDateInput').addEventListener('change', renderTable);
+    document.querySelectorAll('input[name="votePowerToggle"]').forEach(toggle =>
+      toggle.addEventListener('change', renderTable)
+    );
+    document.getElementById('registeredOnly').addEventListener('change', renderTable);
 
     document.addEventListener('DOMContentLoaded', () => {
-      loadData();
-      addTableFilters();
+      loadData().then(() => {
+        initializeDateFilters();
+        addTableFilters();
+        renderTable();
+      });
     });
   </script>
 </body>
