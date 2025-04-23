@@ -30,60 +30,56 @@
       border-radius: 8px;
     }
 
-    .instructions {
-      background: #202026;
-      color: #b3b3c9;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.97rem;
-    }
-
-    .charts {
+    .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: space-around;
-    }
-
-    .chart-container {
-      flex: 1;
-      min-width: 450px;
-      background: #191919;
-      padding: 1rem;
-      border-radius: 8px;
-    }
-
-    .slider-container {
-      display: flex;
-      align-items: center;
       gap: 1rem;
+      margin-bottom: 2rem;
+      justify-content: space-between;
     }
 
-    .slider-label {
-      flex: 1;
+    .slider-container,
+    .slicer-container,
+    .checkbox-container {
+      flex: 1 1 calc(33.333% - 1rem);
+      min-width: 200px;
     }
 
-    input[type="range"] {
-      flex: 2;
+    .slider-container input[type="range"] {
+      width: 100%;
     }
 
     label {
       font-weight: bold;
+      display: block;
+      margin-bottom: 0.5rem;
     }
 
-    #controls select {
+    canvas {
       width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.5rem;
-      background: #272727;
-      border: 1px solid #333;
-      border-radius: 5px;
-      color: #eee;
+      max-height: 400px;
     }
 
-    #controls input[type="checkbox"] {
-      margin-right: 0.5rem;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      background: #191919;
+    }
+
+    th,
+    td {
+      padding: 0.5rem;
+      border: 1px solid #333;
+      text-align: center;
+    }
+
+    th {
+      background: #232323;
+    }
+
+    tr:hover {
+      background: #222;
     }
   </style>
 </head>
@@ -94,59 +90,58 @@
   </header>
 
   <main class="container">
-    <!-- Instructions -->
-    <section class="instructions">
-      <h2>Instructions</h2>
-      <ul>
-        <li>Select one or more providers to analyze their performance.</li>
-        <li>Use the voting power slider to set a range of interest.</li>
-        <li>Enable the "Registered Only" filter to include only registered providers.</li>
-      </ul>
-    </section>
-
     <!-- Controls -->
-    <section id="controls">
-      <div>
-        <label for="providerSelect">Select Providers:</label>
-        <select id="providerSelect" multiple size="5"></select>
+    <section class="controls">
+      <div class="slider-container">
+        <label>Min Vote Power %: <span id="minVotePower">0</span>%</label>
+        <input type="range" id="minRange" min="0" max="100" step="0.1" value="0" />
       </div>
-      <div>
+      <div class="slider-container">
+        <label>Max Vote Power %: <span id="maxVotePower">100</span>%</label>
+        <input type="range" id="maxRange" min="0" max="100" step="0.1" value="100" />
+      </div>
+      <div class="checkbox-container">
         <label for="registeredOnly">
           <input type="checkbox" id="registeredOnly" />
           Registered Only
         </label>
       </div>
-      <div>
-        <label>Vote Power Range:</label>
-        <div class="slider-container">
-          <span class="slider-label">Min: <span id="minVotePower">0</span>%</span>
-          <input type="range" id="minRange" min="0" step="0.1" value="0" />
-          <span class="slider-label">Max: <span id="maxVotePower">100</span>%</span>
-          <input type="range" id="maxRange" min="0" step="0.1" value="100" />
-        </div>
+      <div class="slicer-container">
+        <label for="timeframe">Timeframe:</label>
+        <select id="timeframe">
+          <option value="latest">Latest</option>
+          <option value="7-day">7-Day Average</option>
+          <option value="30-day">30-Day Average</option>
+          <option value="cumulative">Cumulative Average</option>
+        </select>
       </div>
     </section>
 
-    <!-- Charts -->
-    <section class="charts">
-      <!-- Investigative Chart -->
-      <div class="chart-container">
-        <h2>Investigative Chart</h2>
-        <canvas id="investigativeChart"></canvas>
-      </div>
+    <!-- Reward Rate Chart -->
+    <section>
+      <canvas id="rewardRateChart"></canvas>
+    </section>
 
-      <!-- Leaderboard Chart -->
-      <div class="chart-container">
-        <h2>Leaderboard</h2>
-        <canvas id="leaderboardChart"></canvas>
-      </div>
+    <!-- Full Data Table -->
+    <section>
+      <h2>Full Data Table</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Provider</th>
+            <th>Vote Power %</th>
+            <th>Reward Rate (%)</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
     </section>
   </main>
 
   <script>
     let snapshots = [];
-    let providers = [];
-    let investigativeChart, leaderboardChart;
+    let rewardRateChart;
 
     async function loadData() {
       try {
@@ -155,130 +150,117 @@
         const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
         const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
         snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
-
-        providers = [...new Set(snapshots.flatMap(s => s.providers.map(p => p.name)))];
-        populateProviderSelect();
-        renderCharts();
+        renderChart();
+        renderTable();
       } catch (error) {
         console.error('Error loading data:', error);
         alert('Failed to load data. Please try again later.');
       }
     }
 
-    function populateProviderSelect() {
-      const select = document.getElementById('providerSelect');
-      providers.forEach(provider => {
-        const option = document.createElement('option');
-        option.value = provider;
-        option.textContent = provider;
-        select.appendChild(option);
-      });
-    }
-
-    function getFilteredSnapshots() {
-      const selectedProviders = Array.from(document.getElementById('providerSelect').selectedOptions).map(opt => opt.value);
+    function getFilteredProviders() {
       const minRange = parseFloat(document.getElementById('minRange').value) / 100;
       const maxRange = parseFloat(document.getElementById('maxRange').value) / 100;
       const registeredOnly = document.getElementById('registeredOnly').checked;
 
-      return snapshots.map(snapshot => ({
-        date: snapshot.date,
-        providers: snapshot.providers.filter(provider => {
+      const filtered = snapshots.flatMap(snapshot =>
+        snapshot.providers.filter(provider => {
           const votePower = parseFloat(provider.vote_power_pct);
           const isRegistered = registeredOnly ? provider.registered : true;
-          return selectedProviders.includes(provider.name) && votePower >= minRange && votePower <= maxRange && isRegistered;
+          return votePower >= minRange && votePower <= maxRange && isRegistered;
         })
-      }));
-    }
-
-    function renderCharts() {
-      const filteredSnapshots = getFilteredSnapshots();
-      renderInvestigativeChart(filteredSnapshots);
-      renderLeaderboard();
-    }
-
-    function renderInvestigativeChart(filteredSnapshots) {
-      const ctx = document.getElementById('investigativeChart').getContext('2d');
-      const labels = filteredSnapshots.map(s => s.date);
-      const datasets = filteredSnapshots.flatMap(snapshot =>
-        snapshot.providers.map(provider => ({
-          label: provider.name,
-          data: filteredSnapshots.map(s => {
-            const p = s.providers.find(x => x.name === provider.name);
-            return p ? parseFloat(p.vote_power_pct) * 100 : null;
-          }),
-          borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
-          fill: false
-        }))
       );
 
-      if (investigativeChart) investigativeChart.destroy();
-      investigativeChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets },
-        options: { responsive: true }
+      return filtered;
+    }
+
+    function calculateRewardRates(timeframe) {
+      const filteredProviders = getFilteredProviders();
+      const rewardRates = {};
+
+      filteredProviders.forEach(provider => {
+        if (!rewardRates[provider.name]) rewardRates[provider.name] = [];
+        rewardRates[provider.name].push(parseFloat(provider.reward_rate) * 100);
+      });
+
+      return Object.keys(rewardRates).map(name => {
+        const rates = rewardRates[name];
+        let average = 0;
+
+        switch (timeframe) {
+          case '7-day':
+            average = rates.slice(-7).reduce((sum, rate) => sum + rate, 0) / Math.min(7, rates.length);
+            break;
+          case '30-day':
+            average = rates.slice(-30).reduce((sum, rate) => sum + rate, 0) / Math.min(30, rates.length);
+            break;
+          case 'cumulative':
+            average = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+            break;
+          default:
+            average = rates[rates.length - 1];
+        }
+
+        return { name, average: average.toFixed(2) };
       });
     }
 
-    function renderLeaderboard() {
-      const ctx = document.getElementById('leaderboardChart').getContext('2d');
-      const minRange = parseFloat(document.getElementById('minRange').value) / 100;
-      const maxRange = parseFloat(document.getElementById('maxRange').value) / 100;
+    function renderChart() {
+      const timeframe = document.getElementById('timeframe').value;
+      const rewardRates = calculateRewardRates(timeframe).sort((a, b) => b.average - a.average);
 
-      const leaderboard = calculateLeaderboard(minRange, maxRange);
+      const ctx = document.getElementById('rewardRateChart').getContext('2d');
+      if (rewardRateChart) rewardRateChart.destroy();
 
-      if (leaderboardChart) leaderboardChart.destroy();
-      leaderboardChart = new Chart(ctx, {
+      rewardRateChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: leaderboard.map(entry => entry.name),
+          labels: rewardRates.map(r => r.name),
           datasets: [{
-            label: '30-Day Avg Reward Rate (%)',
-            data: leaderboard.map(entry => entry.averageRewardRate),
+            label: `Reward Rate (%) - ${timeframe}`,
+            data: rewardRates.map(r => r.average),
             backgroundColor: 'orange'
           }]
         },
-        options: { responsive: true }
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
       });
     }
 
-    function calculateLeaderboard(minRange, maxRange) {
-      const leaderboard = {};
+    function renderTable() {
+      const tbody = document.getElementById('dataTable');
+      tbody.innerHTML = '';
+
       snapshots.forEach(snapshot => {
         snapshot.providers.forEach(provider => {
-          const votePower = parseFloat(provider.vote_power_pct);
-          if (votePower >= minRange && votePower <= maxRange) {
-            if (!leaderboard[provider.name]) {
-              leaderboard[provider.name] = { totalRewardRate: 0, count: 0 };
-            }
-            leaderboard[provider.name].totalRewardRate += parseFloat(provider.reward_rate) * 100;
-            leaderboard[provider.name].count++;
-          }
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${snapshot.date}</td>
+            <td>${provider.name}</td>
+            <td>${(parseFloat(provider.vote_power_pct) * 100).toFixed(2)}</td>
+            <td>${(parseFloat(provider.reward_rate) * 100).toFixed(2)}</td>
+          `;
+          tbody.appendChild(row);
         });
       });
-
-      return Object.keys(leaderboard)
-        .map(name => ({
-          name,
-          averageRewardRate: leaderboard[name].totalRewardRate / leaderboard[name].count
-        }))
-        .sort((a, b) => b.averageRewardRate - a.averageRewardRate)
-        .slice(0, 10);
     }
 
     document.getElementById('minRange').addEventListener('input', () => {
       document.getElementById('minVotePower').textContent = document.getElementById('minRange').value;
-      renderCharts();
+      renderChart();
     });
 
     document.getElementById('maxRange').addEventListener('input', () => {
       document.getElementById('maxVotePower').textContent = document.getElementById('maxRange').value;
-      renderCharts();
+      renderChart();
     });
 
-    document.getElementById('registeredOnly').addEventListener('change', renderCharts);
-
-    document.getElementById('providerSelect').addEventListener('change', renderCharts);
+    document.getElementById('registeredOnly').addEventListener('change', renderChart);
+    document.getElementById('timeframe').addEventListener('change', renderChart);
 
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
