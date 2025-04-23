@@ -158,31 +158,13 @@
 
     function getFilteredProviders() {
       const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
-      const minVotePower = parseFloat(document.getElementById('minVotePowerInput').value) || 0;
-      const votePowerToggle = document.querySelector('input[name="votePowerToggle"]:checked').value;
-
-      const minDate = new Date(document.getElementById('minDateInput').value);
-      const maxDate = new Date(document.getElementById('maxDateInput').value);
-
       const registeredOnly = document.getElementById('registeredOnly').checked;
 
       const filtered = snapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
           const votePower = parseFloat(provider.vote_power_pct); // Already in percentage
           const isRegistered = provider.registered.toLowerCase() === "yes"; // Check for "yes" or "no"
-          const providerDate = new Date(snapshot.date);
-
-          const votePowerCondition =
-            votePowerToggle === "max"
-              ? votePower <= maxVotePower
-              : votePower >= minVotePower;
-
-          return (
-            votePowerCondition &&
-            providerDate >= minDate &&
-            providerDate <= maxDate &&
-            (!registeredOnly || isRegistered)
-          );
+          return votePower <= maxVotePower && (!registeredOnly || isRegistered);
         }).map(provider => ({
           ...provider,
           date: snapshot.date // Attach the date from the snapshot
@@ -284,137 +266,17 @@
       });
     }
 
-    function addTableFilters() {
-      const table = document.querySelector('table');
-      const thead = table.querySelector('thead');
-      const filterRow = document.createElement('tr');
-
-      Array.from(thead.rows[0].cells).forEach((cell, index) => {
-        const filterCell = document.createElement('th');
-
-        if (index === 0) {
-          // Date column: Add date range inputs
-          const startDateInput = document.createElement('input');
-          startDateInput.type = 'date';
-          startDateInput.placeholder = 'Start Date';
-          startDateInput.addEventListener('change', () => filterTableByDate());
-          filterCell.appendChild(startDateInput);
-
-          const endDateInput = document.createElement('input');
-          endDateInput.type = 'date';
-          endDateInput.placeholder = 'End Date';
-          endDateInput.addEventListener('change', () => filterTableByDate());
-          filterCell.appendChild(endDateInput);
-        } else if (index === 2 || index === 3) {
-          // Numeric columns: Add min/max range inputs
-          const minInput = document.createElement('input');
-          minInput.type = 'number';
-          minInput.placeholder = 'Min';
-          minInput.addEventListener('input', () => filterTableByRange(index, minInput.value, maxInput.value));
-          filterCell.appendChild(minInput);
-
-          const maxInput = document.createElement('input');
-          maxInput.type = 'number';
-          maxInput.placeholder = 'Max';
-          maxInput.addEventListener('input', () => filterTableByRange(index, minInput.value, maxInput.value));
-          filterCell.appendChild(maxInput);
-        } else {
-          // Text input for other columns
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = `Filter ${cell.textContent}`;
-          input.addEventListener('input', () => filterTableByText(index, input.value));
-          filterCell.appendChild(input);
-        }
-
-        filterRow.appendChild(filterCell);
-      });
-
-      thead.appendChild(filterRow);
-    }
-
-    function filterTableByDate() {
-      const table = document.querySelector('table');
-      const rows = Array.from(table.tBodies[0].rows);
-
-      const startDate = new Date(document.querySelector('thead input[type="date"]:nth-child(1)').value);
-      const endDate = new Date(document.querySelector('thead input[type="date"]:nth-child(2)').value);
-
-      rows.forEach(row => {
-        const cellDate = new Date(row.cells[0].textContent);
-        row.style.display =
-          (!isNaN(startDate) && cellDate < startDate) || (!isNaN(endDate) && cellDate > endDate)
-            ? 'none'
-            : '';
-      });
-    }
-
-    function filterTableByRange(columnIndex, min, max) {
-      const table = document.querySelector('table');
-      const rows = Array.from(table.tBodies[0].rows);
-
-      rows.forEach(row => {
-        const cellValue = parseFloat(row.cells[columnIndex].textContent);
-        row.style.display =
-          (!isNaN(min) && cellValue < min) || (!isNaN(max) && cellValue > max) ? 'none' : '';
-      });
-    }
-
-    function filterTableByText(columnIndex, query) {
-      const table = document.querySelector('table');
-      const rows = Array.from(table.tBodies[0].rows);
-
-      rows.forEach(row => {
-        const cell = row.cells[columnIndex].textContent.toLowerCase();
-        row.style.display = cell.includes(query.toLowerCase()) ? '' : 'none';
-      });
-    }
-
-    function sortTable(columnIndex, isNumeric = false) {
-      const table = document.querySelector('table');
-      const rows = Array.from(table.tBodies[0].rows);
-
-      rows.sort((a, b) => {
-        const cellA = a.cells[columnIndex].textContent.trim();
-        const cellB = b.cells[columnIndex].textContent.trim();
-        return isNumeric ? parseFloat(cellA) - parseFloat(cellB) : cellA.localeCompare(cellB);
-      });
-
-      rows.forEach(row => table.tBodies[0].appendChild(row));
-    }
-
-    function initializeDateFilters() {
-      const minDate = new Date(Math.min(...snapshots.map(s => new Date(s.date))));
-      const maxDate = new Date(Math.max(...snapshots.map(s => new Date(s.date))));
-
-      const minDateInput = document.getElementById('minDateInput');
-      const maxDateInput = document.getElementById('maxDateInput');
-
-      minDateInput.min = minDate.toISOString().split('T')[0];
-      minDateInput.max = maxDate.toISOString().split('T')[0];
-      minDateInput.value = minDate.toISOString().split('T')[0];
-
-      maxDateInput.min = minDate.toISOString().split('T')[0];
-      maxDateInput.max = maxDate.toISOString().split('T')[0];
-      maxDateInput.value = maxDate.toISOString().split('T')[0];
-    }
-
-    document.getElementById('minVotePowerInput').addEventListener('input', renderTable);
-    document.getElementById('maxVotePowerInput').addEventListener('input', renderTable);
-    document.getElementById('minDateInput').addEventListener('change', renderTable);
-    document.getElementById('maxDateInput').addEventListener('change', renderTable);
-    document.querySelectorAll('input[name="votePowerToggle"]').forEach(toggle =>
-      toggle.addEventListener('change', renderTable)
-    );
-    document.getElementById('registeredOnly').addEventListener('change', renderTable);
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadData().then(() => {
-        initializeDateFilters();
-        addTableFilters();
-        renderTable();
-      });
+    document.getElementById('maxVotePowerInput').addEventListener('input', () => {
+      renderChart();
+      renderTable();
     });
+    document.getElementById('registeredOnly').addEventListener('change', () => {
+      renderChart();
+      renderTable();
+    });
+    document.getElementById('timeframe').addEventListener('change', renderChart);
+
+    document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
 
