@@ -39,7 +39,8 @@
     }
 
     .slider-container,
-    .checkbox-container {
+    .checkbox-container,
+    .slicer-container {
       flex: 1 1 calc(33.333% - 1rem);
       min-width: 200px;
     }
@@ -95,23 +96,22 @@
     <section class="controls">
       <div class="slider-container">
         <label>Max Voting Power (%):</label>
-        <input type="number" id="minVotePowerInput" min="0" max="100" step="0.1" value="0" />
         <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100" />
-        <div>
-          <label><input type="radio" name="votePowerToggle" value="min" checked /> Min</label>
-          <label><input type="radio" name="votePowerToggle" value="max" /> Max</label>
-        </div>
-      </div>
-      <div class="slider-container">
-        <label>Date Range:</label>
-        <input type="date" id="minDateInput" />
-        <input type="date" id="maxDateInput" />
       </div>
       <div class="checkbox-container">
         <label for="registeredOnly">
           <input type="checkbox" id="registeredOnly" />
           Registered Only
         </label>
+      </div>
+      <div class="slicer-container">
+        <label for="timeframe">Timeframe:</label>
+        <select id="timeframe">
+          <option value="latest">Latest</option>
+          <option value="7-day">7-Day Average</option>
+          <option value="30-day">30-Day Average</option>
+          <option value="cumulative">Cumulative Average</option>
+        </select>
       </div>
     </section>
 
