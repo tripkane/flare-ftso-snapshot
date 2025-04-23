@@ -125,10 +125,10 @@
       <table>
         <thead>
           <tr>
-            <th onclick="sortTable(0)">Date</th>
-            <th onclick="sortTable(1)">Provider</th>
-            <th onclick="sortTable(2, true)">Vote Power %</th>
-            <th onclick="sortTable(3, true)">Reward Rate (%)</th>
+            <th>Date</th>
+            <th>Provider</th>
+            <th>Vote Power %</th>
+            <th>Reward Rate (%)</th>
           </tr>
         </thead>
         <tbody id="dataTable"></tbody>
@@ -275,18 +275,76 @@
 
       Array.from(thead.rows[0].cells).forEach((cell, index) => {
         const filterCell = document.createElement('th');
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = `Filter ${cell.textContent}`;
-        input.addEventListener('input', () => filterTable(index, input.value));
-        filterCell.appendChild(input);
+
+        if (index === 0) {
+          // Date column: Add date range inputs
+          const startDateInput = document.createElement('input');
+          startDateInput.type = 'date';
+          startDateInput.placeholder = 'Start Date';
+          startDateInput.addEventListener('change', () => filterTableByDate());
+          filterCell.appendChild(startDateInput);
+
+          const endDateInput = document.createElement('input');
+          endDateInput.type = 'date';
+          endDateInput.placeholder = 'End Date';
+          endDateInput.addEventListener('change', () => filterTableByDate());
+          filterCell.appendChild(endDateInput);
+        } else if (index === 2 || index === 3) {
+          // Numeric columns: Add min/max range inputs
+          const minInput = document.createElement('input');
+          minInput.type = 'number';
+          minInput.placeholder = 'Min';
+          minInput.addEventListener('input', () => filterTableByRange(index, minInput.value, maxInput.value));
+          filterCell.appendChild(minInput);
+
+          const maxInput = document.createElement('input');
+          maxInput.type = 'number';
+          maxInput.placeholder = 'Max';
+          maxInput.addEventListener('input', () => filterTableByRange(index, minInput.value, maxInput.value));
+          filterCell.appendChild(maxInput);
+        } else {
+          // Text input for other columns
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = `Filter ${cell.textContent}`;
+          input.addEventListener('input', () => filterTableByText(index, input.value));
+          filterCell.appendChild(input);
+        }
+
         filterRow.appendChild(filterCell);
       });
 
       thead.appendChild(filterRow);
     }
 
-    function filterTable(columnIndex, query) {
+    function filterTableByDate() {
+      const table = document.querySelector('table');
+      const rows = Array.from(table.tBodies[0].rows);
+
+      const startDate = new Date(document.querySelector('thead input[type="date"]:nth-child(1)').value);
+      const endDate = new Date(document.querySelector('thead input[type="date"]:nth-child(2)').value);
+
+      rows.forEach(row => {
+        const cellDate = new Date(row.cells[0].textContent);
+        row.style.display =
+          (!isNaN(startDate) && cellDate < startDate) || (!isNaN(endDate) && cellDate > endDate)
+            ? 'none'
+            : '';
+      });
+    }
+
+    function filterTableByRange(columnIndex, min, max) {
+      const table = document.querySelector('table');
+      const rows = Array.from(table.tBodies[0].rows);
+
+      rows.forEach(row => {
+        const cellValue = parseFloat(row.cells[columnIndex].textContent);
+        row.style.display =
+          (!isNaN(min) && cellValue < min) || (!isNaN(max) && cellValue > max) ? 'none' : '';
+      });
+    }
+
+    function filterTableByText(columnIndex, query) {
       const table = document.querySelector('table');
       const rows = Array.from(table.tBodies[0].rows);
 
