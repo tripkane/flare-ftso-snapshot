@@ -138,9 +138,6 @@
   </main>
 
   <script>
-    let snapshots = [];
-    let rewardRateChart;
-
     async function loadData() {
       try {
         const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
