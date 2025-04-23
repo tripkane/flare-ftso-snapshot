@@ -95,7 +95,6 @@
     <section class="controls">
       <div class="slider-container">
         <label>Vote Power Range (%):</label>
-        <input type="number" id="minVotePowerInput" min="0" max="100" step="0.1" value="0" />
         <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100" />
       </div>
       <div class="checkbox-container">
@@ -157,7 +156,6 @@
     }
 
     function getFilteredProviders() {
-      const minVotePower = parseFloat(document.getElementById('minVotePowerInput').value) || 0;
       const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
       const registeredOnly = document.getElementById('registeredOnly').checked;
 
@@ -166,7 +164,6 @@
           const votePower = parseFloat(provider.vote_power_pct); // Already in percentage
           const isRegistered = provider.registered.toLowerCase() === "yes"; // Check for "yes" or "no"
           return (
-            votePower >= minVotePower &&
             votePower <= maxVotePower &&
             (!registeredOnly || isRegistered)
           );
@@ -223,7 +220,7 @@
           labels: rewardRates.map(r => r.name), // Provider names as labels
           datasets: [{
             label: `Reward Rate (%) - ${timeframe}`,
-            data: rewardRates.map(r => r.average),
+            data: rewardRates.map(r => (r.average * 100).toFixed(2)), // Convert to percentage
             backgroundColor: 'orange'
           }]
         },
@@ -271,34 +268,62 @@
       });
     }
 
-    function updateRangeInputs() {
-      const minVotePower = document.getElementById('minVotePowerInput').value;
-      const maxVotePower = document.getElementById('maxVotePowerInput').value;
-      document.getElementById('minVotePower').textContent = minVotePower;
-      document.getElementById('maxVotePower').textContent = maxVotePower;
-      renderChart();
-      renderTable();
+    function addTableFilters() {
+      const table = document.querySelector('table');
+      const thead = table.querySelector('thead');
+      const filterRow = document.createElement('tr');
+
+      Array.from(thead.rows[0].cells).forEach((cell, index) => {
+        const filterCell = document.createElement('th');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Filter ${cell.textContent}`;
+        input.addEventListener('input', () => filterTable(index, input.value));
+        filterCell.appendChild(input);
+        filterRow.appendChild(filterCell);
+      });
+
+      thead.appendChild(filterRow);
+    }
+
+    function filterTable(columnIndex, query) {
+      const table = document.querySelector('table');
+      const rows = Array.from(table.tBodies[0].rows);
+
+      rows.forEach(row => {
+        const cell = row.cells[columnIndex].textContent.toLowerCase();
+        row.style.display = cell.includes(query.toLowerCase()) ? '' : 'none';
+      });
     }
 
     function sortTable(columnIndex, isNumeric = false) {
       const table = document.querySelector('table');
-      const rows = Array.from(table.rows).slice(1);
+      const rows = Array.from(table.tBodies[0].rows);
+
       rows.sort((a, b) => {
         const cellA = a.cells[columnIndex].textContent.trim();
         const cellB = b.cells[columnIndex].textContent.trim();
         return isNumeric ? parseFloat(cellA) - parseFloat(cellB) : cellA.localeCompare(cellB);
       });
+
       rows.forEach(row => table.tBodies[0].appendChild(row));
     }
 
-    document.getElementById('minVotePowerInput').addEventListener('input', updateRangeInputs);
-    document.getElementById('maxVotePowerInput').addEventListener('input', updateRangeInputs);
-    document.getElementById('registeredOnly').addEventListener('change', renderChart);
+    document.getElementById('maxVotePowerInput').addEventListener('input', () => {
+      renderChart();
+      renderTable();
+    });
+    document.getElementById('registeredOnly').addEventListener('change', () => {
+      renderChart();
+      renderTable();
+    });
     document.getElementById('timeframe').addEventListener('change', renderChart);
 
-    document.addEventListener('DOMContentLoaded', loadData);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      addTableFilters();
+    });
   </script>
 </body>
 
 </html>
-``` 
