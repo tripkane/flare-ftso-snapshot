@@ -76,6 +76,7 @@
 
     th {
       background: #232323;
+      cursor: pointer;
     }
 
     tr:hover {
@@ -94,8 +95,13 @@
     <section class="controls">
       <div class="slider-container">
         <label>Vote Power Range (%):</label>
-        <input type="number" id="minRangeInput" min="0" max="100" step="0.1" value="0" />
-        <input type="number" id="maxRangeInput" min="0" max="100" step="0.1" value="100" />
+        <input type="number" id="minVotePowerInput" min="0" max="100" step="0.1" value="0" />
+        <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100" />
+      </div>
+      <div class="slider-container">
+        <label>Reward Rate Range (%):</label>
+        <input type="number" id="minRewardRateInput" min="0" max="100" step="0.1" value="0" />
+        <input type="number" id="maxRewardRateInput" min="0" max="100" step="0.1" value="100" />
       </div>
       <div class="checkbox-container">
         <label for="registeredOnly">
@@ -125,10 +131,10 @@
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Provider</th>
-            <th>Vote Power %</th>
-            <th>Reward Rate (%)</th>
+            <th onclick="sortTable(0)">Date</th>
+            <th onclick="sortTable(1)">Provider</th>
+            <th onclick="sortTable(2, true)">Vote Power %</th>
+            <th onclick="sortTable(3, true)">Reward Rate (%)</th>
           </tr>
         </thead>
         <tbody id="dataTable"></tbody>
@@ -156,15 +162,24 @@
     }
 
     function getFilteredProviders() {
-      const minRange = parseFloat(document.getElementById('minRangeInput').value);
-      const maxRange = parseFloat(document.getElementById('maxRangeInput').value);
+      const minVotePower = parseFloat(document.getElementById('minVotePowerInput').value) || 0;
+      const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
+      const minRewardRate = parseFloat(document.getElementById('minRewardRateInput').value) || 0;
+      const maxRewardRate = parseFloat(document.getElementById('maxRewardRateInput').value) || 100;
       const registeredOnly = document.getElementById('registeredOnly').checked;
 
       const filtered = snapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
-          const votePower = parseFloat(provider.vote_power_pct); // Already in percentage
+          const votePower = parseFloat(provider.vote_power_pct);
+          const rewardRate = parseFloat(provider.reward_rate) || 0; // Treat NaN as 0
           const isRegistered = provider.registered.toLowerCase() === "yes"; // Check for "yes" or "no"
-          return votePower >= minRange && votePower <= maxRange && (!registeredOnly || isRegistered);
+          return (
+            votePower >= minVotePower &&
+            votePower <= maxVotePower &&
+            rewardRate >= minRewardRate &&
+            rewardRate <= maxRewardRate &&
+            (!registeredOnly || isRegistered)
+          );
         })
       );
 
@@ -177,7 +192,7 @@
 
       filteredProviders.forEach(provider => {
         if (!rewardRates[provider.name]) rewardRates[provider.name] = [];
-        rewardRates[provider.name].push(parseFloat(provider.reward_rate)); // Already in percentage
+        rewardRates[provider.name].push(parseFloat(provider.reward_rate) || 0); // Treat NaN as 0
       });
 
       return Object.keys(rewardRates).map(name => {
@@ -247,15 +262,32 @@
     }
 
     function updateRangeInputs() {
-      const minRange = document.getElementById('minRangeInput').value;
-      const maxRange = document.getElementById('maxRangeInput').value;
-      document.getElementById('minVotePower').textContent = minRange;
-      document.getElementById('maxVotePower').textContent = maxRange;
+      const minVotePower = document.getElementById('minVotePowerInput').value;
+      const maxVotePower = document.getElementById('maxVotePowerInput').value;
+      const minRewardRate = document.getElementById('minRewardRateInput').value;
+      const maxRewardRate = document.getElementById('maxRewardRateInput').value;
+      document.getElementById('minVotePower').textContent = minVotePower;
+      document.getElementById('maxVotePower').textContent = maxVotePower;
+      document.getElementById('minRewardRate').textContent = minRewardRate;
+      document.getElementById('maxRewardRate').textContent = maxRewardRate;
       renderChart();
     }
 
-    document.getElementById('minRangeInput').addEventListener('input', updateRangeInputs);
-    document.getElementById('maxRangeInput').addEventListener('input', updateRangeInputs);
+    function sortTable(columnIndex, isNumeric = false) {
+      const table = document.querySelector('table');
+      const rows = Array.from(table.rows).slice(1);
+      rows.sort((a, b) => {
+        const cellA = a.cells[columnIndex].textContent.trim();
+        const cellB = b.cells[columnIndex].textContent.trim();
+        return isNumeric ? parseFloat(cellA) - parseFloat(cellB) : cellA.localeCompare(cellB);
+      });
+      rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
+
+    document.getElementById('minVotePowerInput').addEventListener('input', updateRangeInputs);
+    document.getElementById('maxVotePowerInput').addEventListener('input', updateRangeInputs);
+    document.getElementById('minRewardRateInput').addEventListener('input', updateRangeInputs);
+    document.getElementById('maxRewardRateInput').addEventListener('input', updateRangeInputs);
     document.getElementById('registeredOnly').addEventListener('change', renderChart);
     document.getElementById('timeframe').addEventListener('change', renderChart);
 
