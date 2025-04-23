@@ -159,19 +159,19 @@
     }
 
     function getFilteredProviders() {
-      const minRange = parseFloat(document.getElementById('minRange').value) / 100;
-      const maxRange = parseFloat(document.getElementById('maxRange').value) / 100;
-      const registeredOnly = document.getElementById('registeredOnly').checked;
+    const minRange = parseFloat(document.getElementById('minRange').value) / 100;
+    const maxRange = parseFloat(document.getElementById('maxRange').value) / 100;
+    const registeredOnly = document.getElementById('registeredOnly').checked;
 
-      const filtered = snapshots.flatMap(snapshot =>
-        snapshot.providers.filter(provider => {
-          const votePower = parseFloat(provider.vote_power_pct);
-          const isRegistered = registeredOnly ? provider.registered : true;
-          return votePower >= minRange && votePower <= maxRange && isRegistered;
-        })
-      );
+    const filtered = snapshots.flatMap(snapshot =>
+      snapshot.providers.filter(provider => {
+        const votePower = parseFloat(provider.vote_power_pct);
+        const isRegistered = provider.registered === true || provider.registered === "true"; // Ensure proper boolean check
+        return votePower >= minRange && votePower <= maxRange && (!registeredOnly || isRegistered);
+      })
+    );
 
-      return filtered;
+    return filtered;
     }
 
     function calculateRewardRates(timeframe) {
