@@ -170,7 +170,10 @@
             votePower <= maxVotePower &&
             (!registeredOnly || isRegistered)
           );
-        })
+        }).map(provider => ({
+          ...provider,
+          date: snapshot.date // Attach the date from the snapshot
+        }))
       );
 
       return filtered;
@@ -262,7 +265,7 @@
           <td>${provider.date}</td>
           <td>${provider.name}</td>
           <td>${parseFloat(provider.vote_power_pct).toFixed(2)}</td>
-          <td>${(parseFloat(provider.reward_rate) || 0).toFixed(2)}</td>
+          <td>${(parseFloat(provider.reward_rate) * 100).toFixed(2)}</td> <!-- Convert reward rate to percentage -->
         `;
         tbody.appendChild(row);
       });
@@ -298,3 +301,4 @@
 </body>
 
 </html>
+``` 
