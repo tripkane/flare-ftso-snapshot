@@ -123,7 +123,7 @@
             average = rates[rates.length - 1];
         }
 
-        return { name, average: average.toFixed(2) }; // Format average to 2 decimal places
+        return { name, average: average.toFixed(4) }; // Keep raw average to 4 decimal places for precision
       });
 
       // Sort data by reward rate (highest to lowest)
@@ -131,7 +131,7 @@
 
       const chartData = {
         x: data.map(d => d.name),
-        y: data.map(d => parseFloat(d.average)), // Ensure y values are decimals with 2 places
+        y: data.map(d => (parseFloat(d.average) * 100).toFixed(2)), // Convert to percentage and format to 2 decimal places
         type: 'bar',
         marker: { color: 'orange' }
       };
