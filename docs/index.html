@@ -191,12 +191,15 @@
       const filteredProviders = getFilteredProviders();
 
       filteredProviders.forEach(provider => {
+        const votePower = parseFloat(provider.vote_power_pct) || 0; // Replace NaN with 0
+        const rewardRate = (parseFloat(provider.reward_rate) * 100) || 0; // Replace NaN with 0 and convert to percentage
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td class="p-2 border border-gray-600">${provider.date}</td>
           <td class="p-2 border border-gray-600">${provider.name}</td>
-          <td class="p-2 border border-gray-600">${parseFloat(provider.vote_power_pct).toFixed(2)}</td>
-          <td class="p-2 border border-gray-600">${(parseFloat(provider.reward_rate) * 100).toFixed(2)}</td>
+          <td class="p-2 border border-gray-600">${votePower.toFixed(2)}</td>
+          <td class="p-2 border border-gray-600">${rewardRate.toFixed(2)}</td>
         `;
         tbody.appendChild(row);
       });
