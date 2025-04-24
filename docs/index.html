@@ -213,8 +213,9 @@
         order: [[3, 'desc']], // Default sort by Reward Rate (%) in descending order
         pageLength: 100, // Default to showing 100 entries
         columnDefs: [
-          { targets: [2, 3], orderable: true }, // Enable sorting for Vote Power % and Reward Rate (%)
-          { targets: [0, 1], orderable: true }, // Enable sorting for Date and Provider
+          { targets: 0, type: 'date' }, // Treat Date column as a date
+          { targets: 2, type: 'num' }, // Treat Vote Power % as numeric
+          { targets: 3, type: 'num' }, // Treat Reward Rate (%) as numeric
         ],
       });
     }
