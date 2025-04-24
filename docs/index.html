@@ -7,6 +7,9 @@
   <title>FTSO Flare Dashboard</title>
   <script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 </head>
 
 <body class="bg-gray-900 text-gray-100 font-sans">
@@ -47,7 +50,7 @@
     <!-- Full Data Table -->
     <section>
       <h2 class="text-xl font-bold mt-6">Full Data Table</h2>
-      <table class="w-full border-collapse mt-4 bg-gray-800 text-gray-100">
+      <table id="dataTable" class="display w-full border-collapse mt-4 bg-gray-800 text-gray-100">
         <thead>
           <tr class="bg-gray-700">
             <th class="p-2 border border-gray-600">Date</th>
@@ -56,7 +59,9 @@
             <th class="p-2 border border-gray-600">Reward Rate (%)</th>
           </tr>
         </thead>
-        <tbody id="dataTable"></tbody>
+        <tbody>
+          <!-- Rows will be dynamically populated by renderTable() -->
+        </tbody>
       </table>
     </section>
   </main>
@@ -146,7 +151,7 @@
     }
 
     function renderTable() {
-      const tbody = document.getElementById('dataTable');
+      const tbody = document.getElementById('dataTable').querySelector('tbody');
       tbody.innerHTML = '';
 
       const filteredProviders = getFilteredProviders();
@@ -161,6 +166,10 @@
         `;
         tbody.appendChild(row);
       });
+
+      // Reinitialize DataTables after updating the table
+      $('#dataTable').DataTable().destroy(); // Destroy the existing DataTable instance
+      $('#dataTable').DataTable(); // Reinitialize DataTable
     }
 
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
