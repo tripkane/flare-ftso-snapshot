@@ -59,26 +59,24 @@ def scrape_flaremetrics(driver):
                 vote_power_locked = vote_nums[1]
             else:
                 m = re.match(r"^([0-9,]+?)\1$", raw_vote)
-
                 if m:
                     vote_power = m.group(1)
                     vote_power_locked = m.group(1)
                 else:
-                    vote_power = vote_nums[0] if vote_nums else ''
-                    vote_power_locked = ''
+                    vote_power = vote_nums[0] if vote_nums else '0'
+                    vote_power_locked = '0'
 
             # Extract vote power percentages
             pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
-            vote_power_pct = pcts[0] if len(pcts) > 0 else ''
-            vote_power_pct_locked = pcts[1] if len(pcts) > 1 else ''
+            vote_power_pct = float(pcts[0].replace('%', '').replace(',', '')) if len(pcts) > 0 else 0.0
+            vote_power_pct_locked = float(pcts[1].replace('%', '').replace(',', '')) if len(pcts) > 1 else 0.0
 
             # 24h change percent
             change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
-            change_24h_pct = change_pcts[0] if change_pcts else ''
+            change_24h_pct = float(change_pcts[0].replace('%', '').replace(',', '')) if change_pcts else 0.0
 
             # Reward rate as decimal
-            reward_rate = extract_decimal(raw_reward)
-
+            reward_rate = float(extract_decimal(raw_reward)) if extract_decimal(raw_reward) else 0.0
 
             providers.append({
                 "rank": rank,
