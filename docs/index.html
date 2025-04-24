@@ -5,108 +5,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FTSO Flare Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #eee;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      text-align: center;
-      padding: 1rem;
-      background: #181818;
-      border-bottom: 1px solid #222;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 1rem auto;
-      padding: 1rem;
-      background: #1e1e1e;
-      border-radius: 8px;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      justify-content: space-between;
-    }
-
-    .slider-container,
-    .checkbox-container,
-    .slicer-container {
-      flex: 1 1 calc(33.333% - 1rem);
-      min-width: 200px;
-    }
-
-    .slider-container input[type="range"],
-    .slider-container input[type="date"] {
-      width: 100%;
-    }
-
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    canvas {
-      width: 100%;
-      max-height: 400px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 2rem;
-      background: #191919;
-    }
-
-    th,
-    td {
-      padding: 0.5rem;
-      border: 1px solid #333;
-      text-align: center;
-    }
-
-    th {
-      background: #232323;
-      cursor: pointer;
-    }
-
-    tr:hover {
-      background: #222;
-    }
-  </style>
+  <script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
-  <header>
-    <h1>FTSO Flare Dashboard</h1>
+<body class="bg-gray-900 text-gray-100 font-sans">
+  <header class="text-center py-4 bg-gray-800 border-b border-gray-700">
+    <h1 class="text-2xl font-bold">FTSO Flare Dashboard</h1>
   </header>
 
-  <main class="container">
+  <main class="container mx-auto p-4">
     <!-- Controls -->
-    <section class="controls">
-      <div class="slider-container">
-        <label>Max Voting Power (%):</label>
-        <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100" />
+    <section class="flex flex-wrap gap-4 mb-6">
+      <div class="flex-1 min-w-[200px]">
+        <label class="block font-bold mb-2">Max Voting Power (%):</label>
+        <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100"
+          class="w-full p-2 bg-gray-800 border border-gray-700 rounded" />
       </div>
-      <div class="checkbox-container">
-        <label for="registeredOnly">
-          <input type="checkbox" id="registeredOnly" />
+      <div class="flex-1 min-w-[200px]">
+        <label class="block font-bold mb-2">
+          <input type="checkbox" id="registeredOnly" class="mr-2" />
           Registered Only
         </label>
       </div>
-      <div class="slicer-container">
-        <label for="timeframe">Timeframe:</label>
-        <select id="timeframe">
+      <div class="flex-1 min-w-[200px]">
+        <label for="timeframe" class="block font-bold mb-2">Timeframe:</label>
+        <select id="timeframe" class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
           <option value="latest">Latest</option>
           <option value="7-day">7-Day Average</option>
           <option value="30-day">30-Day Average</option>
@@ -116,20 +40,20 @@
     </section>
 
     <!-- Reward Rate Chart -->
-    <section id="chartContainer" style="overflow-x: auto; white-space: nowrap;">
-      <canvas id="rewardRateChart"></canvas>
+    <section id="chartContainer" class="overflow-x-auto">
+      <div id="rewardRateChart" class="w-full h-[400px]"></div>
     </section>
 
     <!-- Full Data Table -->
     <section>
-      <h2>Full Data Table</h2>
-      <table>
+      <h2 class="text-xl font-bold mt-6">Full Data Table</h2>
+      <table class="w-full border-collapse mt-4 bg-gray-800 text-gray-100">
         <thead>
-          <tr>
-            <th>Date</th>
-            <th>Provider</th>
-            <th>Vote Power %</th>
-            <th>Reward Rate (%)</th>
+          <tr class="bg-gray-700">
+            <th class="p-2 border border-gray-600">Date</th>
+            <th class="p-2 border border-gray-600">Provider</th>
+            <th class="p-2 border border-gray-600">Vote Power %</th>
+            <th class="p-2 border border-gray-600">Reward Rate (%)</th>
           </tr>
         </thead>
         <tbody id="dataTable"></tbody>
@@ -171,16 +95,17 @@
       return filtered;
     }
 
-    function calculateRewardRates(timeframe) {
+    function renderChart() {
+      const timeframe = document.getElementById('timeframe').value;
       const filteredProviders = getFilteredProviders();
-      const rewardRates = {};
 
+      const rewardRates = {};
       filteredProviders.forEach(provider => {
         if (!rewardRates[provider.name]) rewardRates[provider.name] = [];
-        rewardRates[provider.name].push(parseFloat(provider.reward_rate) || 0); // Treat NaN as 0
+        rewardRates[provider.name].push(parseFloat(provider.reward_rate) || 0);
       });
 
-      return Object.keys(rewardRates).map(name => {
+      const data = Object.keys(rewardRates).map(name => {
         const rates = rewardRates[name];
         let average = 0;
 
@@ -199,50 +124,22 @@
         }
 
         return { name, average: average.toFixed(2) };
-      }).sort((a, b) => b.average - a.average); // Sort from max to min
-    }
-
-    function renderChart() {
-      const timeframe = document.getElementById('timeframe').value;
-      const rewardRates = calculateRewardRates(timeframe);
-
-      const ctx = document.getElementById('rewardRateChart').getContext('2d');
-      if (rewardRateChart) rewardRateChart.destroy();
-
-      rewardRateChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: rewardRates.map(r => r.name), // Provider names as labels
-          datasets: [{
-            label: `Reward Rate (%) - ${timeframe}`,
-            data: rewardRates.map(r => (r.average * 100).toFixed(2)), // Convert to percentage
-            backgroundColor: 'orange'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              ticks: {
-                autoSkip: false, // Ensure all labels are shown
-                maxRotation: 45, // Rotate labels for better readability
-                minRotation: 0
-              }
-            },
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
       });
 
-      // Add horizontal scrolling if the chart overflows
-      const chartContainer = document.getElementById('chartContainer');
-      chartContainer.style.overflowX = 'auto';
+      const chartData = {
+        x: data.map(d => d.name),
+        y: data.map(d => d.average * 100), // Convert to percentage
+        type: 'bar',
+        marker: { color: 'orange' }
+      };
+
+      Plotly.newPlot('rewardRateChart', [chartData], {
+        title: `Reward Rate (%) - ${timeframe}`,
+        xaxis: { title: 'Provider' },
+        yaxis: { title: 'Reward Rate (%)' },
+        margin: { t: 50, l: 50, r: 50, b: 50 },
+        responsive: true
+      });
     }
 
     function renderTable() {
@@ -254,10 +151,10 @@
       filteredProviders.forEach(provider => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${provider.date}</td>
-          <td>${provider.name}</td>
-          <td>${parseFloat(provider.vote_power_pct).toFixed(2)}</td>
-          <td>${(parseFloat(provider.reward_rate) * 100).toFixed(2)}</td> <!-- Convert reward rate to percentage -->
+          <td class="p-2 border border-gray-600">${provider.date}</td>
+          <td class="p-2 border border-gray-600">${provider.name}</td>
+          <td class="p-2 border border-gray-600">${parseFloat(provider.vote_power_pct).toFixed(2)}</td>
+          <td class="p-2 border border-gray-600">${(parseFloat(provider.reward_rate) * 100).toFixed(2)}</td>
         `;
         tbody.appendChild(row);
       });
