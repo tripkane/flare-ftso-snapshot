@@ -105,7 +105,7 @@
         rewardRates[provider.name].push(parseFloat(provider.reward_rate) || 0);
       });
 
-      const data = Object.keys(rewardRates).map(name => {
+      let data = Object.keys(rewardRates).map(name => {
         const rates = rewardRates[name];
         let average = 0;
 
@@ -125,6 +125,9 @@
 
         return { name, average: average.toFixed(2) };
       });
+
+      // Sort data by reward rate (highest to lowest)
+      data = data.sort((a, b) => b.average - a.average);
 
       const chartData = {
         x: data.map(d => d.name),
