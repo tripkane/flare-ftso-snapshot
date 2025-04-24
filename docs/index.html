@@ -97,6 +97,17 @@
         const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
         const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
         snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
+
+        // Calculate the maximum vote_power_pct
+        const maxVotePower = Math.max(
+          ...snapshots.flatMap(snapshot =>
+            snapshot.providers.map(provider => parseFloat(provider.vote_power_pct))
+          )
+        );
+
+        // Set the maxVotePowerInput default value to the maximum vote_power_pct
+        document.getElementById('maxVotePowerInput').value = maxVotePower.toFixed(2);
+
         renderChart();
         renderTable();
       } catch (error) {
