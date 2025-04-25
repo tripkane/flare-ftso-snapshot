@@ -103,14 +103,67 @@ def save_snapshot(data):
         json.dump({"date": today, "providers": data}, f, indent=2)
     print(f"Snapshot saved: {filename}")
 
+def load_previous_snapshot():
+    """Load the most recent snapshot from the daily_snapshots directory."""
+    snapshots_dir = "daily_snapshots"
+    files = sorted(
+        [f for f in os.listdir(snapshots_dir) if f.endswith(".json")],
+        reverse=True
+    )
+    if len(files) < 2:
+        return None  # No previous snapshot available
+    with open(os.path.join(snapshots_dir, files[1]), 'r') as f:
+        return json.load(f)
+
+def compare_snapshots(current, previous):
+    """Compare the current snapshot with the previous one."""
+    previous_providers = {p["name"]: p for p in previous.get("providers", [])}
+    report = []
+
+    for provider in current.get("providers", []):
+        name = provider["name"]
+        current_reward_rate = provider["reward_rate"]
+        current_registered = provider["registered"]
+
+        if name in previous_providers:
+            previous_reward_rate = previous_providers[name]["reward_rate"]
+            previous_registered = previous_providers[name]["registered"]
+
+            # Check if reward rate changed to NaN
+            if not current_reward_rate and previous_reward_rate > 0:
+                report.append({
+                    "name": name,
+                    "previous_reward_rate": previous_reward_rate,
+                    "current_reward_rate": current_reward_rate,
+                    "current_registered": current_registered
+                })
+
+    return report
+
+def save_report(report):
+    """Save the report to a JSON file."""
+    today = datetime.date.today().isoformat()
+    os.makedirs("reports", exist_ok=True)
+    filename = f"reports/reward_rate_changes_{today}.json"
+    with open(filename, 'w') as f:
+        json.dump(report, f, indent=2)
+    print(f"Report saved: {filename}")
+
 # Main entrypoint
 def main():
     driver = init_driver()
     try:
-        data = scrape_flaremetrics(driver)
+        current_data = scrape_flaremetrics(driver)
     finally:
         driver.quit()
-    save_snapshot(data)
+
+    save_snapshot(current_data)
+
+    # Load the previous snapshot and compare
+    previous_data = load_previous_snapshot()
+    if previous_data:
+        report = compare_snapshots({"providers": current_data}, previous_data)
+        save_report(report)
 
 if __name__ == '__main__':
     main()
