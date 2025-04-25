@@ -26,11 +26,14 @@ def extract_numbers(text):
 
 def extract_decimal(text):
     """Extract a floating-point number from text."""
-    m = re.search(r"\d+\.\d+", text)
+    m = re.search(r"\d+\.\d+", text)  # Match valid decimal numbers
     if m:
         return m.group(0)
     # Fallback: remove non-digit and non-dot characters
     cleaned = re.sub(r"[^0-9.]", "", text)
+    # Ensure the cleaned value is a valid float
+    if cleaned.count('.') > 1 or cleaned == '.':  # Invalid if multiple dots or just a dot
+        return None
     return cleaned
 
 # Scrape flaremetrics.io (Songbird network)
