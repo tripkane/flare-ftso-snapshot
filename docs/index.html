@@ -91,12 +91,17 @@
 
   <script>
     async function loadData() {
-      try {
-        const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
-        const files = await res.json();
-        const urls = files.filter(f => f.name.endsWith('.json')).map(f => f.download_url);
-        const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
-        snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
+  try {
+    const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
+    const files = await res.json();
+
+    // Filter files to only include those starting with 'flare_'
+    const urls = files
+      .filter(f => f.name.startsWith('flare_') && f.name.endsWith('.json'))
+      .map(f => f.download_url);
+
+    const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
+    snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
 
         // Calculate the maximum vote_power_pct
         const maxVotePower = Math.max(
