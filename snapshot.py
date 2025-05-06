@@ -3,6 +3,7 @@ import datetime
 import os
 import time
 import re
+import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -36,9 +37,14 @@ def extract_decimal(text):
         return None
     return cleaned
 
-# Scrape flaremetrics.io (Songbird network)
-def scrape_flaremetrics(driver):
-    url = "https://flaremetrics.io/"
+# Scrape flaremetrics.io (Flare or Songbird network)
+def scrape_flaremetrics(driver, network="flare"):
+    if network == "flare":
+        url = "https://flaremetrics.io/"
+    elif network == "songbird":
+        url = "https://flaremetrics.io/songbird"
+    else:
+        raise ValueError("Unknown network: " + network)
     driver.get(url)
     time.sleep(5)  # allow JS to render table
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -105,75 +111,29 @@ def scrape_flaremetrics(driver):
     return providers
 
 # Save snapshot to JSON
-def save_snapshot(data):
+def save_snapshot(data, network="flare"):
     today = datetime.date.today().isoformat()
     os.makedirs("daily_snapshots", exist_ok=True)
-    filename = f"daily_snapshots/ftso_snapshot_{today}.json"
+    filename = f"daily_snapshots/{network}_snapshot_{today}.json"
     with open(filename, 'w') as f:
         json.dump({"date": today, "providers": data}, f, indent=2)
     print(f"Snapshot saved: {filename}")
 
-def load_previous_snapshot():
-    """Load the most recent snapshot from the daily_snapshots directory."""
-    snapshots_dir = "daily_snapshots"
-    files = sorted(
-        [f for f in os.listdir(snapshots_dir) if f.endswith(".json")],
-        reverse=True
-    )
-    if len(files) < 2:
-        return None  # No previous snapshot available
-    with open(os.path.join(snapshots_dir, files[1]), 'r') as f:
-        return json.load(f)
-
-def compare_snapshots(current, previous):
-    """Compare the current snapshot with the previous one."""
-    previous_providers = {p["name"]: p for p in previous.get("providers", [])}
-    report = []
-
-    for provider in current.get("providers", []):
-        name = provider["name"]
-        current_reward_rate = provider["reward_rate"]
-        current_registered = provider["registered"]
-
-        if name in previous_providers:
-            previous_reward_rate = previous_providers[name]["reward_rate"]
-            previous_registered = previous_providers[name]["registered"]
-
-            # Check if reward rate changed to NaN
-            if not current_reward_rate and previous_reward_rate > 0:
-                report.append({
-                    "name": name,
-                    "previous_reward_rate": previous_reward_rate,
-                    "current_reward_rate": current_reward_rate,
-                    "current_registered": current_registered
-                })
-
-    return report
-
-def save_report(report):
-    """Save the report to a JSON file."""
-    today = datetime.date.today().isoformat()
-    os.makedirs("reports", exist_ok=True)
-    filename = f"reports/reward_rate_changes_{today}.json"
-    with open(filename, 'w') as f:
-        json.dump(report, f, indent=2)
-    print(f"Report saved: {filename}")
-
 # Main entrypoint
-def main():
+def main(network="flare"):
     driver = init_driver()
     try:
-        current_data = scrape_flaremetrics(driver)
+        current_data = scrape_flaremetrics(driver, network)
     finally:
         driver.quit()
 
-    save_snapshot(current_data)
-
-    # Load the previous snapshot and compare
-    previous_data = load_previous_snapshot()
-    if previous_data:
-        report = compare_snapshots({"providers": current_data}, previous_data)
-        save_report(report)
+    save_snapshot(current_data, network)
 
 if __name__ == '__main__':
-    main()
+    # Usage: python snapshot.py [flare|songbird]
+    networks = ["flare", "songbird"]
+    if len(sys.argv) > 1 and sys.argv[1] in networks:
+        main(sys.argv[1])
+    else:
+        for net in networks:
+            main(net)
