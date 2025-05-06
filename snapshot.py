@@ -55,19 +55,29 @@ def scrape_flaremetrics(driver):
             raw_reward = cols[5].get_text("", strip=True)
             registered = cols[6].get_text(strip=True)
 
-            # Extract vote power and locked vote power
+            # --- Updated vote_power/vote_power_locked logic ---
             vote_nums = extract_numbers(raw_vote)
             if len(vote_nums) >= 2:
-                vote_power = vote_nums[0]
-                vote_power_locked = vote_nums[1]
+                # Already split, just clean commas and convert to int
+                vote_power = int(vote_nums[0].replace(",", "")) if vote_nums[0] else 0
+                vote_power_locked = int(vote_nums[1].replace(",", "")) if vote_nums[1] else 0
+            elif len(vote_nums) == 1:
+                # Only one number, use for both
+                num = vote_nums[0].replace(",", "")
+                vote_power = int(num) if num else 0
+                vote_power_locked = int(num) if num else 0
             else:
-                m = re.match(r"^([0-9,]+?)\1$", raw_vote)
-                if m:
-                    vote_power = m.group(1)
-                    vote_power_locked = m.group(1)
+                # Fallback: try to split the raw_vote string in half (legacy case)
+                vp = raw_vote.replace(",", "")
+                if vp and len(vp) % 2 == 0:
+                    mid = len(vp) // 2
+                    vp1 = vp[:mid]
+                    vp2 = vp[mid:]
+                    vote_power = int(vp1) if vp1.isdigit() else 0
+                    vote_power_locked = int(vp2) if vp2.isdigit() else 0
                 else:
-                    vote_power = vote_nums[0] if vote_nums else '0'
-                    vote_power_locked = '0'
+                    vote_power = 0
+                    vote_power_locked = 0
 
             # Extract vote power percentages
             pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
