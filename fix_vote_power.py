@@ -9,7 +9,7 @@ def fix_vote_power(directory="daily_snapshots"):
                 data = json.load(f)
             changed = False
             for provider in data.get("providers", []):
-                vp = provider.get("vote_power", "")
+                vp = str(provider.get("vote_power", ""))
                 if vp and len(vp) % 2 == 0:
                     mid = len(vp) // 2
                     vp1 = vp[:mid].replace(",", "")
