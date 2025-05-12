@@ -50,8 +50,14 @@
       </div>
       <div class="flex-1 min-w-[200px]">
         <label class="block font-bold mb-2">
+          <input type="checkbox" id="registeredLatestOnly" class="mr-2" />
+          Registered in Latest Snapshot Only
+        </label>
+      </div>
+      <div class="flex-1 min-w-[200px]">
+        <label class="block font-bold mb-2">
           <input type="checkbox" id="registeredOnly" class="mr-2" />
-          Registered Only
+          Registered at Each Date
         </label>
       </div>
       <div class="flex-1 min-w-[200px]">
@@ -124,15 +130,31 @@
     function getFilteredProviders() {
       const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
       const registeredOnly = document.getElementById('registeredOnly').checked;
+      const registeredLatestOnly = document.getElementById('registeredLatestOnly').checked;
+
+      let latestSnapshot = snapshots[snapshots.length - 1];
+      let registeredInLatest = new Set();
+      if (latestSnapshot) {
+        latestSnapshot.providers.forEach(provider => {
+          if (provider.registered && provider.registered.toLowerCase() === "yes") {
+            registeredInLatest.add(provider.name);
+          }
+        });
+      }
 
       const filtered = snapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
-          const votePower = parseFloat(provider.vote_power_pct); // Already in percentage
-          const isRegistered = provider.registered.toLowerCase() === "yes"; // Check for "yes" or "no"
-          return votePower <= maxVotePower && (!registeredOnly || isRegistered);
+          const votePower = parseFloat(provider.vote_power_pct);
+          const isRegistered = provider.registered && provider.registered.toLowerCase() === "yes";
+          const isRegisteredLatest = registeredInLatest.has(provider.name);
+
+          // Apply filters
+          if (registeredOnly && !isRegistered) return false;
+          if (registeredLatestOnly && !isRegisteredLatest) return false;
+          return votePower <= maxVotePower;
         }).map(provider => ({
           ...provider,
-          date: snapshot.date // Attach the date from the snapshot
+          date: snapshot.date
         }))
       );
 
@@ -230,6 +252,10 @@
     }
 
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
+      renderChart();
+      renderTable();
+    });
+    document.getElementById('registeredLatestOnly').addEventListener('change', () => {
       renderChart();
       renderTable();
     });
