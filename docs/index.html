@@ -84,7 +84,10 @@
           <tr class="bg-gray-700">
             <th class="p-2 border border-gray-600">Date</th>
             <th class="p-2 border border-gray-600">Provider</th>
-            <th class="p-2 border border-gray-600">Vote Power %</th>
+            <th class="p-2 border border-gray-600">Current Voting Power %</th>
+            <th class="p-2 border border-gray-600">Locked Voting Power %</th>
+            <th class="p-2 border border-gray-600">Current Voting Power % (SGB)</th>
+            <th class="p-2 border border-gray-600">Locked Voting Power % (SGB)</th>
             <th class="p-2 border border-gray-600">Reward Rate (%)</th>
           </tr>
         </thead>
@@ -265,38 +268,65 @@
       const tbody = document.getElementById('dataTable').querySelector('tbody');
       tbody.innerHTML = '';
 
-      const filteredProviders = getFilteredProviders();
+      // Get filtered Flare and Songbird providers
+      const filteredFlare = getFilteredProviders();
+      const filteredSongbird = getFilteredSongbirdProviders();
 
-      filteredProviders.forEach(provider => {
-        // Ensure vote_power_pct and reward_rate are properly handled
-        const votePower = isNaN(parseFloat(provider.vote_power_pct)) ? 0 : parseFloat(provider.vote_power_pct); // Replace NaN with 0
-        const rewardRate = isNaN(parseFloat(provider.reward_rate)) ? 0 : parseFloat(provider.reward_rate) * 100; // Replace NaN with 0 and convert to percentage
+      // Combine both datasets
+      const allRows = [];
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td class="p-2 border border-gray-600">${provider.date || 'N/A'}</td> <!-- Handle missing dates -->
-          <td class="p-2 border border-gray-600">${provider.name || 'Unknown'}</td> <!-- Handle missing provider names -->
-          <td class="p-2 border border-gray-600">${votePower.toFixed(2)}</td>
-          <td class="p-2 border border-gray-600">${rewardRate.toFixed(2)}</td>
+      filteredFlare.forEach(provider => {
+        allRows.push({
+          date: provider.date || 'N/A',
+          provider: provider.name || 'Unknown',
+          currentVotingPower: isNaN(parseFloat(provider.vote_power_pct)) ? 0 : parseFloat(provider.vote_power_pct),
+          lockedVotingPower: isNaN(parseFloat(provider.vote_power_pct_locked)) ? 0 : parseFloat(provider.vote_power_pct_locked),
+          currentVotingPowerSGB: '', // No SGB data for Flare row
+          lockedVotingPowerSGB: '',  // No SGB data for Flare row
+          rewardRate: isNaN(parseFloat(provider.reward_rate)) ? 0 : parseFloat(provider.reward_rate) * 100
+        });
+      });
+
+      filteredSongbird.forEach(provider => {
+        allRows.push({
+          date: provider.date || 'N/A',
+          provider: provider.SGB_provider || 'Unknown',
+          currentVotingPower: '', // No Flare data for Songbird row
+          lockedVotingPower: '',  // No Flare data for Songbird row
+          currentVotingPowerSGB: isNaN(parseFloat(provider.SGB_vote_power_pct)) ? 0 : parseFloat(provider.SGB_vote_power_pct),
+          lockedVotingPowerSGB: isNaN(parseFloat(provider.SGB_vote_power_locked_pct)) ? 0 : parseFloat(provider.SGB_vote_power_locked_pct),
+          rewardRate: '' // Add SGB reward rate here if available
+        });
+      });
+
+      allRows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2 border border-gray-600">${row.date}</td>
+          <td class="p-2 border border-gray-600">${row.provider}</td>
+          <td class="p-2 border border-gray-600">${row.currentVotingPower !== '' ? row.currentVotingPower.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.lockedVotingPower !== '' ? row.lockedVotingPower.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.currentVotingPowerSGB !== '' ? row.currentVotingPowerSGB.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.lockedVotingPowerSGB !== '' ? row.lockedVotingPowerSGB.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.rewardRate !== '' ? row.rewardRate.toFixed(2) : ''}</td>
         `;
-        tbody.appendChild(row);
+        tbody.appendChild(tr);
       });
 
       // Reinitialize DataTables after updating the table
       if ($.fn.DataTable.isDataTable('#dataTable')) {
-        $('#dataTable').DataTable().destroy(); // Destroy the existing DataTable instance
+        $('#dataTable').DataTable().destroy();
       }
 
       $('#dataTable').DataTable({
-        paging: true, // Enable pagination
-        searching: true, // Enable global search
-        ordering: true, // Enable column sorting
-        order: [[3, 'desc']], // Default sort by Reward Rate (%) in descending order
-        pageLength: 100, // Default to showing 100 entries
+        paging: true,
+        searching: true,
+        ordering: true,
+        order: [[6, 'desc']], // Default sort by Reward Rate (%) in descending order
+        pageLength: 100,
         columnDefs: [
-          { targets: 0, type: 'date' }, // Treat Date column as a date
-          { targets: 2, type: 'num' }, // Treat Vote Power % as numeric
-          { targets: 3, type: 'num' }, // Treat Reward Rate (%) as numeric
+          { targets: 0, type: 'date' },
+          { targets: [2,3,4,5,6], type: 'num' },
         ],
       });
     }
