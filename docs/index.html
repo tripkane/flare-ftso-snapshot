@@ -84,7 +84,7 @@
       <div id="rewardRateChart" class="w-full h-[400px]"></div>
     </section>
 
-    <div id="miniChartsContainer" style="overflow-x: auto; white-space: nowrap; width: 100%;">
+    <div id="miniChartsContainer" style="overflow-y: auto; max-height: 1200px; width: 100%;">
       <!-- Mini charts will be injected here -->
     </div>
 
@@ -331,9 +331,8 @@
       const filteredFlare = getFilteredProviders();
       const filteredSongbird = getFilteredSongbirdProviders();
 
-      // Build a map: providerName -> { flare: [...], songbird: [...] }
+      // Build provider map
       const providerMap = {};
-
       filteredFlare.forEach(p => {
         if (!providerMap[p.name]) providerMap[p.name] = { flare: [], songbird: [] };
         providerMap[p.name].flare.push(p);
@@ -343,79 +342,48 @@
         providerMap[p.SGB_provider].songbird.push(p);
       });
 
-      // Sort providers by latest reward rate (highest to lowest)
+      // Sort and restrict to top 3
       const sortedProviders = Object.keys(providerMap).sort((a, b) => {
         const aReward = providerMap[a].flare.concat(providerMap[a].songbird).slice(-1)[0]?.reward_rate || 0;
         const bReward = providerMap[b].flare.concat(providerMap[b].songbird).slice(-1)[0]?.reward_rate || 0;
         return bReward - aReward;
       });
-
-      // Provider filter dropdown
       const providerFilter = document.getElementById('providerFilter');
-      providerFilter.innerHTML = '<option value="all">All Providers</option>' +
+      providerFilter.innerHTML = '<option value="all">Top 3 Providers</option>' +
         sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
-      providerFilter.onchange = renderMiniCharts; // re-render on filter
-
-      // Filter by selected provider if not "all"
+      providerFilter.onchange = renderMiniCharts;
       const selectedProvider = providerFilter.value;
-      const displayProviders = selectedProvider === "all" ? sortedProviders : [selectedProvider];
+      const displayProviders = selectedProvider === "all" ? sortedProviders.slice(0, 3) : [selectedProvider];
 
-      // Render mini charts
+      // Render vertically
       const container = document.getElementById('miniChartsContainer');
       container.innerHTML = '';
+      container.style.display = 'block';
       displayProviders.forEach(providerName => {
         const flareData = providerMap[providerName].flare;
         const songbirdData = providerMap[providerName].songbird;
-
-        // Prepare traces
         const dates = [...new Set(flareData.map(d => d.date).concat(songbirdData.map(d => d.date)))].sort();
-        const flareLocked = dates.map(date => flareData.find(d => d.date === date)?.vote_power_pct_locked ?? null);
-        const flareCurrent = dates.map(date => flareData.find(d => d.date === date)?.vote_power_pct ?? null);
-        const sgbLocked = dates.map(date => songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct ?? null);
-        const sgbCurrent = dates.map(date => songbirdData.find(d => d.date === date)?.SGB_vote_power_pct ?? null);
-        const rewardRate = dates.map(date => flareData.find(d => d.date === date)?.reward_rate * 100 ?? null);
+        const flareLocked = dates.map(date => Number(flareData.find(d => d.date === date)?.vote_power_pct_locked) || null);
+        const flareCurrent = dates.map(date => Number(flareData.find(d => d.date === date)?.vote_power_pct) || null);
+        const sgbLocked = dates.map(date => Number(songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct) || null);
+        const sgbCurrent = dates.map(date => Number(songbirdData.find(d => d.date === date)?.SGB_vote_power_pct) || null);
+        const rewardRate = dates.map(date => Number(flareData.find(d => d.date === date)?.reward_rate) * 100 || null);
         const registered = dates.map(date => {
           const reg = flareData.find(d => d.date === date)?.registered;
           return reg && reg.toLowerCase() === "yes" ? 1 : 0;
         });
 
-        // Traces
         const traces = [
-          {
-            x: dates, y: flareLocked, name: 'Flare Locked VP', mode: 'lines+markers',
-            line: { color: 'orange', dash: 'solid' }
-          },
-          {
-            x: dates, y: flareCurrent, name: 'Flare Current VP', mode: 'lines+markers',
-            line: { color: 'orange', dash: 'dot' }
-          },
-          {
-            x: dates, y: sgbLocked, name: 'SGB Locked VP', mode: 'lines+markers',
-            line: { color: 'blue', dash: 'solid' }
-          },
-          {
-            x: dates, y: sgbCurrent, name: 'SGB Current VP', mode: 'lines+markers',
-            line: { color: 'blue', dash: 'dot' }
-          },
-          {
-            x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers',
-            yaxis: 'y2', line: { color: 'green', dash: 'solid' }
-          },
-          {
-            x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines',
-            line: { color: 'grey', dash: 'dash' }
-          },
-          {
-            x: dates, y: registered.map((r, i) => r ? 0 : null), name: 'Registered', mode: 'markers',
-            marker: { color: 'green', size: 12, symbol: 'circle' }, yaxis: 'y3'
-          },
-          {
-            x: dates, y: registered.map((r, i) => r ? null : 0), name: 'Not Registered', mode: 'markers',
-            marker: { color: 'red', size: 12, symbol: 'circle' }, yaxis: 'y3'
-          }
+          { x: dates, y: flareLocked, name: 'Flare Locked VP', mode: 'lines+markers', line: { color: 'orange', dash: 'solid' } },
+          { x: dates, y: flareCurrent, name: 'Flare Current VP', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
+          { x: dates, y: sgbLocked, name: 'SGB Locked VP', mode: 'lines+markers', line: { color: 'blue', dash: 'solid' } },
+          { x: dates, y: sgbCurrent, name: 'SGB Current VP', mode: 'lines+markers', line: { color: 'blue', dash: 'dot' } },
+          { x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers', yaxis: 'y2', line: { color: 'green', dash: 'solid' } },
+          { x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines', line: { color: 'grey', dash: 'dash' } },
+          { x: dates, y: registered.map(r => r ? 0 : null), name: 'Registered', mode: 'markers', marker: { color: 'green', size: 12, symbol: 'circle' } },
+          { x: dates, y: registered.map(r => r ? null : 0), name: 'Not Registered', mode: 'markers', marker: { color: 'red', size: 12, symbol: 'circle' } }
         ];
 
-        // Layout
         const layout = {
           title: providerName,
           height: 350,
@@ -423,15 +391,13 @@
           legend: { orientation: 'h', y: 1.15 },
           xaxis: { title: 'Date', type: 'category' },
           yaxis: { title: 'Voting Power (%)', range: [0, 5] },
-          yaxis2: { title: 'Reward Rate (%)', overlaying: 'y', side: 'right' },
-          yaxis3: { visible: false, range: [-0.5, 0.5] }
+          yaxis2: { title: 'Reward Rate (%)', overlaying: 'y', side: 'right' }
         };
 
-        // Chart div
         const chartDiv = document.createElement('div');
-        chartDiv.style.display = 'inline-block';
-        chartDiv.style.width = '600px';
+        chartDiv.style.width = '100%';
         chartDiv.style.height = '350px';
+        chartDiv.style.marginBottom = '30px';
         container.appendChild(chartDiv);
 
         Plotly.newPlot(chartDiv, traces, layout, { displayModeBar: false });
