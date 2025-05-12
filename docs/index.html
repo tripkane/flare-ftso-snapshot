@@ -447,10 +447,22 @@
       }
     }
 
+    // Remove any previous event listeners to avoid duplicates
     const providerFilter = document.getElementById('providerFilter');
-    providerFilter.onchange = () => {
+    providerFilter.addEventListener('change', function () {
       renderSingleProviderChart();
-    };
+    });
+
+    // If you are dynamically updating the providerFilter options inside renderSingleProviderChart,
+    // make sure you do NOT re-assign the onchange handler inside that function.
+    // Only assign the event handler ONCE as above, outside the function.
+
+    // If you want to be extra sure, you can also use this pattern to remove all previous listeners:
+    const newProviderFilter = providerFilter.cloneNode(true);
+    providerFilter.parentNode.replaceChild(newProviderFilter, providerFilter);
+    newProviderFilter.addEventListener('change', function () {
+      renderSingleProviderChart();
+    });
 
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
       renderChart();
