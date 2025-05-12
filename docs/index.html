@@ -78,6 +78,7 @@
         <!-- Options will be populated dynamically -->
       </select>
     </div>
+    <div id="singleChartContainer" style="width: 100%;"></div>
 
     <!-- Reward Rate Chart -->
     <section id="chartContainer" class="overflow-x-auto">
@@ -141,6 +142,12 @@
             SGB_vote_power_pct: p.vote_power_pct
           }))
         }));
+
+        // Prepare dates as date-only strings
+        const dates = [...new Set(
+          flareData.map(d => d.date.split('T')[0])
+            .concat(songbirdData.map(d => d.date.split('T')[0]))
+        )].sort();
 
         // Store both sets for filtering
         window.flareSnapshots = flareSnapshots;
@@ -327,7 +334,7 @@
       });
     }
 
-    function renderMiniCharts() {
+    function renderSingleProviderChart() {
       const filteredFlare = getFilteredProviders();
       const filteredSongbird = getFilteredSongbirdProviders();
 
@@ -342,85 +349,86 @@
         providerMap[p.SGB_provider].songbird.push(p);
       });
 
-      // Sort and restrict to top 3
+      // Sort by reward rate (highest to lowest)
       const sortedProviders = Object.keys(providerMap).sort((a, b) => {
         const aReward = providerMap[a].flare.concat(providerMap[a].songbird).slice(-1)[0]?.reward_rate || 0;
         const bReward = providerMap[b].flare.concat(providerMap[b].songbird).slice(-1)[0]?.reward_rate || 0;
         return bReward - aReward;
       });
+
+      // Populate provider filter dropdown
       const providerFilter = document.getElementById('providerFilter');
-      providerFilter.innerHTML = '<option value="all">Top 3 Providers</option>' +
-        sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
-      providerFilter.onchange = () => {
-        renderMiniCharts();
-        renderChart();
-        renderTable();
-      };
+      providerFilter.innerHTML = sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
+      // Set default selection to first provider if not set
+      if (!providerFilter.value || !providerMap[providerFilter.value]) {
+        providerFilter.value = sortedProviders[0] || '';
+      }
       const selectedProvider = providerFilter.value;
-      const displayProviders = selectedProvider === "all" ? sortedProviders.slice(0, 3) : [selectedProvider];
 
-      // Render vertically
-      const container = document.getElementById('miniChartsContainer');
-      container.innerHTML = '';
-      container.style.display = 'block';
-      displayProviders.forEach(providerName => {
-        const flareData = providerMap[providerName].flare;
-        const songbirdData = providerMap[providerName].songbird;
-        const dates = [...new Set(flareData.map(d => d.date).concat(songbirdData.map(d => d.date)))].sort();
-        const flareLocked = dates.map(date => {
-          const val = flareData.find(d => d.date === date)?.vote_power_pct_locked;
-          return val !== undefined && val !== null ? Number(val) : null;
-        });
-        const flareCurrent = dates.map(date => {
-          const val = flareData.find(d => d.date === date)?.vote_power_pct;
-          return val !== undefined && val !== null ? Number(val) : null;
-        });
-        const sgbLocked = dates.map(date => {
-          const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct;
-          return val !== undefined && val !== null ? Number(val) : null;
-        });
-        const sgbCurrent = dates.map(date => {
-          const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_pct;
-          return val !== undefined && val !== null ? Number(val) : null;
-        });
-        const rewardRate = dates.map(date => {
-          const val = flareData.find(d => d.date === date)?.reward_rate;
-          return val !== undefined && val !== null ? Number(val) * 100 : null;
-        });
-        const registered = dates.map(date => {
-          const reg = flareData.find(d => d.date === date)?.registered;
-          return reg && reg.toLowerCase() === "yes" ? 1 : 0;
-        });
-
-        const traces = [
-          { x: dates, y: flareLocked, name: 'Flare Locked VP', mode: 'lines+markers', line: { color: 'orange', dash: 'solid' } },
-          { x: dates, y: flareCurrent, name: 'Flare Current VP', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
-          { x: dates, y: sgbLocked, name: 'SGB Locked VP', mode: 'lines+markers', line: { color: 'blue', dash: 'solid' } },
-          { x: dates, y: sgbCurrent, name: 'SGB Current VP', mode: 'lines+markers', line: { color: 'blue', dash: 'dot' } },
-          { x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers', yaxis: 'y2', line: { color: 'purple', dash: 'solid' } },
-          { x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines', line: { color: 'grey', dash: 'dash' } },
-          { x: dates, y: registered.map(r => r ? 0 : null), name: 'Registered', mode: 'markers', marker: { color: 'green', size: 12, symbol: 'circle' } },
-          { x: dates, y: registered.map(r => r ? null : 0), name: 'Not Registered', mode: 'markers', marker: { color: 'red', size: 12, symbol: 'circle' } }
-        ];
-
-        const layout = {
-          title: providerName,
-          height: 350,
-          margin: { t: 40, l: 50, r: 50, b: 50 },
-          legend: { orientation: 'h', y: 1.15 },
-          xaxis: { title: 'Date', type: 'category' },
-          yaxis: { title: 'Voting Power (%)', range: [-1, 5] },
-          yaxis2: { title: 'Reward Rate (%)', overlaying: 'y', side: 'right' }
-        };
-
-        const chartDiv = document.createElement('div');
-        chartDiv.style.width = '100%';
-        chartDiv.style.height = '350px';
-        chartDiv.style.marginBottom = '30px';
-        container.appendChild(chartDiv);
-
-        Plotly.newPlot(chartDiv, traces, layout, { displayModeBar: false });
+      // Get data for selected provider
+      const flareData = providerMap[selectedProvider]?.flare || [];
+      const songbirdData = providerMap[selectedProvider]?.songbird || [];
+      const dates = [...new Set(flareData.map(d => d.date).concat(songbirdData.map(d => d.date)))].sort();
+      const flareLocked = dates.map(date => {
+        const val = flareData.find(d => d.date === date)?.vote_power_pct_locked;
+        return val !== undefined && val !== null ? Number(val) : null;
       });
+      const flareCurrent = dates.map(date => {
+        const val = flareData.find(d => d.date === date)?.vote_power_pct;
+        return val !== undefined && val !== null ? Number(val) : null;
+      });
+      const sgbLocked = dates.map(date => {
+        const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct;
+        return val !== undefined && val !== null ? Number(val) : null;
+      });
+      const sgbCurrent = dates.map(date => {
+        const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_pct;
+        return val !== undefined && val !== null ? Number(val) : null;
+      });
+      const rewardRate = dates.map(date => {
+        const val = flareData.find(d => d.date === date)?.reward_rate;
+        return val !== undefined && val !== null ? Number(val) * 100 : null;
+      });
+      const registered = dates.map(date => {
+        const reg = flareData.find(d => d.date === date)?.registered;
+        return reg && reg.toLowerCase() === "yes" ? 1 : 0;
+      });
+
+      const traces = [
+        { x: dates, y: flareLocked, name: 'Flare Locked VP', mode: 'lines+markers', line: { color: 'orange', dash: 'solid' } },
+        { x: dates, y: flareCurrent, name: 'Flare Current VP', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
+        { x: dates, y: sgbLocked, name: 'SGB Locked VP', mode: 'lines+markers', line: { color: 'blue', dash: 'solid' } },
+        { x: dates, y: sgbCurrent, name: 'SGB Current VP', mode: 'lines+markers', line: { color: 'blue', dash: 'dot' } },
+        { x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers', yaxis: 'y2', line: { color: 'purple', dash: 'solid' } },
+        { x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines', line: { color: 'grey', dash: 'dash' } },
+        { x: dates, y: registered.map(r => r ? 0 : null), name: 'Registered', mode: 'markers', marker: { color: 'green', size: 12, symbol: 'circle' } },
+        { x: dates, y: registered.map(r => r ? null : 0), name: 'Not Registered', mode: 'markers', marker: { color: 'red', size: 12, symbol: 'circle' } }
+      ];
+
+      const layout = {
+        title: selectedProvider,
+        height: 350,
+        margin: { t: 40, l: 50, r: 50, b: 50 },
+        legend: { orientation: 'h', y: 1.15 },
+        xaxis: {
+          title: 'Date',
+          type: 'category',
+          rangeslider: { visible: true }, // <-- enables horizontal slider
+          tickformat: '%Y-%m-%d'
+        },
+        yaxis: { title: 'Voting Power (%)', range: [-1, 5] },
+        yaxis2: { title: 'Reward Rate (%)', overlaying: 'y', side: 'right' }
+      };
+
+      const container = document.getElementById('singleChartContainer');
+      container.innerHTML = '';
+      const chartDiv = document.createElement('div');
+      chartDiv.style.width = '100%';
+      chartDiv.style.height = '350px';
+      chartDiv.style.marginBottom = '30px';
+      container.appendChild(chartDiv);
+
+      Plotly.newPlot(chartDiv, traces, layout, { displayModeBar: false });
 
       // Master legend (only once)
       if (!document.getElementById('masterLegend')) {
@@ -442,27 +450,31 @@
       }
     }
 
-    // Call renderMiniCharts after data is loaded and on filter changes
-    document.getElementById('providerFilter').addEventListener('change', renderMiniCharts);
-    document.addEventListener('DOMContentLoaded', () => {
-      loadData().then(renderMiniCharts);
+    document.getElementById('providerFilter').addEventListener('change', () => {
+      renderSingleProviderChart();
+      renderChart();
+      renderTable();
     });
-
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
+      renderSingleProviderChart();
       renderChart();
       renderTable();
     });
     document.getElementById('registeredLatestOnly').addEventListener('change', () => {
+      renderSingleProviderChart();
       renderChart();
       renderTable();
     });
     document.getElementById('registeredOnly').addEventListener('change', () => {
+      renderSingleProviderChart();
       renderChart();
       renderTable();
     });
     document.getElementById('timeframe').addEventListener('change', renderChart);
 
-    document.addEventListener('DOMContentLoaded', loadData);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData().then(renderSingleProviderChart);
+    });
   </script>
 </body>
 
