@@ -264,7 +264,7 @@
         x: data.map(d => d.name),
         y: data.map(d => (parseFloat(d.average) * 100).toFixed(2)), // Convert to percentage and format to 2 decimal places
         type: 'bar',
-        marker: { color: 'orange' }
+        marker: { color: 'purple' } // <-- changed to purple
       };
 
       Plotly.newPlot('rewardRateChart', [chartData], {
@@ -351,7 +351,11 @@
       const providerFilter = document.getElementById('providerFilter');
       providerFilter.innerHTML = '<option value="all">Top 3 Providers</option>' +
         sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
-      providerFilter.onchange = renderMiniCharts;
+      providerFilter.onchange = () => {
+        renderMiniCharts();
+        renderChart();
+        renderTable();
+      };
       const selectedProvider = providerFilter.value;
       const displayProviders = selectedProvider === "all" ? sortedProviders.slice(0, 3) : [selectedProvider];
 
@@ -363,11 +367,26 @@
         const flareData = providerMap[providerName].flare;
         const songbirdData = providerMap[providerName].songbird;
         const dates = [...new Set(flareData.map(d => d.date).concat(songbirdData.map(d => d.date)))].sort();
-        const flareLocked = dates.map(date => Number(flareData.find(d => d.date === date)?.vote_power_pct_locked) || null);
-        const flareCurrent = dates.map(date => Number(flareData.find(d => d.date === date)?.vote_power_pct) || null);
-        const sgbLocked = dates.map(date => Number(songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct) || null);
-        const sgbCurrent = dates.map(date => Number(songbirdData.find(d => d.date === date)?.SGB_vote_power_pct) || null);
-        const rewardRate = dates.map(date => Number(flareData.find(d => d.date === date)?.reward_rate) * 100 || null);
+        const flareLocked = dates.map(date => {
+          const val = flareData.find(d => d.date === date)?.vote_power_pct_locked;
+          return val !== undefined && val !== null ? Number(val) : null;
+        });
+        const flareCurrent = dates.map(date => {
+          const val = flareData.find(d => d.date === date)?.vote_power_pct;
+          return val !== undefined && val !== null ? Number(val) : null;
+        });
+        const sgbLocked = dates.map(date => {
+          const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct;
+          return val !== undefined && val !== null ? Number(val) : null;
+        });
+        const sgbCurrent = dates.map(date => {
+          const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_pct;
+          return val !== undefined && val !== null ? Number(val) : null;
+        });
+        const rewardRate = dates.map(date => {
+          const val = flareData.find(d => d.date === date)?.reward_rate;
+          return val !== undefined && val !== null ? Number(val) * 100 : null;
+        });
         const registered = dates.map(date => {
           const reg = flareData.find(d => d.date === date)?.registered;
           return reg && reg.toLowerCase() === "yes" ? 1 : 0;
@@ -378,7 +397,7 @@
           { x: dates, y: flareCurrent, name: 'Flare Current VP', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
           { x: dates, y: sgbLocked, name: 'SGB Locked VP', mode: 'lines+markers', line: { color: 'blue', dash: 'solid' } },
           { x: dates, y: sgbCurrent, name: 'SGB Current VP', mode: 'lines+markers', line: { color: 'blue', dash: 'dot' } },
-          { x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers', yaxis: 'y2', line: { color: 'green', dash: 'solid' } },
+          { x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers', yaxis: 'y2', line: { color: 'purple', dash: 'solid' } },
           { x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines', line: { color: 'grey', dash: 'dash' } },
           { x: dates, y: registered.map(r => r ? 0 : null), name: 'Registered', mode: 'markers', marker: { color: 'green', size: 12, symbol: 'circle' } },
           { x: dates, y: registered.map(r => r ? null : 0), name: 'Not Registered', mode: 'markers', marker: { color: 'red', size: 12, symbol: 'circle' } }
@@ -390,7 +409,7 @@
           margin: { t: 40, l: 50, r: 50, b: 50 },
           legend: { orientation: 'h', y: 1.15 },
           xaxis: { title: 'Date', type: 'category' },
-          yaxis: { title: 'Voting Power (%)', range: [0, 5] },
+          yaxis: { title: 'Voting Power (%)', range: [-1, 5] },
           yaxis2: { title: 'Reward Rate (%)', overlaying: 'y', side: 'right' }
         };
 
@@ -413,7 +432,7 @@
             <span><span style="color:orange; border-bottom:2px dotted orange;">&#9632;</span> Flare Current VP</span>
             <span><span style="color:blue;">&#9632;</span> SGB Locked VP</span>
             <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP</span>
-            <span><span style="color:green;">&#9632;</span> Reward Rate</span>
+            <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
             <span><span style="color:grey;">&#9632;</span> 2.5% Threshold</span>
             <span><span style="color:green;">&#11044;</span> Registered</span>
             <span><span style="color:red;">&#11044;</span> Not Registered</span>
