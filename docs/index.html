@@ -272,31 +272,29 @@
       const filteredFlare = getFilteredProviders();
       const filteredSongbird = getFilteredSongbirdProviders();
 
-      // Combine both datasets
-      const allRows = [];
+      // Build a map: {date|provider: {flare: {...}, songbird: {...}}}
+      const rowMap = {};
 
       filteredFlare.forEach(provider => {
-        allRows.push({
-          date: provider.date || 'N/A',
-          provider: provider.name || 'Unknown',
-          currentVotingPower: isNaN(parseFloat(provider.vote_power_pct)) ? 0 : parseFloat(provider.vote_power_pct),
-          lockedVotingPower: isNaN(parseFloat(provider.vote_power_pct_locked)) ? 0 : parseFloat(provider.vote_power_pct_locked),
-          currentVotingPowerSGB: '', // No SGB data for Flare row
-          lockedVotingPowerSGB: '',  // No SGB data for Flare row
-          rewardRate: isNaN(parseFloat(provider.reward_rate)) ? 0 : parseFloat(provider.reward_rate) * 100
-        });
+        const key = `${provider.date}|${provider.name}`;
+        if (!rowMap[key]) rowMap[key] = { date: provider.date, provider: provider.name };
+        rowMap[key].currentVotingPower = isNaN(parseFloat(provider.vote_power_pct)) ? '' : parseFloat(provider.vote_power_pct);
+        rowMap[key].lockedVotingPower = isNaN(parseFloat(provider.vote_power_pct_locked)) ? '' : parseFloat(provider.vote_power_pct_locked);
+        rowMap[key].rewardRate = isNaN(parseFloat(provider.reward_rate)) ? '' : (parseFloat(provider.reward_rate) * 100);
       });
 
       filteredSongbird.forEach(provider => {
-        allRows.push({
-          date: provider.date || 'N/A',
-          provider: provider.SGB_provider || 'Unknown',
-          currentVotingPower: '', // No Flare data for Songbird row
-          lockedVotingPower: '',  // No Flare data for Songbird row
-          currentVotingPowerSGB: isNaN(parseFloat(provider.SGB_vote_power_pct)) ? 0 : parseFloat(provider.SGB_vote_power_pct),
-          lockedVotingPowerSGB: isNaN(parseFloat(provider.SGB_vote_power_locked_pct)) ? 0 : parseFloat(provider.SGB_vote_power_locked_pct),
-          rewardRate: '' // Add SGB reward rate here if available
-        });
+        const key = `${provider.date}|${provider.SGB_provider}`;
+        if (!rowMap[key]) rowMap[key] = { date: provider.date, provider: provider.SGB_provider };
+        rowMap[key].currentVotingPowerSGB = isNaN(parseFloat(provider.SGB_vote_power_pct)) ? '' : parseFloat(provider.SGB_vote_power_pct);
+        rowMap[key].lockedVotingPowerSGB = isNaN(parseFloat(provider.SGB_vote_power_locked_pct)) ? '' : parseFloat(provider.SGB_vote_power_locked_pct);
+        // If you have SGB reward rate, add it here
+      });
+
+      // Convert map to array and sort by date descending, then provider
+      const allRows = Object.values(rowMap).sort((a, b) => {
+        if (a.date === b.date) return a.provider.localeCompare(b.provider);
+        return b.date.localeCompare(a.date);
       });
 
       allRows.forEach(row => {
@@ -304,11 +302,11 @@
         tr.innerHTML = `
           <td class="p-2 border border-gray-600">${row.date}</td>
           <td class="p-2 border border-gray-600">${row.provider}</td>
-          <td class="p-2 border border-gray-600">${row.currentVotingPower !== '' ? row.currentVotingPower.toFixed(2) : ''}</td>
-          <td class="p-2 border border-gray-600">${row.lockedVotingPower !== '' ? row.lockedVotingPower.toFixed(2) : ''}</td>
-          <td class="p-2 border border-gray-600">${row.currentVotingPowerSGB !== '' ? row.currentVotingPowerSGB.toFixed(2) : ''}</td>
-          <td class="p-2 border border-gray-600">${row.lockedVotingPowerSGB !== '' ? row.lockedVotingPowerSGB.toFixed(2) : ''}</td>
-          <td class="p-2 border border-gray-600">${row.rewardRate !== '' ? row.rewardRate.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.currentVotingPower !== undefined && row.currentVotingPower !== '' ? Number(row.currentVotingPower).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.lockedVotingPower !== undefined && row.lockedVotingPower !== '' ? Number(row.lockedVotingPower).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.currentVotingPowerSGB !== undefined && row.currentVotingPowerSGB !== '' ? Number(row.currentVotingPowerSGB).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.lockedVotingPowerSGB !== undefined && row.lockedVotingPowerSGB !== '' ? Number(row.lockedVotingPowerSGB).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${row.rewardRate !== undefined && row.rewardRate !== '' ? Number(row.rewardRate).toFixed(2) : ''}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -322,7 +320,7 @@
         paging: true,
         searching: true,
         ordering: true,
-        order: [[6, 'desc']], // Default sort by Reward Rate (%) in descending order
+        order: [[0, 'desc'], [1, 'asc']],
         pageLength: 100,
         columnDefs: [
           { targets: 0, type: 'date' },
@@ -350,3 +348,4 @@
 </body>
 
 </html>
+``` 
