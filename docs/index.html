@@ -74,14 +74,13 @@
     <div class="mb-4">
       <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
       <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
-        <option value="all">All Providers</option>
         <!-- Options will be populated dynamically -->
       </select>
     </div>
     <div id="singleChartContainer" style="width: 100%;"></div>
 
     <!-- Reward Rate Chart -->
-    <section id="chartContainer" class="overflow-x-auto">
+    <section id="chartContainer" class="overflow-x-auto mb-4">
       <div id="rewardRateChart" class="w-full h-[400px]"></div>
     </section>
 
@@ -356,16 +355,14 @@
         return bReward - aReward;
       });
 
-      // Populate provider filter dropdown
       const providerFilter = document.getElementById('providerFilter');
       providerFilter.innerHTML = sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
-      // Set default selection to first provider if not set
-      if (!providerFilter.value || !providerMap[providerFilter.value]) {
+      // If the current value is not in the list, set to first provider
+      if (!sortedProviders.includes(providerFilter.value)) {
         providerFilter.value = sortedProviders[0] || '';
       }
       const selectedProvider = providerFilter.value;
 
-      // Get data for selected provider
       const flareData = providerMap[selectedProvider]?.flare || [];
       const songbirdData = providerMap[selectedProvider]?.songbird || [];
       const dates = [...new Set(flareData.map(d => d.date).concat(songbirdData.map(d => d.date)))].sort();
@@ -450,30 +447,31 @@
       }
     }
 
-    document.getElementById('providerFilter').addEventListener('change', () => {
+    const providerFilter = document.getElementById('providerFilter');
+    providerFilter.onchange = () => {
       renderSingleProviderChart();
-      renderChart();
-      renderTable();
-    });
+    };
+
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
-      renderSingleProviderChart();
       renderChart();
       renderTable();
     });
     document.getElementById('registeredLatestOnly').addEventListener('change', () => {
-      renderSingleProviderChart();
       renderChart();
       renderTable();
     });
     document.getElementById('registeredOnly').addEventListener('change', () => {
-      renderSingleProviderChart();
       renderChart();
       renderTable();
     });
     document.getElementById('timeframe').addEventListener('change', renderChart);
 
     document.addEventListener('DOMContentLoaded', () => {
-      loadData().then(renderSingleProviderChart);
+      loadData().then(() => {
+        renderChart();
+        renderTable();
+        renderSingleProviderChart();
+      });
     });
   </script>
 </body>
