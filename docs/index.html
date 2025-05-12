@@ -44,7 +44,7 @@
     <!-- Controls -->
     <section class="flex flex-wrap gap-4 mb-6">
       <div class="flex-1 min-w-[200px]">
-        <label class="block font-bold mb-2">Max Voting Power (%):</label>
+        <label class="block font-bold mb-2">Max locked voting power (%):</label>
         <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100"
           class="w-full p-2 bg-gray-800 border border-gray-700 rounded" />
       </div>
@@ -96,31 +96,43 @@
   </main>
 
   <script>
+    // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
-  try {
-    const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
-    const files = await res.json();
+      try {
+        const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
+        const files = await res.json();
 
-    // Filter files to only include those starting with 'flare_'
-    const urls = files
-      .filter(f => f.name.startsWith('flare_') && f.name.endsWith('.json'))
-      .map(f => f.download_url);
+        // Flare files
+        const flareUrls = files
+          .filter(f => f.name.startsWith('flare_') && f.name.endsWith('.json'))
+          .map(f => f.download_url);
 
-    const data = await Promise.all(urls.map(url => fetch(url).then(r => r.json())));
-    snapshots = data.map(s => ({ date: s.date, providers: s.providers }));
+        // Songbird files
+        const songbirdUrls = files
+          .filter(f => f.name.startsWith('songbird_') && f.name.endsWith('.json'))
+          .map(f => f.download_url);
 
-        // Calculate the maximum vote_power_pct
-        const maxVotePower = Math.max(
-          ...snapshots.flatMap(snapshot =>
-            snapshot.providers.map(provider => parseFloat(provider.vote_power_pct))
-          )
-        );
+        // Load Flare data as usual
+        const flareData = await Promise.all(flareUrls.map(url => fetch(url).then(r => r.json())));
+        const flareSnapshots = flareData.map(s => ({ date: s.date, providers: s.providers }));
 
-        // Set the maxVotePowerInput default value to the maximum vote_power_pct
-        document.getElementById('maxVotePowerInput').value = maxVotePower.toFixed(2);
+        // Load Songbird data and transform fields
+        const songbirdData = await Promise.all(songbirdUrls.map(url => fetch(url).then(r => r.json())));
+        const songbirdSnapshots = songbirdData.map(s => ({
+          date: s.date,
+          providers: s.providers.map(p => ({
+            SGB_provider: p.name,
+            SGB_vote_power_locked_pct: p.vote_power_pct_locked,
+            SGB_vote_power_pct: p.vote_power_pct
+          }))
+        }));
 
-        renderChart();
-        renderTable();
+        // Store both sets for filtering
+        window.flareSnapshots = flareSnapshots;
+        window.songbirdSnapshots = songbirdSnapshots;
+
+        // Continue with your rendering logic...
+        // You can now filter and display either or both datasets as needed
       } catch (error) {
         console.error('Error loading data:', error);
         alert('Failed to load data. Please try again later.');
@@ -128,11 +140,9 @@
     }
 
     function getFilteredProviders() {
-      const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
       const registeredOnly = document.getElementById('registeredOnly').checked;
       const registeredLatestOnly = document.getElementById('registeredLatestOnly').checked;
-
-      let latestSnapshot = snapshots[snapshots.length - 1];
+      let latestSnapshot = window.flareSnapshots[window.flareSnapshots.length - 1];
       let registeredInLatest = new Set();
       if (latestSnapshot) {
         latestSnapshot.providers.forEach(provider => {
@@ -142,23 +152,63 @@
         });
       }
 
-      const filtered = snapshots.flatMap(snapshot =>
+      const providersOverLimit = getProvidersOverLimitCombined();
+
+      const filtered = window.flareSnapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
-          const votePower = parseFloat(provider.vote_power_pct);
+          if (providersOverLimit.has(provider.name)) return false;
           const isRegistered = provider.registered && provider.registered.toLowerCase() === "yes";
           const isRegisteredLatest = registeredInLatest.has(provider.name);
-
-          // Apply filters
           if (registeredOnly && !isRegistered) return false;
           if (registeredLatestOnly && !isRegisteredLatest) return false;
-          return votePower <= maxVotePower;
+          return true;
         }).map(provider => ({
           ...provider,
           date: snapshot.date
         }))
       );
-
       return filtered;
+    }
+
+    function getFilteredSongbirdProviders() {
+      const providersOverLimit = getProvidersOverLimitCombined();
+      const filtered = window.songbirdSnapshots.flatMap(snapshot =>
+        snapshot.providers.filter(provider => {
+          if (providersOverLimit.has(provider.SGB_provider)) return false;
+          return true;
+        }).map(provider => ({
+          ...provider,
+          date: snapshot.date
+        }))
+      );
+      return filtered;
+    }
+
+    function getProvidersOverLimitCombined() {
+      const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
+      const overLimit = new Set();
+
+      // Flare
+      window.flareSnapshots.forEach(snapshot => {
+        snapshot.providers.forEach(provider => {
+          const votePower = parseFloat(provider.vote_power_pct_locked);
+          if (votePower > maxVotePower) {
+            overLimit.add(provider.name);
+          }
+        });
+      });
+
+      // Songbird
+      window.songbirdSnapshots.forEach(snapshot => {
+        snapshot.providers.forEach(provider => {
+          const votePower = parseFloat(provider.SGB_vote_power_locked_pct);
+          if (votePower > maxVotePower) {
+            overLimit.add(provider.SGB_provider);
+          }
+        });
+      });
+
+      return overLimit;
     }
 
     function renderChart() {
