@@ -21,7 +21,11 @@ def run_daily_pipeline():
         logging.info("Report built successfully.")
 
         visible_to = SENDER_EMAIL  # Hide actual recipients
-        send_email(to=visible_to, subject="Daily FTSO Report", body=report, bcc=RECIPIENTS, sender=SENDER_EMAIL)
+        logging.info("Skipping email sending for now. Printing report:")
+        print("\n===== FTSO Report =====\n")
+        print(report)
+        print("\n=======================\n")
+
         logging.info("Email sent to recipients.")
 
     except Exception as e:
