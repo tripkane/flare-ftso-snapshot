@@ -2,8 +2,8 @@ name: Daily FTSO Snapshot (Flaremetrics)
 
 on:
   schedule:
-    - cron: '0 0 * * *'    # Every day at 00:00 UTC
-  workflow_dispatch:      # Manual trigger
+    - cron: '*/5 * * * *'    # Run every 5 minutes to catch scheduled times
+  workflow_dispatch:         # Allow manual trigger
 
 jobs:
   run-snapshot:
@@ -17,6 +17,40 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Check if snapshot is scheduled now
+        id: check_schedule
+        run: |
+          python - <<'EOF'
+          import json, datetime
+          from datetime import timezone
+          # Load the epoch schedule file
+          try:
+              with open("flare_epoch_schedule.json", "r") as f:
+                  schedule = json.load(f)
+          except Exception as e:
+              print("Error reading schedule:", e)
+              exit(0)  # Gracefully exit if schedule file is missing or invalid
+
+          # Get current UTC time rounded to the minute
+          now_utc = datetime.datetime.now(timezone.utc).replace(second=0, microsecond=0)
+          now_str = now_utc.strftime("%Y-%m-%d %H:%M:%S")
+          print("Current UTC time:", now_str)
+
+          # Check if current time matches any scheduled start or end time
+          scheduled = any(
+              epoch.get("Start (UTC)") == now_str or epoch.get("End (UTC)") == now_str
+              for epoch in schedule
+          )
+          if scheduled:
+              print("Scheduled snapshot time matched.")
+              with open("$GITHUB_OUTPUT", "a") as f:
+                  f.write("run_snapshot=true\n")
+          else:
+              print("No scheduled snapshot time matched.")
+              with open("$GITHUB_OUTPUT", "a") as f:
+                  f.write("run_snapshot=false\n")
+          EOF
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -24,9 +58,11 @@ jobs:
           pip install selenium beautifulsoup4 bs4
 
       - name: Run snapshot script
+        if: steps.check_schedule.outputs.run_snapshot == 'true'
         run: python snapshot.py
 
       - name: Commit and push results
+        if: steps.check_schedule.outputs.run_snapshot == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
