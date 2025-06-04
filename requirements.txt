@@ -2,3 +2,7 @@
 requests
 python-dotenv
 pytest
+fastapi
+uvicorn
+transformers
+torch
