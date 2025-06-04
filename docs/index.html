@@ -409,10 +409,10 @@
         return reg && reg.toLowerCase() === "yes" ? 1 : 0;
       });
 
-      const container = document.getElementById('singleChartContainer');
-      container.innerHTML = '';
-      const voteCanvas = document.createElement('canvas');
-      const rewardCanvas = document.createElement('canvas');
+        const container = document.getElementById('singleChartContainer');
+        container.innerHTML = '';
+        const voteCanvas = document.createElement('canvas');
+        const rewardCanvas = document.createElement('canvas');
       voteCanvas.style.width = '100%';
       voteCanvas.style.height = '350px';
       voteCanvas.style.marginBottom = '30px';
@@ -422,8 +422,15 @@
       container.appendChild(voteCanvas);
       container.appendChild(rewardCanvas);
 
-      if (singleVoteChart) singleVoteChart.destroy();
-      if (singleRewardChart) singleRewardChart.destroy();
+        if (singleVoteChart) singleVoteChart.destroy();
+        if (singleRewardChart) singleRewardChart.destroy();
+
+        const voteValues = flareLocked
+          .concat(flareCurrent, sgbLocked, sgbCurrent)
+          .filter(v => v !== null && !isNaN(v));
+        let yAxisMax = Math.max(2.5, ...voteValues);
+        if (!isFinite(yAxisMax)) yAxisMax = 5;
+        yAxisMax *= 1.1; // small padding for clarity
 
       singleVoteChart = new Chart(voteCanvas.getContext('2d'), {
         data: {
@@ -434,19 +441,19 @@
             { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
             { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' },
             { label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' },
-            { label: 'Registered', data: registered.map(r => r ? 5 : 0), backgroundColor: 'rgba(0,255,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 },
-            { label: 'Not Registered', data: registered.map(r => r ? 0 : 5), backgroundColor: 'rgba(255,0,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 }
-          ]
-        },
-        options: {
-          responsive: true,
+            { label: 'Registered', data: registered.map(r => r ? yAxisMax : 0), backgroundColor: 'rgba(0,255,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 },
+            { label: 'Not Registered', data: registered.map(r => r ? 0 : yAxisMax), backgroundColor: 'rgba(255,0,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 }
+         ]
+       },
+       options: {
+         responsive: true,
           plugins: {
             title: { display: true, text: selectedProvider + ' - Voting Power' },
             legend: { position: 'top' }
           },
           scales: {
             x: { title: { display: true, text: 'Date' } },
-            y: { title: { display: true, text: 'Voting Power (%)' }, min: -1, max: 5 }
+            y: { title: { display: true, text: 'Voting Power (%)' }, min: 0, max: yAxisMax }
           }
         }
       });
