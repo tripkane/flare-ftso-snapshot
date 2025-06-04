@@ -1,0 +1,8 @@
+{
+  "timestamp": "2025-06-01T00:00:00Z",
+  "providers": [
+    {"name": "Bifrost Wallet", "vote_power_pct": 4.5},
+    {"name": "Atlas TSO", "vote_power_pct": 4.2},
+    {"name": "Fission", "vote_power_pct": 3.1}
+  ]
+}
