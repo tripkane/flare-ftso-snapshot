@@ -71,7 +71,7 @@
       </div>
     </section>
 
-    <section id="providerSection" class="border border-gray-700 rounded p-4 mb-4">
+    <section id="providerSection" class="border-4 border-gray-700 rounded p-4 mb-4">
       <div class="mb-4">
         <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
         <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
@@ -82,7 +82,7 @@
     </section>
 
     <!-- Reward Rate Chart -->
-    <section id="chartContainer" class="overflow-x-auto mb-4">
+    <section id="chartContainer" class="overflow-x-auto mb-4 border-4 border-gray-700 rounded p-4">
       <canvas id="rewardRateChart" class="w-full h-[400px]"></canvas>
     </section>
 
@@ -103,6 +103,9 @@
             <th class="p-2 border border-gray-600">Current Voting Power % (SGB)</th>
             <th class="p-2 border border-gray-600">Locked Voting Power % (SGB)</th>
             <th class="p-2 border border-gray-600">Reward Rate (%)</th>
+            <th class="p-2 border border-gray-600">7-Day Avg Reward Rate (%)</th>
+            <th class="p-2 border border-gray-600">30-Day Avg Reward Rate (%)</th>
+            <th class="p-2 border border-gray-600">Cumulative Avg Reward Rate (%)</th>
           </tr>
         </thead>
         <tbody>
@@ -284,7 +287,8 @@
         options: {
           responsive: true,
           plugins: {
-            title: { display: true, text: `Reward Rate (%) - ${timeframe}` }
+            title: { display: true, text: `Flare Reward Rate - ${timeframe}` },
+            legend: { display: false }
           },
           scales: {
             x: { ticks: { maxRotation: 45, minRotation: 45 }, title: { display: true, text: 'Provider' } },
@@ -310,12 +314,28 @@
         sgbMap[key] = provider;
       });
 
+      // Compute reward rate averages per provider
+      const rewardMap = {};
+      filteredFlare.forEach(p => {
+        if (!rewardMap[p.name]) rewardMap[p.name] = [];
+        rewardMap[p.name].push(parseFloat(p.reward_rate) || 0);
+      });
+      const avgMap = {};
+      Object.keys(rewardMap).forEach(name => {
+        const rates = rewardMap[name];
+        const avg7 = rates.slice(-7).reduce((s, r) => s + r, 0) / Math.min(7, rates.length);
+        const avg30 = rates.slice(-30).reduce((s, r) => s + r, 0) / Math.min(30, rates.length);
+        const avgCum = rates.reduce((s, r) => s + r, 0) / rates.length;
+        avgMap[name] = { avg7: avg7 * 100, avg30: avg30 * 100, avgCum: avgCum * 100 };
+      });
+
       // Only iterate Flare providers (left join)
       filteredFlare.forEach(provider => {
         const key = `${provider.date}|${provider.name}`;
         const sgb = sgbMap[key];
 
         const tr = document.createElement('tr');
+        const avg = avgMap[provider.name] || { avg7: '', avg30: '', avgCum: '' };
         tr.innerHTML = `
           <td class="p-2 border border-gray-600">${provider.date}</td>
           <td class="p-2 border border-gray-600">${provider.name}</td>
@@ -324,6 +344,9 @@
           <td class="p-2 border border-gray-600">${sgb && sgb.SGB_vote_power_pct !== undefined && sgb.SGB_vote_power_pct !== '' ? Number(sgb.SGB_vote_power_pct).toFixed(2) : ''}</td>
           <td class="p-2 border border-gray-600">${sgb && sgb.SGB_vote_power_locked_pct !== undefined && sgb.SGB_vote_power_locked_pct !== '' ? Number(sgb.SGB_vote_power_locked_pct).toFixed(2) : ''}</td>
           <td class="p-2 border border-gray-600">${provider.reward_rate !== undefined && provider.reward_rate !== '' ? Number(provider.reward_rate * 100).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${avg.avg7 !== '' ? avg.avg7.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${avg.avg30 !== '' ? avg.avg30.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${avg.avgCum !== '' ? avg.avgCum.toFixed(2) : ''}</td>
         `;
         tbody.append(tr);
       });
@@ -343,7 +366,7 @@
           pageLength: 100,
           columnDefs: [
             { targets: 0, type: 'date' },
-            { targets: [2,3,4,5,6], type: 'num' },
+            { targets: [2,3,4,5,6,7,8,9], type: 'num' },
           ],
         });
       }
@@ -411,7 +434,13 @@
 
         const container = document.getElementById('singleChartContainer');
         container.innerHTML = '';
+        const voteHeader = document.createElement('h3');
+        voteHeader.textContent = 'Network Voting Power';
+        voteHeader.className = 'text-lg font-bold mb-2';
         const voteCanvas = document.createElement('canvas');
+        const rewardHeader = document.createElement('h3');
+        rewardHeader.textContent = 'Flare Reward Rate';
+        rewardHeader.className = 'text-lg font-bold mb-2 mt-4';
         const rewardCanvas = document.createElement('canvas');
       voteCanvas.style.width = '100%';
       voteCanvas.style.height = '350px';
@@ -419,7 +448,9 @@
       rewardCanvas.style.width = '100%';
       rewardCanvas.style.height = '350px';
       rewardCanvas.style.marginBottom = '30px';
+      container.appendChild(voteHeader);
       container.appendChild(voteCanvas);
+      container.appendChild(rewardHeader);
       container.appendChild(rewardCanvas);
 
         if (singleVoteChart) singleVoteChart.destroy();
@@ -456,7 +487,7 @@
        options: {
          responsive: true,
           plugins: {
-            title: { display: true, text: selectedProvider + ' - Voting Power' },
+            title: { display: true, text: selectedProvider + ' - Network Voting Power' },
             legend: { position: 'top' }
           },
           scales: {
@@ -477,8 +508,8 @@
         options: {
           responsive: true,
           plugins: {
-            title: { display: true, text: selectedProvider + ' - Reward Rate (%)' },
-            legend: { position: 'top' }
+            title: { display: true, text: selectedProvider + ' - Flare Reward Rate' },
+            legend: { display: false }
           },
           scales: {
             x: { title: { display: true, text: 'Date' } },
