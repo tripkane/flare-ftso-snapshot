@@ -114,6 +114,7 @@
 
     let rewardChart;
     let singleProviderChart;
+    let dataTable;
 
     // Small debounce utility
     function debounce(func, delay) {
@@ -321,7 +322,7 @@
           <td class="p-2 border border-gray-600">${sgb && sgb.SGB_vote_power_locked_pct !== undefined && sgb.SGB_vote_power_locked_pct !== '' ? Number(sgb.SGB_vote_power_locked_pct).toFixed(2) : ''}</td>
           <td class="p-2 border border-gray-600">${provider.reward_rate !== undefined && provider.reward_rate !== '' ? Number(provider.reward_rate * 100).toFixed(2) : ''}</td>
         `;
-        tbody.appendChild(tr);
+        tbody.append(tr);
       });
 
       const rows = tbody.find('tr');
