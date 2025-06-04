@@ -111,6 +111,7 @@
   </main>
 
   <script>
+
     // Small debounce utility
     function debounce(func, delay) {
       let timeout;
@@ -119,6 +120,7 @@
         timeout = setTimeout(() => func.apply(this, args), delay);
       };
     }
+
 
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
@@ -284,16 +286,17 @@
 
       Plotly.newPlot('rewardRateChart', [chartData], {
         title: `Reward Rate (%) - ${timeframe}`,
-        xaxis: { title: 'Provider' },
+        xaxis: { title: 'Provider', tickangle: -45 },
         yaxis: { title: 'Reward Rate (%)' },
-        margin: { t: 50, l: 50, r: 50, b: 50 },
+        margin: { t: 50, l: 50, r: 50, b: 120 },
         responsive: true
       });
     }
 
     function renderTable() {
-      const tbody = document.getElementById('dataTable').querySelector('tbody');
-      tbody.innerHTML = '';
+      const table = $('#dataTable');
+      const tbody = table.find('tbody');
+      tbody.empty();
 
       // Get filtered Flare and Songbird providers
       const filteredFlare = getFilteredProviders();
@@ -324,22 +327,25 @@
         tbody.appendChild(tr);
       });
 
-      // Reinitialize DataTables after updating the table
-      if ($.fn.DataTable.isDataTable('#dataTable')) {
-        $('#dataTable').DataTable().destroy();
-      }
+      const rows = tbody.find('tr');
 
-      $('#dataTable').DataTable({
-        paging: true,
-        searching: true,
-        ordering: true,
-        order: [[0, 'desc'], [1, 'asc']],
-        pageLength: 100,
-        columnDefs: [
-          { targets: 0, type: 'date' },
-          { targets: [2,3,4,5,6], type: 'num' },
-        ],
-      });
+      if (dataTable) {
+        dataTable.clear();
+        dataTable.rows.add(rows);
+        dataTable.draw();
+      } else {
+        dataTable = table.DataTable({
+          paging: true,
+          searching: true,
+          ordering: true,
+          order: [[0, 'desc'], [1, 'asc']],
+          pageLength: 100,
+          columnDefs: [
+            { targets: 0, type: 'date' },
+            { targets: [2,3,4,5,6], type: 'num' },
+          ],
+        });
+      }
     }
 
     function renderSingleProviderChart() {
@@ -403,11 +409,11 @@
       });
 
       const traces = [
-        { x: dates, y: flareLocked, name: 'Flare Locked VP', mode: 'lines+markers', line: { color: 'orange', dash: 'solid' } },
-        { x: dates, y: flareCurrent, name: 'Flare Current VP', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
-        { x: dates, y: sgbLocked, name: 'SGB Locked VP', mode: 'lines+markers', line: { color: 'blue', dash: 'solid' } },
-        { x: dates, y: sgbCurrent, name: 'SGB Current VP', mode: 'lines+markers', line: { color: 'blue', dash: 'dot' } },
-        { x: dates, y: rewardRate, name: 'Reward Rate (%)', mode: 'lines+markers', yaxis: 'y2', line: { color: 'purple', dash: 'solid' } },
+        { x: dates, y: flareLocked, name: 'Flare Locked VP', type: 'scatter', mode: 'lines+markers', line: { color: 'orange', dash: 'solid' } },
+        { x: dates, y: flareCurrent, name: 'Flare Current VP', type: 'scatter', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
+        { x: dates, y: sgbLocked, name: 'SGB Locked VP', type: 'bar', marker: { color: 'rgba(0,0,255,0.5)' } },
+        { x: dates, y: sgbCurrent, name: 'SGB Current VP', type: 'bar', marker: { color: 'rgba(0,0,255,0.25)' } },
+        { x: dates, y: rewardRate, name: 'Reward Rate (%)', type: 'scatter', mode: 'lines+markers', yaxis: 'y2', line: { color: 'purple', dash: 'solid' } },
         { x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines', line: { color: 'grey', dash: 'dash' } },
         { x: dates, y: registered.map(r => r ? 0 : null), name: 'Registered', mode: 'markers', marker: { color: 'green', size: 12, symbol: 'circle' } },
         { x: dates, y: registered.map(r => r ? null : 0), name: 'Not Registered', mode: 'markers', marker: { color: 'red', size: 12, symbol: 'circle' } }
@@ -417,6 +423,7 @@
         title: selectedProvider,
         height: 350,
         margin: { t: 40, l: 50, r: 50, b: 50 },
+        barmode: 'group',
         legend: { orientation: 'h', y: 1.15 },
         xaxis: {
           title: 'Date',
@@ -446,8 +453,8 @@
           <div class="flex gap-4 mb-2">
             <span><span style="color:orange;">&#9632;</span> Flare Locked VP</span>
             <span><span style="color:orange; border-bottom:2px dotted orange;">&#9632;</span> Flare Current VP</span>
-            <span><span style="color:blue;">&#9632;</span> SGB Locked VP</span>
-            <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP</span>
+            <span><span style="color:blue;">&#9632;</span> SGB Locked VP (bar)</span>
+            <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP (bar)</span>
             <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
             <span><span style="color:grey;">&#9632;</span> 2.5% Threshold</span>
             <span><span style="color:green;">&#11044;</span> Registered</span>
