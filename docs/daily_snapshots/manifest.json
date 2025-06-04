@@ -1,0 +1,26 @@
+{
+  "flare": [
+    "flare_ftso_snapshot_2025-04-24.json",
+    "flare_ftso_snapshot_2025-04-28.json",
+    "flare_ftso_snapshot_2025-05-01.json",
+    "flare_ftso_snapshot_2025-05-05.json",
+    "flare_snapshot_2025-05-08.json",
+    "flare_snapshot_2025-05-12.json",
+    "flare_snapshot_2025-05-15.json",
+    "flare_snapshot_2025-05-19.json",
+    "flare_snapshot_2025-05-22.json",
+    "flare_snapshot_2025-05-26.json",
+    "flare_snapshot_2025-05-29.json",
+    "flare_snapshot_2025-06-02.json"
+  ],
+  "songbird": [
+    "songbird_snapshot_2025-05-08.json",
+    "songbird_snapshot_2025-05-12.json",
+    "songbird_snapshot_2025-05-15.json",
+    "songbird_snapshot_2025-05-19.json",
+    "songbird_snapshot_2025-05-22.json",
+    "songbird_snapshot_2025-05-26.json",
+    "songbird_snapshot_2025-05-29.json",
+    "songbird_snapshot_2025-06-02.json"
+  ]
+}
