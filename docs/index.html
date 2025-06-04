@@ -428,22 +428,30 @@
         const voteValues = flareLocked
           .concat(flareCurrent, sgbLocked, sgbCurrent)
           .filter(v => v !== null && !isNaN(v));
-        let yAxisMax = Math.max(2.5, ...voteValues);
-        if (!isFinite(yAxisMax)) yAxisMax = 5;
+        const yAxisMaxValue = Math.max(...voteValues);
+        let yAxisMax = isFinite(yAxisMaxValue) ? yAxisMaxValue : 5;
         yAxisMax *= 1.1; // small padding for clarity
+        const nearThreshold = voteValues.some(v => Math.abs(v - 2.5) < 0.25);
 
       singleVoteChart = new Chart(voteCanvas.getContext('2d'), {
         data: {
           labels: dates,
-          datasets: [
-            { label: 'Flare Locked VP', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
-            { label: 'Flare Current VP', data: flareCurrent, borderColor: 'orange', backgroundColor: 'orange', borderDash: [5,5], fill: false, type: 'line' },
-            { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
-            { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' },
-            { label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' },
-            { label: 'Registered', data: registered.map(r => r ? yAxisMax : 0), backgroundColor: 'rgba(0,255,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 },
-            { label: 'Not Registered', data: registered.map(r => r ? 0 : yAxisMax), backgroundColor: 'rgba(255,0,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 }
-         ]
+          datasets: (() => {
+            const datasets = [
+              { label: 'Flare Locked VP', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
+              { label: 'Flare Current VP', data: flareCurrent, borderColor: 'orange', backgroundColor: 'orange', borderDash: [5,5], fill: false, type: 'line' },
+              { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
+              { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' }
+            ];
+            if (nearThreshold) {
+              datasets.push({ label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' });
+            }
+            datasets.push(
+              { label: 'Registered', data: registered.map(r => r ? yAxisMax : 0), backgroundColor: 'rgba(0,255,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 },
+              { label: 'Not Registered', data: registered.map(r => r ? 0 : yAxisMax), backgroundColor: 'rgba(255,0,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 }
+            );
+            return datasets;
+          })()
        },
        options: {
          responsive: true,
@@ -479,22 +487,20 @@
         }
       });
 
-      // Master legend (only once)
+      const legendDiv = document.getElementById('masterLegend') || document.createElement('div');
+      legendDiv.id = 'masterLegend';
+      legendDiv.innerHTML = `
+        <div class="flex gap-4 mb-2">
+          <span><span style="color:orange;">&#9632;</span> Flare Locked VP</span>
+          <span><span style="color:orange; border-bottom:2px dotted orange;">&#9632;</span> Flare Current VP</span>
+          <span><span style="color:blue;">&#9632;</span> SGB Locked VP (bar)</span>
+          <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP (bar)</span>
+          <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
+          ${nearThreshold ? '<span><span style="color:grey;">&#9632;</span> 2.5% Threshold</span>' : ''}
+          <span><span style="color:green;">&#11044;</span> Registered</span>
+          <span><span style="color:red;">&#11044;</span> Not Registered</span>
+        </div>`;
       if (!document.getElementById('masterLegend')) {
-        const legendDiv = document.createElement('div');
-        legendDiv.id = 'masterLegend';
-        legendDiv.innerHTML = `
-          <div class="flex gap-4 mb-2">
-            <span><span style="color:orange;">&#9632;</span> Flare Locked VP</span>
-            <span><span style="color:orange; border-bottom:2px dotted orange;">&#9632;</span> Flare Current VP</span>
-            <span><span style="color:blue;">&#9632;</span> SGB Locked VP (bar)</span>
-            <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP (bar)</span>
-            <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
-            <span><span style="color:grey;">&#9632;</span> 2.5% Threshold</span>
-            <span><span style="color:green;">&#11044;</span> Registered</span>
-            <span><span style="color:red;">&#11044;</span> Not Registered</span>
-          </div>
-        `;
         container.parentNode.insertBefore(legendDiv, container);
       }
     }
