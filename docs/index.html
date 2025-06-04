@@ -275,9 +275,9 @@
 
       Plotly.newPlot('rewardRateChart', [chartData], {
         title: `Reward Rate (%) - ${timeframe}`,
-        xaxis: { title: 'Provider' },
+        xaxis: { title: 'Provider', tickangle: -45 },
         yaxis: { title: 'Reward Rate (%)' },
-        margin: { t: 50, l: 50, r: 50, b: 50 },
+        margin: { t: 50, l: 50, r: 50, b: 120 },
         responsive: true
       });
     }
