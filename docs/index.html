@@ -113,7 +113,8 @@
   <script>
 
     let rewardChart;
-    let singleProviderChart;
+    let singleVoteChart;
+    let singleRewardChart;
     let dataTable;
 
     // Small debounce utility
@@ -408,15 +409,21 @@
 
       const container = document.getElementById('singleChartContainer');
       container.innerHTML = '';
-      const canvas = document.createElement('canvas');
-      canvas.style.width = '100%';
-      canvas.style.height = '350px';
-      canvas.style.marginBottom = '30px';
-      container.appendChild(canvas);
+      const voteCanvas = document.createElement('canvas');
+      const rewardCanvas = document.createElement('canvas');
+      voteCanvas.style.width = '100%';
+      voteCanvas.style.height = '350px';
+      voteCanvas.style.marginBottom = '30px';
+      rewardCanvas.style.width = '100%';
+      rewardCanvas.style.height = '350px';
+      rewardCanvas.style.marginBottom = '30px';
+      container.appendChild(voteCanvas);
+      container.appendChild(rewardCanvas);
 
-      if (singleProviderChart) singleProviderChart.destroy();
+      if (singleVoteChart) singleVoteChart.destroy();
+      if (singleRewardChart) singleRewardChart.destroy();
 
-      singleProviderChart = new Chart(canvas.getContext('2d'), {
+      singleVoteChart = new Chart(voteCanvas.getContext('2d'), {
         data: {
           labels: dates,
           datasets: [
@@ -424,7 +431,6 @@
             { label: 'Flare Current VP', data: flareCurrent, borderColor: 'orange', backgroundColor: 'orange', borderDash: [5,5], fill: false, type: 'line' },
             { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
             { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' },
-            { label: 'Reward Rate (%)', data: rewardRate, borderColor: 'purple', backgroundColor: 'purple', fill: false, type: 'line', yAxisID: 'y2' },
             { label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' },
             { label: 'Registered', data: registered.map(r => r ? 0 : null), borderColor: 'green', backgroundColor: 'green', type: 'scatter', showLine: false, pointRadius: 6 },
             { label: 'Not Registered', data: registered.map(r => r ? null : 0), borderColor: 'red', backgroundColor: 'red', type: 'scatter', showLine: false, pointRadius: 6 }
@@ -433,13 +439,33 @@
         options: {
           responsive: true,
           plugins: {
-            title: { display: true, text: selectedProvider },
+            title: { display: true, text: selectedProvider + ' - Voting Power' },
             legend: { position: 'top' }
           },
           scales: {
             x: { title: { display: true, text: 'Date' } },
-            y: { title: { display: true, text: 'Voting Power (%)' }, min: -1, max: 5 },
-            y2: { title: { display: true, text: 'Reward Rate (%)' }, position: 'right', grid: { drawOnChartArea: false } }
+            y: { title: { display: true, text: 'Voting Power (%)' }, min: -1, max: 5 }
+          }
+        }
+      });
+
+      singleRewardChart = new Chart(rewardCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            { label: 'Reward Rate (%)', data: rewardRate, borderColor: 'purple', backgroundColor: 'purple', fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: selectedProvider + ' - Reward Rate (%)' },
+            legend: { position: 'top' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Reward Rate (%)' } }
           }
         }
       });
