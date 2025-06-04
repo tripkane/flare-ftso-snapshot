@@ -111,6 +111,15 @@
   </main>
 
   <script>
+    // Small debounce utility
+    function debounce(func, delay) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
@@ -449,6 +458,9 @@
       }
     }
 
+    const debouncedRenderChart = debounce(renderChart, 300);
+    const debouncedRenderTable = debounce(renderTable, 300);
+
     // Remove any previous event listeners to avoid duplicates
     const providerFilter = document.getElementById('providerFilter');
     const newProviderFilter = providerFilter.cloneNode(true);
@@ -458,18 +470,18 @@
     });
 
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
-      renderChart();
-      renderTable();
+      debouncedRenderChart();
+      debouncedRenderTable();
     });
     document.getElementById('registeredLatestOnly').addEventListener('change', () => {
-      renderChart();
-      renderTable();
+      debouncedRenderChart();
+      debouncedRenderTable();
     });
     document.getElementById('registeredOnly').addEventListener('change', () => {
-      renderChart();
-      renderTable();
+      debouncedRenderChart();
+      debouncedRenderTable();
     });
-    document.getElementById('timeframe').addEventListener('change', renderChart);
+    document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
 
     document.addEventListener('DOMContentLoaded', () => {
       loadData().then(() => {
