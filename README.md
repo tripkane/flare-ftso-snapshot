@@ -17,4 +17,8 @@ pip install -r requirements.txt
 uvicorn query_server:app --reload
 ```
 
-Then open the dashboard (served from `docs/`) in a browser. A prompt bar in the top right sends questions to `http://localhost:8000/query` and displays the answer.
+
+Start the server and visit `http://localhost:8000` in your browser. The dashboard
+is served directly by the API and the prompt bar sends questions to
+`http://localhost:8000/query`.
+

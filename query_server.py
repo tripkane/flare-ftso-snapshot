@@ -2,10 +2,13 @@ import glob
 import json
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from transformers import pipeline
 
 app = FastAPI()
+
+app.mount("/", StaticFiles(directory="docs", html=True), name="docs")
 
 # Load a lightweight generation model
 text_gen = pipeline("text-generation", model="gpt2")
