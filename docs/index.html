@@ -125,24 +125,15 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
-        const res = await fetch('https://api.github.com/repos/tripkane/flare-ftso-snapshot/contents/daily_snapshots');
-        const files = await res.json();
+        const manifestRes = await fetch('daily_snapshots/manifest.json');
+        const manifest = await manifestRes.json();
 
-        // Flare files
-        const flareUrls = files
-          .filter(f => f.name.startsWith('flare_') && f.name.endsWith('.json'))
-          .map(f => f.download_url);
+        const flareUrls = manifest.flare.map(name => `daily_snapshots/${name}`);
+        const songbirdUrls = manifest.songbird.map(name => `daily_snapshots/${name}`);
 
-        // Songbird files
-        const songbirdUrls = files
-          .filter(f => f.name.startsWith('songbird_') && f.name.endsWith('.json'))
-          .map(f => f.download_url);
-
-        // Load Flare data as usual
         const flareData = await Promise.all(flareUrls.map(url => fetch(url).then(r => r.json())));
         const flareSnapshots = flareData.map(s => ({ date: s.date, providers: s.providers }));
 
-        // Load Songbird data and transform fields
         const songbirdData = await Promise.all(songbirdUrls.map(url => fetch(url).then(r => r.json())));
         const songbirdSnapshots = songbirdData.map(s => ({
           date: s.date,
@@ -153,18 +144,8 @@
           }))
         }));
 
-        // Prepare dates as date-only strings
-        const dates = [...new Set(
-          flareData.map(d => d.date.split('T')[0])
-            .concat(songbirdData.map(d => d.date.split('T')[0]))
-        )].sort();
-
-        // Store both sets for filtering
         window.flareSnapshots = flareSnapshots;
         window.songbirdSnapshots = songbirdSnapshots;
-
-        // Continue with your rendering logic...
-        // You can now filter and display either or both datasets as needed
       } catch (error) {
         console.error('Error loading data:', error);
         alert('Failed to load data. Please try again later.');
