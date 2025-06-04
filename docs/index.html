@@ -111,8 +111,9 @@
   </main>
 
   <script>
-    // Plotly is used for interactive charts. Chart.js was evaluated but lacked
-    // built-in range sliders required for navigating historical data.
+    let dataTable;
+
+
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
@@ -285,8 +286,9 @@
     }
 
     function renderTable() {
-      const tbody = document.getElementById('dataTable').querySelector('tbody');
-      tbody.innerHTML = '';
+      const table = $('#dataTable');
+      const tbody = table.find('tbody');
+      tbody.empty();
 
       // Get filtered Flare and Songbird providers
       const filteredFlare = getFilteredProviders();
@@ -317,22 +319,25 @@
         tbody.appendChild(tr);
       });
 
-      // Reinitialize DataTables after updating the table
-      if ($.fn.DataTable.isDataTable('#dataTable')) {
-        $('#dataTable').DataTable().destroy();
-      }
+      const rows = tbody.find('tr');
 
-      $('#dataTable').DataTable({
-        paging: true,
-        searching: true,
-        ordering: true,
-        order: [[0, 'desc'], [1, 'asc']],
-        pageLength: 100,
-        columnDefs: [
-          { targets: 0, type: 'date' },
-          { targets: [2,3,4,5,6], type: 'num' },
-        ],
-      });
+      if (dataTable) {
+        dataTable.clear();
+        dataTable.rows.add(rows);
+        dataTable.draw();
+      } else {
+        dataTable = table.DataTable({
+          paging: true,
+          searching: true,
+          ordering: true,
+          order: [[0, 'desc'], [1, 'asc']],
+          pageLength: 100,
+          columnDefs: [
+            { targets: 0, type: 'date' },
+            { targets: [2,3,4,5,6], type: 'num' },
+          ],
+        });
+      }
     }
 
     function renderSingleProviderChart() {
