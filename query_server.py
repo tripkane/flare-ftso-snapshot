@@ -8,8 +8,6 @@ from transformers import pipeline
 
 app = FastAPI()
 
-app.mount("/", StaticFiles(directory="docs", html=True), name="docs")
-
 # Load a lightweight generation model
 try:
     text_gen = pipeline("text-generation", model="gpt2")
@@ -41,13 +39,12 @@ def query(q: Question):
         "Answer this question about the dataset:\n" + CONTEXT +
         f"\nQuestion: {q.question}\nAnswer:"
     )
-    try:
-        print(f"Generated prompt: {prompt}")  # Debugging: Log the prompt
-        result = text_gen(prompt, max_length=len(prompt.split()) + 50, num_return_sequences=1)
-        print(f"Model result: {result}")  # Debugging: Log the raw model output
-        generated = result[0]["generated_text"]
-        answer = generated[len(prompt):].strip()
-        return {"answer": answer}
-    except Exception as e:
-        print(f"Error during text generation: {e}")
-        raise HTTPException(status_code=500, detail="Error generating response")
+
+    result = text_gen(prompt, max_length=len(prompt.split()) + 50, num_return_sequences=1)
+    generated = result[0]["generated_text"]
+    answer = generated[len(prompt):].strip()
+    return {"answer": answer}
+
+app.mount("/", StaticFiles(directory="docs", html=True), name="docs")
+
+
