@@ -32,10 +32,9 @@
       box-shadow: 0 0 5px #374151; /* Add a subtle shadow for focus */
     }
 
-    /* Table container for scrolling */
+    /* Table container for scrolling - let DataTables handle overflow */
     #tableContainer {
       max-height: 600px;
-      overflow-y: auto;
     }
 
     /* Sticky table headers */
@@ -103,7 +102,7 @@
       </div>
 
       <h2 class="text-xl font-bold mt-6">Full Data Table</h2>
-      <div id="tableContainer" class="overflow-y-auto max-h-[600px]">
+      <div id="tableContainer" class="max-h-[600px]">
         <table id="dataTable" class="display w-full border-collapse mt-4 bg-gray-800 text-gray-100">
           <thead>
             <tr class="bg-gray-700">
