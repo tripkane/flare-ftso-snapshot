@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FTSO Flare Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -81,7 +81,7 @@
 
     <!-- Reward Rate Chart -->
     <section id="chartContainer" class="overflow-x-auto mb-4">
-      <div id="rewardRateChart" class="w-full h-[400px]"></div>
+      <canvas id="rewardRateChart" class="w-full h-[400px]"></canvas>
     </section>
 
     <div id="miniChartsContainer" style="overflow-y: auto; max-height: 1200px; width: 100%;">
@@ -111,6 +111,9 @@
   </main>
 
   <script>
+
+    let rewardChart;
+    let singleProviderChart;
 
     // Small debounce utility
     function debounce(func, delay) {
@@ -258,19 +261,32 @@
       // Sort data by reward rate (highest to lowest)
       data = data.sort((a, b) => b.average - a.average);
 
-      const chartData = {
-        x: data.map(d => d.name),
-        y: data.map(d => (parseFloat(d.average) * 100).toFixed(2)), // Convert to percentage and format to 2 decimal places
-        type: 'bar',
-        marker: { color: 'purple' } // <-- changed to purple
-      };
+      const ctx = document.getElementById('rewardRateChart').getContext('2d');
+      const labels = data.map(d => d.name);
+      const values = data.map(d => parseFloat(d.average) * 100);
 
-      Plotly.newPlot('rewardRateChart', [chartData], {
-        title: `Reward Rate (%) - ${timeframe}`,
-        xaxis: { title: 'Provider', tickangle: -45 },
-        yaxis: { title: 'Reward Rate (%)' },
-        margin: { t: 50, l: 50, r: 50, b: 120 },
-        responsive: true
+      if (rewardChart) rewardChart.destroy();
+
+      rewardChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Reward Rate (%)',
+            data: values,
+            backgroundColor: 'purple'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: `Reward Rate (%) - ${timeframe}` }
+          },
+          scales: {
+            x: { ticks: { maxRotation: 45, minRotation: 45 }, title: { display: true, text: 'Provider' } },
+            y: { title: { display: true, text: 'Reward Rate (%)' } }
+          }
+        }
       });
     }
 
@@ -389,42 +405,43 @@
         return reg && reg.toLowerCase() === "yes" ? 1 : 0;
       });
 
-      const traces = [
-        { x: dates, y: flareLocked, name: 'Flare Locked VP', type: 'scatter', mode: 'lines+markers', line: { color: 'orange', dash: 'solid' } },
-        { x: dates, y: flareCurrent, name: 'Flare Current VP', type: 'scatter', mode: 'lines+markers', line: { color: 'orange', dash: 'dot' } },
-        { x: dates, y: sgbLocked, name: 'SGB Locked VP', type: 'bar', marker: { color: 'rgba(0,0,255,0.5)' } },
-        { x: dates, y: sgbCurrent, name: 'SGB Current VP', type: 'bar', marker: { color: 'rgba(0,0,255,0.25)' } },
-        { x: dates, y: rewardRate, name: 'Reward Rate (%)', type: 'scatter', mode: 'lines+markers', yaxis: 'y2', line: { color: 'purple', dash: 'solid' } },
-        { x: dates, y: Array(dates.length).fill(2.5), name: '2.5% Threshold', mode: 'lines', line: { color: 'grey', dash: 'dash' } },
-        { x: dates, y: registered.map(r => r ? 0 : null), name: 'Registered', mode: 'markers', marker: { color: 'green', size: 12, symbol: 'circle' } },
-        { x: dates, y: registered.map(r => r ? null : 0), name: 'Not Registered', mode: 'markers', marker: { color: 'red', size: 12, symbol: 'circle' } }
-      ];
-
-      const layout = {
-        title: selectedProvider,
-        height: 350,
-        margin: { t: 40, l: 50, r: 50, b: 50 },
-        barmode: 'group',
-        legend: { orientation: 'h', y: 1.15 },
-        xaxis: {
-          title: 'Date',
-          type: 'category',
-          rangeslider: { visible: true }, // <-- enables horizontal slider
-          tickformat: '%Y-%m-%d'
-        },
-        yaxis: { title: 'Voting Power (%)', range: [-1, 5] },
-        yaxis2: { title: 'Reward Rate (%)', overlaying: 'y', side: 'right' }
-      };
-
       const container = document.getElementById('singleChartContainer');
       container.innerHTML = '';
-      const chartDiv = document.createElement('div');
-      chartDiv.style.width = '100%';
-      chartDiv.style.height = '350px';
-      chartDiv.style.marginBottom = '30px';
-      container.appendChild(chartDiv);
+      const canvas = document.createElement('canvas');
+      canvas.style.width = '100%';
+      canvas.style.height = '350px';
+      canvas.style.marginBottom = '30px';
+      container.appendChild(canvas);
 
-      Plotly.newPlot(chartDiv, traces, layout, { displayModeBar: false });
+      if (singleProviderChart) singleProviderChart.destroy();
+
+      singleProviderChart = new Chart(canvas.getContext('2d'), {
+        data: {
+          labels: dates,
+          datasets: [
+            { label: 'Flare Locked VP', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
+            { label: 'Flare Current VP', data: flareCurrent, borderColor: 'orange', backgroundColor: 'orange', borderDash: [5,5], fill: false, type: 'line' },
+            { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
+            { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' },
+            { label: 'Reward Rate (%)', data: rewardRate, borderColor: 'purple', backgroundColor: 'purple', fill: false, type: 'line', yAxisID: 'y2' },
+            { label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' },
+            { label: 'Registered', data: registered.map(r => r ? 0 : null), borderColor: 'green', backgroundColor: 'green', type: 'scatter', showLine: false, pointRadius: 6 },
+            { label: 'Not Registered', data: registered.map(r => r ? null : 0), borderColor: 'red', backgroundColor: 'red', type: 'scatter', showLine: false, pointRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: selectedProvider },
+            legend: { position: 'top' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Voting Power (%)' }, min: -1, max: 5 },
+            y2: { title: { display: true, text: 'Reward Rate (%)' }, position: 'right', grid: { drawOnChartArea: false } }
+          }
+        }
+      });
 
       // Master legend (only once)
       if (!document.getElementById('masterLegend')) {
