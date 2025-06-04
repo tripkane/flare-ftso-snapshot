@@ -69,6 +69,10 @@
         </select>
       </div>
       <div id="singleChartContainer" style="width: 100%;"></div>
+      <div id="currentVpChartSection" class="mt-4">
+        <div id="currentVpChartContainer" style="width: 100%;"></div>
+        <input id="currentVpRange" type="range" min="0" max="0" value="0" class="w-full mt-2" />
+      </div>
     </section>
 
     <!-- Multi-provider chart and table -->
@@ -141,6 +145,7 @@
     let rewardChart;
     let singleVoteChart;
     let singleRewardChart;
+    let currentVoteChart;
     let dataTable;
 
     // Small debounce utility
@@ -175,8 +180,25 @@
           }))
         }));
 
+        let currentManifest = { flare: [], songbird: [] };
+        try {
+          const currentRes = await fetch('current_vote_power/manifest.json');
+          currentManifest = await currentRes.json();
+        } catch (err) {
+          console.warn('No current vote power manifest found');
+        }
+        const flareCurrentUrls = currentManifest.flare.map(n => `current_vote_power/${n}`);
+        const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetch(u).then(r => r.json())));
+        const flareCurrentSnapshots = flareCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
+
+        const songbirdCurrentUrls = currentManifest.songbird.map(n => `current_vote_power/${n}`);
+        const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetch(u).then(r => r.json())));
+        const songbirdCurrentSnapshots = songbirdCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
+
         window.flareSnapshots = flareSnapshots;
         window.songbirdSnapshots = songbirdSnapshots;
+        window.flareCurrentSnapshots = flareCurrentSnapshots;
+        window.songbirdCurrentSnapshots = songbirdCurrentSnapshots;
       } catch (error) {
         console.error('Error loading data:', error);
         alert('Failed to load data. Please try again later.');
@@ -435,10 +457,6 @@
         const val = flareData.find(d => d.date === date)?.vote_power_pct_locked;
         return val !== undefined && val !== null ? Number(val) : null;
       });
-      const flareCurrent = dates.map(date => {
-        const val = flareData.find(d => d.date === date)?.vote_power_pct;
-        return val !== undefined && val !== null ? Number(val) : null;
-      });
       const sgbLocked = dates.map(date => {
         const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct;
         return val !== undefined && val !== null ? Number(val) : null;
@@ -481,7 +499,7 @@
         if (singleRewardChart) singleRewardChart.destroy();
 
         const voteValues = flareLocked
-          .concat(flareCurrent, sgbLocked, sgbCurrent)
+          .concat(sgbLocked, sgbCurrent)
           .filter(v => v !== null && !isNaN(v));
         const yAxisMaxValue = Math.max(...voteValues);
         let yAxisMax = isFinite(yAxisMaxValue) ? yAxisMaxValue : 5;
@@ -494,7 +512,6 @@
           datasets: (() => {
             const datasets = [
               { label: 'Flare Locked VP', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
-              { label: 'Flare Current VP', data: flareCurrent, borderColor: 'orange', backgroundColor: 'orange', borderDash: [5,5], fill: false, type: 'line' },
               { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
               { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' }
             ];
@@ -547,7 +564,6 @@
       legendDiv.innerHTML = `
         <div class="flex gap-4 mb-2">
           <span><span style="color:orange;">&#9632;</span> Flare Locked VP</span>
-          <span><span style="color:orange; border-bottom:2px dotted orange;">&#9632;</span> Flare Current VP</span>
           <span><span style="color:blue;">&#9632;</span> SGB Locked VP (bar)</span>
           <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP (bar)</span>
           <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
@@ -560,6 +576,67 @@
       }
     }
 
+    function renderCurrentVoteChart() {
+      if (!window.flareCurrentSnapshots && !window.songbirdCurrentSnapshots) return;
+      const provider = document.getElementById('providerFilter').value;
+      const container = document.getElementById('currentVpChartContainer');
+      const range = document.getElementById('currentVpRange');
+      container.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      container.appendChild(canvas);
+
+      const timestampsSet = new Set();
+      const flareMap = {};
+      if (window.flareCurrentSnapshots) {
+        window.flareCurrentSnapshots.forEach(s => {
+          timestampsSet.add(s.timestamp);
+          const p = s.providers.find(pr => pr.name === provider);
+          if (p) flareMap[s.timestamp] = Number(p.vote_power_pct);
+        });
+      }
+      const songbirdMap = {};
+      if (window.songbirdCurrentSnapshots) {
+        window.songbirdCurrentSnapshots.forEach(s => {
+          timestampsSet.add(s.timestamp);
+          const p = s.providers.find(pr => pr.name === provider);
+          if (p) songbirdMap[s.timestamp] = Number(p.vote_power_pct);
+        });
+      }
+
+      const timestamps = Array.from(timestampsSet).sort();
+      const flareValues = timestamps.map(t => flareMap[t] ?? null);
+      const sgbValues = timestamps.map(t => songbirdMap[t] ?? null);
+
+      range.max = Math.max(timestamps.length - 1, 0);
+      if (!range.value) range.value = Math.max(timestamps.length - 100, 0);
+
+      function updateCurrentChart() {
+        const start = parseInt(range.value) || 0;
+        const labels = timestamps.slice(start);
+        const flareData = flareValues.slice(start);
+        const sgbData = sgbValues.slice(start);
+        if (currentVoteChart) currentVoteChart.destroy();
+        currentVoteChart = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Flare Current VP', data: flareData, borderColor: 'orange', backgroundColor: 'orange', fill: false },
+              { label: 'Songbird Current VP', data: sgbData, borderColor: 'blue', backgroundColor: 'blue', fill: false }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { title: { display: true, text: provider + ' - Current Vote Power' } },
+            scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Vote Power (%)' } } }
+          }
+        });
+      }
+
+      range.oninput = updateCurrentChart;
+      updateCurrentChart();
+    }
+
     const debouncedRenderChart = debounce(renderChart, 300);
     const debouncedRenderTable = debounce(renderTable, 300);
 
@@ -569,6 +646,7 @@
     providerFilter.parentNode.replaceChild(newProviderFilter, providerFilter);
     newProviderFilter.addEventListener('change', function () {
       renderSingleProviderChart();
+      renderCurrentVoteChart();
     });
 
     document.getElementById('maxVotePowerInput').addEventListener('input', () => {
@@ -609,7 +687,9 @@
         renderChart();
         renderTable();
         renderSingleProviderChart();
+        renderCurrentVoteChart();
         document.getElementById('providerFilter').addEventListener('change', renderSingleProviderChart);
+        document.getElementById('providerFilter').addEventListener('change', renderCurrentVoteChart);
       });
     });
   </script>

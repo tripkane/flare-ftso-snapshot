@@ -1,0 +1,8 @@
+{
+  "timestamp": "2025-06-01T00:00:00Z",
+  "providers": [
+    {"name": "Bifrost Wallet", "vote_power_pct": 3.5},
+    {"name": "Flare.Space", "vote_power_pct": 2.75},
+    {"name": "AlphaOracle", "vote_power_pct": 2.5}
+  ]
+}
