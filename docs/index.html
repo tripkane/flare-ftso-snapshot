@@ -71,13 +71,15 @@
       </div>
     </section>
 
-    <div class="mb-4">
-      <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
-      <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
-        <!-- Options will be populated dynamically -->
-      </select>
-    </div>
-    <div id="singleChartContainer" style="width: 100%;"></div>
+    <section id="providerSection" class="border border-gray-700 rounded p-4 mb-4">
+      <div class="mb-4">
+        <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
+        <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+      <div id="singleChartContainer" style="width: 100%;"></div>
+    </section>
 
     <!-- Reward Rate Chart -->
     <section id="chartContainer" class="overflow-x-auto mb-4">
@@ -432,8 +434,8 @@
             { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
             { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' },
             { label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' },
-            { label: 'Registered', data: registered.map(r => r ? 0 : null), borderColor: 'green', backgroundColor: 'green', type: 'scatter', showLine: false, pointRadius: 6 },
-            { label: 'Not Registered', data: registered.map(r => r ? null : 0), borderColor: 'red', backgroundColor: 'red', type: 'scatter', showLine: false, pointRadius: 6 }
+            { label: 'Registered', data: registered.map(r => r ? 5 : 0), backgroundColor: 'rgba(0,255,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 },
+            { label: 'Not Registered', data: registered.map(r => r ? 0 : 5), backgroundColor: 'rgba(255,0,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 }
           ]
         },
         options: {
