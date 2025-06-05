@@ -2,11 +2,13 @@
   "flare": [
     "flare_vp_2025-06-01T00-00.json",
     "flare_vp_2025-06-01T00-10.json",
-    "flare_vp_2025-06-05T10-53-02Z.json"
+    "flare_vp_2025-06-05T10-53-02Z.json",
+    "flare_vp_2025-06-05T10-57-29Z.json"
   ],
   "songbird": [
     "songbird_vp_2025-06-01T00-00.json",
     "songbird_vp_2025-06-01T00-10.json",
-    "songbird_vp_2025-06-05T10-53-08Z.json"
+    "songbird_vp_2025-06-05T10-53-08Z.json",
+    "songbird_vp_2025-06-05T10-57-35Z.json"
   ]
 }
