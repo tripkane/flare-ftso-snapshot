@@ -615,20 +615,66 @@
         const labels = timestamps.slice(start);
         const flareData = flareValues.slice(start);
         const sgbData = sgbValues.slice(start);
+
         if (currentVoteChart) currentVoteChart.destroy();
+
         currentVoteChart = new Chart(canvas.getContext('2d'), {
           type: 'line',
           data: {
             labels,
             datasets: [
-              { label: 'Flare Current VP', data: flareData, borderColor: 'orange', backgroundColor: 'orange', fill: false },
-              { label: 'Songbird Current VP', data: sgbData, borderColor: 'blue', backgroundColor: 'blue', fill: false }
+              {
+                label: 'Flare Current VP',
+                data: flareData,
+                borderColor: 'orange',
+                backgroundColor: 'orange',
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                spanGaps: true
+              },
+              {
+                label: 'Songbird Current VP',
+                data: sgbData,
+                borderColor: 'blue',
+                backgroundColor: 'blue',
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 3,
+                spanGaps: true
+              }
             ]
           },
           options: {
             responsive: true,
-            plugins: { title: { display: true, text: provider + ' - Current Vote Power' } },
-            scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Vote Power (%)' } } }
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+              title: { display: true, text: provider + ' - Current Vote Power' },
+              tooltip: {
+                callbacks: {
+                  title: ctx => ctx[0].label,
+                  label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Time' },
+                ticks: {
+                  autoSkip: false,
+                  maxRotation: 0,
+                  minRotation: 0,
+                  callback: function (value, index) {
+                    const label = labels[index];
+                    const date = label.slice(0, 10);
+                    if (index === 0) return date;
+                    const prevDate = labels[index - 1].slice(0, 10);
+                    return date !== prevDate ? date : '';
+                  }
+                }
+              },
+              y: { title: { display: true, text: 'Vote Power (%)' } }
+            }
           }
         });
       }
