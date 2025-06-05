@@ -68,10 +68,20 @@ def scrape_flaremetrics(driver, network="flare"):
                 vote_power = int(vote_nums[0].replace(",", "")) if vote_nums[0] else 0
                 vote_power_locked = int(vote_nums[1].replace(",", "")) if vote_nums[1] else 0
             elif len(vote_nums) == 1:
-                # Only one number, use for both
+                # Single number present. Check for doubled value pattern.
                 num = vote_nums[0].replace(",", "")
-                vote_power = int(num) if num else 0
-                vote_power_locked = int(num) if num else 0
+                if num and len(num) % 2 == 0:
+                    half = len(num) // 2
+                    first, second = num[:half], num[half:]
+                    if first == second:
+                        vote_power = int(first)
+                        vote_power_locked = int(second)
+                    else:
+                        vote_power = int(num)
+                        vote_power_locked = int(num)
+                else:
+                    vote_power = int(num) if num else 0
+                    vote_power_locked = int(num) if num else 0
             else:
                 # Fallback: try to split the raw_vote string in half (legacy case)
                 vp = raw_vote.replace(",", "")
