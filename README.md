@@ -6,8 +6,12 @@ This repo is designed to scrape the FTSO provider rewards data and associated re
 Run a small API to query the snapshot data using a lightweight language model.
 
 ### Setup
+This project requires **Python 3.11**. It is recommended to create a virtual
+environment before installing dependencies:
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -21,4 +25,12 @@ uvicorn query_server:app --reload
 Start the server and visit `http://localhost:8000` in your browser. The dashboard
 is served directly by the API and the prompt bar sends questions to
 `http://localhost:8000/query`.
+
+## Running Tests
+
+Execute the test suite with `pytest`:
+
+```bash
+pytest
+```
 
