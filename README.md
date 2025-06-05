@@ -26,6 +26,7 @@ Start the server and visit `http://localhost:8000` in your browser. The dashboar
 is served directly by the API and the prompt bar sends questions to
 `http://localhost:8000/query`.
 
+
 ## Running Tests
 
 Execute the test suite with `pytest`:
@@ -33,4 +34,9 @@ Execute the test suite with `pytest`:
 ```bash
 pytest
 ```
+=======
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 
