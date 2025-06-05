@@ -34,6 +34,12 @@ Execute the test suite with `pytest`:
 ```bash
 pytest
 ```
+
+## Automated Vote Power Snapshots
+
+GitHub Actions runs `current_vote_power.py` every ten minutes to keep
+`current_vote_power/` and `docs/current_vote_power/` up to date with the latest
+Flare and Songbird vote power data.
 =======
 ## License
 
