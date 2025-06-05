@@ -1,28 +1,46 @@
 import os
 import json
 
+
+def maybe_split(vp_raw: str):
+    """Return tuple of (vote_power, vote_power_locked) if vp_raw appears doubled."""
+    digits = vp_raw.replace(",", "")
+    if digits.isdigit() and len(digits) % 2 == 0:
+        half = len(digits) // 2
+        first, second = digits[:half], digits[half:]
+        if first == second:
+            return int(first), int(second)
+    return None
+
+
 def fix_vote_power(directory="daily_snapshots"):
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            file_path = os.path.join(directory, filename)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-            changed = False
-            for provider in data.get("providers", []):
-                vp = str(provider.get("vote_power", ""))
-                if vp and len(vp) % 2 == 0:
-                    mid = len(vp) // 2
-                    vp1 = vp[:mid].replace(",", "")
-                    vp2 = vp[mid:].replace(",", "")
-                    # Only update if not already numeric
-                    if not (provider.get("vote_power_locked") and isinstance(provider["vote_power"], int)):
-                        provider["vote_power"] = int(vp1) if vp1.isdigit() else 0
-                        provider["vote_power_locked"] = int(vp2) if vp2.isdigit() else 0
-                        changed = True
-            if changed:
-                with open(file_path, 'w') as f:
-                    json.dump(data, f, indent=2)
-                print(f"Fixed: {filename}")
+    for filename in sorted(os.listdir(directory)):
+        if not filename.endswith(".json"):
+            continue
+
+        file_path = os.path.join(directory, filename)
+        with open(file_path, "r") as f:
+            data = json.load(f)
+
+        changed = False
+        for provider in data.get("providers", []):
+            vp_raw = str(provider.get("vote_power", ""))
+            locked_raw = str(provider.get("vote_power_locked", ""))
+
+            # Detect doubled numbers (vote_power == vote_power_locked and digits repeated)
+            if vp_raw == locked_raw:
+                result = maybe_split(vp_raw)
+                if result:
+                    provider["vote_power"], provider["vote_power_locked"] = result
+                    changed = True
+
+        if changed:
+            with open(file_path, "w") as f:
+                json.dump(data, f, indent=2)
+            print(f"Fixed: {os.path.join(directory, filename)}")
+
 
 if __name__ == "__main__":
-    fix_vote_power()
+    for d in ["daily_snapshots", os.path.join("docs", "daily_snapshots")]:
+        if os.path.isdir(d):
+            fix_vote_power(d)
