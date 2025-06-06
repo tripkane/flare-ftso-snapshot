@@ -152,10 +152,12 @@ def save_snapshot(data, network="flare"):
     filename = f"daily_snapshots/{network}_snapshot_{today}.json"
     if os.path.exists(filename):
         print(f"Snapshot already exists: {filename}")
+
     else:
         with open(filename, "w") as f:
             json.dump({"date": today, "providers": data}, f, indent=2)
         print(f"Snapshot saved: {filename}")
+
     copy_snapshot_to_docs(filename, network)
 
 
@@ -177,8 +179,10 @@ def update_docs_manifest(docs_dir, filename, network):
     else:
         manifest = {"flare": [], "songbird": []}
     manifest.setdefault(network, [])
+
     if filename not in manifest[network]:
         manifest[network].append(filename)
+
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
