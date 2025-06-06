@@ -152,10 +152,35 @@ def save_snapshot(data, network="flare"):
     filename = f"daily_snapshots/{network}_snapshot_{today}.json"
     if os.path.exists(filename):
         print(f"Snapshot already exists: {filename}")
-        return
-    with open(filename, 'w') as f:
-        json.dump({"date": today, "providers": data}, f, indent=2)
-    print(f"Snapshot saved: {filename}")
+    else:
+        with open(filename, "w") as f:
+            json.dump({"date": today, "providers": data}, f, indent=2)
+        print(f"Snapshot saved: {filename}")
+    copy_snapshot_to_docs(filename, network)
+
+
+def copy_snapshot_to_docs(path, network):
+    """Copy snapshot to docs directory and update manifest."""
+    docs_dir = os.path.join("docs", "daily_snapshots")
+    os.makedirs(docs_dir, exist_ok=True)
+    dest = os.path.join(docs_dir, os.path.basename(path))
+    with open(path) as src, open(dest, "w") as dst:
+        dst.write(src.read())
+    update_docs_manifest(docs_dir, os.path.basename(path), network)
+
+
+def update_docs_manifest(docs_dir, filename, network):
+    manifest_path = os.path.join(docs_dir, "manifest.json")
+    if os.path.exists(manifest_path):
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+    else:
+        manifest = {"flare": [], "songbird": []}
+    manifest.setdefault(network, [])
+    if filename not in manifest[network]:
+        manifest[network].append(filename)
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
 
 def load_epoch_schedule(file_path="flare_epoch_schedule.json"):
     """Load the epoch schedule from a JSON file."""

@@ -33,6 +33,6 @@ jobs:
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@users.noreply.github.com'
-          git add daily_snapshots/
+          git add daily_snapshots/ docs/daily_snapshots/
           git commit -m "Daily Flaremetrics snapshot $(date +'%Y-%m-%d')" || echo "No changes to commit"
           git push
