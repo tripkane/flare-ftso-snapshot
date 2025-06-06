@@ -9,6 +9,9 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 
+MAX_RETRIES = int(os.getenv("SNAPSHOT_RETRIES", "6"))
+RETRY_DELAY = int(os.getenv("SNAPSHOT_RETRY_DELAY", "600"))  # seconds
+
 # Initialize headless browser
 def init_driver():
     options = Options()
@@ -120,11 +123,36 @@ def scrape_flaremetrics(driver, network="flare"):
             })
     return providers
 
+def scrape_with_retries(network="flare", max_retries=MAX_RETRIES, delay=RETRY_DELAY):
+    """Scrape flaremetrics with retry logic."""
+    attempt = 0
+    while attempt < max_retries:
+        driver = init_driver()
+        try:
+            data = scrape_flaremetrics(driver, network)
+            if data:
+                return data
+            else:
+                print(f"No data retrieved for {network} on attempt {attempt + 1}")
+        except Exception as e:
+            print(f"Error scraping {network} on attempt {attempt + 1}: {e}")
+        finally:
+            driver.quit()
+        attempt += 1
+        if attempt < max_retries:
+            print(f"Retrying in {delay} seconds...")
+            time.sleep(delay)
+    print(f"Failed to scrape data for {network} after {max_retries} attempts")
+    return []
+
 # Save snapshot to JSON
 def save_snapshot(data, network="flare"):
     today = datetime.date.today().isoformat()
     os.makedirs("daily_snapshots", exist_ok=True)
     filename = f"daily_snapshots/{network}_snapshot_{today}.json"
+    if os.path.exists(filename):
+        print(f"Snapshot already exists: {filename}")
+        return
     with open(filename, 'w') as f:
         json.dump({"date": today, "providers": data}, f, indent=2)
     print(f"Snapshot saved: {filename}")
@@ -167,11 +195,7 @@ def clean_snapshots(schedule, snapshot_dir="daily_snapshots"):
 
 # Main entrypoint
 def main(network="flare"):
-    driver = init_driver()
-    try:
-        current_data = scrape_flaremetrics(driver, network)
-    finally:
-        driver.quit()
+    current_data = scrape_with_retries(network)
 
     save_snapshot(current_data, network)
 
