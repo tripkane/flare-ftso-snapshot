@@ -26,7 +26,9 @@ bs4_module = types.ModuleType("bs4")
 bs4_module.BeautifulSoup = object
 sys.modules.setdefault("bs4", bs4_module)
 
-from snapshot import extract_numbers, extract_decimal
+from snapshot import extract_numbers, extract_decimal, save_snapshot
+import json
+import datetime
 
 
 def test_extract_numbers_with_commas():
@@ -41,3 +43,29 @@ def test_extract_decimal_valid():
 
 def test_extract_decimal_invalid_multiple_dots():
     assert extract_decimal("invalid 1..2 value") is None
+
+
+def test_save_snapshot_updates_manifest(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    data = [{"value": 1}]
+    network = "flare"
+
+    save_snapshot(data, network=network)
+
+    today = datetime.date.today().isoformat()
+    filename = f"{network}_snapshot_{today}.json"
+
+    snap_file = tmp_path / "daily_snapshots" / filename
+    docs_file = tmp_path / "docs" / "daily_snapshots" / filename
+    manifest_path = tmp_path / "docs" / "daily_snapshots" / "manifest.json"
+
+    assert snap_file.exists()
+    assert docs_file.exists()
+
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest[network] == [filename]
+
+    # call again to ensure manifest entry isn't duplicated
+    save_snapshot(data, network=network)
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest[network] == [filename]
