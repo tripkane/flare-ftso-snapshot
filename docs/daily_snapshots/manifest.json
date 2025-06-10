@@ -15,7 +15,8 @@
     "flare_snapshot_2025-06-06.json",
     "flare_snapshot_2025-06-07.json",
     "flare_snapshot_2025-06-08.json",
-    "flare_snapshot_2025-06-09.json"
+    "flare_snapshot_2025-06-09.json",
+    "flare_snapshot_2025-06-10.json"
   ],
   "songbird": [
     "songbird_snapshot_2025-05-08.json",
@@ -29,6 +30,7 @@
     "songbird_snapshot_2025-06-06.json",
     "songbird_snapshot_2025-06-07.json",
     "songbird_snapshot_2025-06-08.json",
-    "songbird_snapshot_2025-06-09.json"
+    "songbird_snapshot_2025-06-09.json",
+    "songbird_snapshot_2025-06-10.json"
   ]
 }
