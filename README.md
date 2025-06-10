@@ -37,10 +37,7 @@ pytest
 
 ## Automated Vote Power Snapshots
 
-GitHub Actions runs `current_vote_power.py` every ten minutes to keep
-`current_vote_power/` and `docs/current_vote_power/` up to date with the latest
-Flare and Songbird vote power data.
-=======
+GitHub Actions runs `current_vote_power.py` every ten minutes. This process keeps `current_vote_power/` and `docs/current_vote_power/` updated with the latest Flare and Songbird vote-power data.
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
