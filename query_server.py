@@ -1,5 +1,6 @@
 import glob
 import json
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +19,8 @@ except Exception as e:
 # Gather snapshot data
 snapshots = []
 for path in sorted(glob.glob("docs/daily_snapshots/*.json")):
+    if os.path.basename(path) == "manifest.json":
+        continue
     try:
         with open(path) as f:
             snapshots.append(json.load(f))
