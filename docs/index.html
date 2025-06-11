@@ -499,7 +499,7 @@
         if (singleRewardChart) singleRewardChart.destroy();
 
         const voteValues = flareLocked
-          .concat(sgbLocked, sgbCurrent)
+          .concat(sgbLocked)
           .filter(v => v !== null && !isNaN(v));
         const yAxisMaxValue = Math.max(...voteValues);
         let yAxisMax = isFinite(yAxisMaxValue) ? yAxisMaxValue : 5;
@@ -510,11 +510,10 @@
         data: {
           labels: dates,
           datasets: (() => {
-            const datasets = [
-              { label: 'Flare Locked VP', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
-              { label: 'SGB Locked VP', data: sgbLocked, backgroundColor: 'rgba(0,0,255,0.5)', type: 'bar' },
-              { label: 'SGB Current VP', data: sgbCurrent, backgroundColor: 'rgba(0,0,255,0.25)', type: 'bar' }
-            ];
+              const datasets = [
+                { label: 'FLR Locked Voting Power', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
+                { label: 'SGB Locked Voting Power', data: sgbLocked, borderColor: 'blue', backgroundColor: 'blue', fill: false, type: 'line' }
+              ];
             if (nearThreshold) {
               datasets.push({ label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' });
             }
@@ -563,9 +562,8 @@
       legendDiv.id = 'masterLegend';
       legendDiv.innerHTML = `
         <div class="flex gap-4 mb-2">
-          <span><span style="color:orange;">&#9632;</span> Flare Locked VP</span>
-          <span><span style="color:blue;">&#9632;</span> SGB Locked VP (bar)</span>
-          <span><span style="color:blue; border-bottom:2px dotted blue;">&#9632;</span> SGB Current VP (bar)</span>
+          <span><span style="color:orange;">&#9632;</span> FLR Locked Voting Power</span>
+          <span><span style="color:blue;">&#9632;</span> SGB Locked Voting Power</span>
           <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
           ${nearThreshold ? '<span><span style="color:grey;">&#9632;</span> 2.5% Threshold</span>' : ''}
           <span><span style="color:green;">&#11044;</span> Registered</span>
