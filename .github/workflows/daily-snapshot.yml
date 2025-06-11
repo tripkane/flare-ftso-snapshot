@@ -27,6 +27,11 @@ jobs:
       - name: Run snapshot script
         run: python snapshot.py
 
+      - name: Clean old snapshots
+        run: |
+          python clean_snapshots.py
+          python clean_snapshots.py docs/daily_snapshots
+
       - name: Commit and push results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
