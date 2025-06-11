@@ -196,12 +196,11 @@ def load_epoch_schedule(file_path="flare_epoch_schedule.json"):
         return []
 
 def is_snapshot_relevant(snapshot_date, schedule):
-    """Check if a snapshot date falls within any epoch in the schedule."""
-    snapshot_datetime = datetime.datetime.strptime(snapshot_date, "%Y-%m-%d")
+    """Return True if snapshot_date exactly matches an epoch start date."""
+    snapshot_day = datetime.datetime.strptime(snapshot_date, "%Y-%m-%d").date()
     for epoch in schedule:
-        start = datetime.datetime.strptime(epoch["Start (UTC)"], "%Y-%m-%d %H:%M:%S")
-        end = datetime.datetime.strptime(epoch["End (UTC)"], "%Y-%m-%d %H:%M:%S")
-        if start.date() <= snapshot_datetime.date() <= end.date():
+        start = datetime.datetime.strptime(epoch["Start (UTC)"], "%Y-%m-%d %H:%M:%S").date()
+        if snapshot_day == start:
             return True
     return False
 
