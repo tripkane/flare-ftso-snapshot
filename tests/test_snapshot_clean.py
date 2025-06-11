@@ -36,7 +36,8 @@ def test_is_snapshot_relevant():
         {"Start (UTC)": "2023-02-01 00:00:00", "End (UTC)": "2023-02-05 23:59:59"},
     ]
 
-    assert is_snapshot_relevant("2023-01-03", schedule)
+    assert is_snapshot_relevant("2023-01-01", schedule)
+    assert not is_snapshot_relevant("2023-01-03", schedule)
     assert not is_snapshot_relevant("2023-03-01", schedule)
 
 
