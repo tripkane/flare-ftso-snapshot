@@ -53,7 +53,10 @@
       <img src="assets/logo.png" alt="Dashboard Logo" class="h-12 w-auto" />
       <h1 class="text-2xl font-bold">FTSO Flare Dashboard</h1>
     </div>
-    <div id="queryBar" class="flex items-center space-x-2">
+    <!-- The query interface previously posted questions to a local LLM server.
+         It is hidden by default because the dashboard now works without any
+         backend service. -->
+    <div id="queryBar" class="flex items-center space-x-2 hidden">
       <input id="queryInput" type="text" placeholder="Ask about snapshots..." class="p-2 bg-gray-700 border border-gray-600 rounded-l text-sm w-64" />
       <button id="queryButton" class="px-3 py-2 bg-purple-600 text-white rounded-r">Ask</button>
     </div>
@@ -148,6 +151,9 @@
     let currentVoteChart;
     let dataTable;
 
+    // Base URL for fetching snapshot files directly from GitHub
+    const BASE_URL = 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs';
+
     // Small debounce utility
     function debounce(func, delay) {
       let timeout;
@@ -161,11 +167,11 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
-        const manifestRes = await fetch('daily_snapshots/manifest.json');
+        const manifestRes = await fetch(`${BASE_URL}/daily_snapshots/manifest.json`);
         const manifest = await manifestRes.json();
 
-        const flareUrls = manifest.flare.map(name => `daily_snapshots/${name}`);
-        const songbirdUrls = manifest.songbird.map(name => `daily_snapshots/${name}`);
+        const flareUrls = manifest.flare.map(name => `${BASE_URL}/daily_snapshots/${name}`);
+        const songbirdUrls = manifest.songbird.map(name => `${BASE_URL}/daily_snapshots/${name}`);
 
         const flareData = await Promise.all(flareUrls.map(url => fetch(url).then(r => r.json())));
         const flareSnapshots = flareData.map(s => ({ date: s.date, providers: s.providers }));
@@ -182,16 +188,16 @@
 
         let currentManifest = { flare: [], songbird: [] };
         try {
-          const currentRes = await fetch('current_vote_power/manifest.json');
+          const currentRes = await fetch(`${BASE_URL}/current_vote_power/manifest.json`);
           currentManifest = await currentRes.json();
         } catch (err) {
           console.warn('No current vote power manifest found');
         }
-        const flareCurrentUrls = currentManifest.flare.map(n => `current_vote_power/${n}`);
+        const flareCurrentUrls = currentManifest.flare.map(n => `${BASE_URL}/current_vote_power/${n}`);
         const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetch(u).then(r => r.json())));
         const flareCurrentSnapshots = flareCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
-        const songbirdCurrentUrls = currentManifest.songbird.map(n => `current_vote_power/${n}`);
+        const songbirdCurrentUrls = currentManifest.songbird.map(n => `${BASE_URL}/current_vote_power/${n}`);
         const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetch(u).then(r => r.json())));
         const songbirdCurrentSnapshots = songbirdCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
@@ -707,21 +713,9 @@
     });
     document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
 
+    // Query functionality disabled when no LLM backend is used.
     async function sendQuery() {
-      const input = document.getElementById('queryInput');
-      const question = input.value.trim();
-      if (!question) return;
-      try {
-        const res = await fetch('/query', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question })
-        });
-        const data = await res.json();
-        alert(data.answer);
-      } catch (err) {
-        alert('Failed to query server');
-      }
+      alert('Query service not available.');
     }
 
     document.getElementById('queryButton').addEventListener('click', sendQuery);
