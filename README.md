@@ -52,6 +52,7 @@ Without an argument it cleans `daily_snapshots/` in the project root. This can
 be used after running the workflow manually if you need to tidy the `docs`
 folder. The scheduled snapshot workflow also runs this script to keep
 `daily_snapshots/` and `docs/daily_snapshots/` free of stray files.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
