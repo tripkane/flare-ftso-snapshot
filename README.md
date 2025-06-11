@@ -38,6 +38,19 @@ pytest
 ## Automated Vote Power Snapshots
 
 GitHub Actions runs `current_vote_power.py` every ten minutes. This process keeps `current_vote_power/` and `docs/current_vote_power/` updated with the latest Flare and Songbird vote-power data.
+
+## Cleaning Snapshot Directories
+
+To remove snapshot files that are not aligned with epoch start dates, run
+`clean_snapshots.py` and optionally pass the directory you want to clean:
+
+```bash
+python clean_snapshots.py docs/daily_snapshots
+```
+
+Without an argument it cleans `daily_snapshots/` in the project root. This can
+be used after running the workflow manually if you need to tidy the `docs`
+folder.
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
