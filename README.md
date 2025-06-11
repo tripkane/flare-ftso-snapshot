@@ -21,6 +21,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+This installs all dependencies required to run the snapshot scripts,
+including `selenium` and `beautifulsoup4` for web scraping.
 
 ### Start the server (optional)
 
