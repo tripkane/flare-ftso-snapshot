@@ -42,8 +42,13 @@ def clean_snapshots(start_dates, snapshot_dir="daily_snapshots"):
                 print(f"Error processing file '{filename}': {e}")
 
 if __name__ == "__main__":
+    import sys
+
+    # allow optional directory argument
+    snapshot_dir = sys.argv[1] if len(sys.argv) > 1 else "daily_snapshots"
+
     # Load epoch start dates
     start_dates = load_epoch_schedule()
 
     # Clean snapshots
-    clean_snapshots(start_dates)
+    clean_snapshots(start_dates, snapshot_dir=snapshot_dir)
