@@ -11,13 +11,14 @@ permissions:
   contents: read       # for checkout, build, etc.
   pages: write         # to push the Pages deployment
   id-token: write      # to mint the OIDC token for verification
+  actions: read        # to access the current workflow run
 
 concurrency:
   group: 'pages'
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,6 +29,16 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v2
+        with:
+          token: ${{ github.token }}
