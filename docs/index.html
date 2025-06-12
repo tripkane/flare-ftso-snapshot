@@ -193,11 +193,11 @@
         } catch (err) {
           console.warn('No current vote power manifest found');
         }
-        const flareCurrentUrls = currentManifest.flare.map(n => `${BASE_URL}/current_vote_power/${n}`);
+        const flareCurrentUrls = currentManifest.flare.map(path => `${BASE_URL}/current_vote_power/${path}`);
         const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetch(u).then(r => r.json())));
         const flareCurrentSnapshots = flareCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
-        const songbirdCurrentUrls = currentManifest.songbird.map(n => `${BASE_URL}/current_vote_power/${n}`);
+        const songbirdCurrentUrls = currentManifest.songbird.map(path => `${BASE_URL}/current_vote_power/${path}`);
         const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetch(u).then(r => r.json())));
         const songbirdCurrentSnapshots = songbirdCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 

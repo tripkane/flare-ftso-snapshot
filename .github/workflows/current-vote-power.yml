@@ -26,6 +26,9 @@ jobs:
       - name: Run current vote power script
         run: python current_vote_power.py
 
+      - name: Archive old vote power files
+        run: python archive_vote_power.py
+
       - name: Commit and push results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
