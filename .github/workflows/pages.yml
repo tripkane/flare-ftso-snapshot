@@ -11,6 +11,7 @@ permissions:
   contents: read       # for checkout, build, etc.
   pages: write         # to push the Pages deployment
   id-token: write      # to mint the OIDC token for verification
+  actions: read        # to access the current workflow run
 
 concurrency:
   group: 'pages'
