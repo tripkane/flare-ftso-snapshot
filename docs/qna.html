@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Q&A</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    textarea, input { width: 100%; font-size: 1rem; margin: .5rem 0; }
+    #answer { white-space: pre-wrap; background: #f1f1f1; padding: 1rem; border-radius: 4px; }
+  </style>
+  <script src="config.js"></script>
+</head>
+<body>
+  <h1>Ask the Data</h1>
+  <p>Loaded dataset: <code>data.json</code></p>
+  <textarea id="question" rows="2" placeholder="e.g. What was the highest vote power?"></textarea>
+  <button onclick="ask()">Ask</button>
+  <div id="answer"></div>
+
+  <script>
+  async function ask() {
+    document.getElementById('answer').textContent = "Thinking…";
+    const data = await fetch('data.json').then(r=>r.text());
+    const prompt = `\nHere is some JSON data:\n${data}\n\nQuestion: ${document.getElementById('question').value}\nAnswer:`;
+    const res = await fetch('https://api.github.com/copilot/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + window.GITHUB_TOKEN,
+        'X-GitHub-Api-Version': '2023-07-07'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{role:'user', content: prompt}],
+        temperature: 0
+      })
+    });
+    const {choices} = await res.json();
+    document.getElementById('answer').textContent = choices[0].message.content.trim();
+  }
+  </script>
+</body>
+</html>

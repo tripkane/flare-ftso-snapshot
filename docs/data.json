@@ -1,0 +1,38 @@
+{
+  "date": "2025-04-24",
+  "providers": [
+    {
+      "rank": "1",
+      "name": "Bifrost Wallet",
+      "vote_power": 1609987635,
+      "vote_power_locked": 1609987635,
+      "vote_power_pct": "3.59%",
+      "vote_power_pct_locked": "3.61%",
+      "change_24h_pct": "0.10%",
+      "reward_rate": "0.0313",
+      "registered": "Yes"
+    },
+    {
+      "rank": "2",
+      "name": "Flare.Space",
+      "vote_power": 1244755576,
+      "vote_power_locked": 1244755576,
+      "vote_power_pct": "2.78%",
+      "vote_power_pct_locked": "2.76%",
+      "change_24h_pct": "0.47%",
+      "reward_rate": "0.0491",
+      "registered": "Yes"
+    },
+    {
+      "rank": "3",
+      "name": "AlphaOracle",
+      "vote_power": 1115290904,
+      "vote_power_locked": 1115290904,
+      "vote_power_pct": "2.49%",
+      "vote_power_pct_locked": "2.49%",
+      "change_24h_pct": "0.11%",
+      "reward_rate": "0.0543",
+      "registered": "Yes"
+    }
+  ]
+}
