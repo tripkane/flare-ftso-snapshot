@@ -24,6 +24,15 @@ pip install -r requirements.txt
 This installs all dependencies required to run the snapshot scripts,
 including `selenium` and `beautifulsoup4` for web scraping.
 
+The scraper expects `chromium-browser` and `chromedriver` to be installed.
+If they are located in non‑standard paths, set the `CHROMIUM_BINARY` and
+`CHROMEDRIVER` environment variables before running any snapshot scripts, e.g.:
+
+```bash
+export CHROMIUM_BINARY=/path/to/chromium
+export CHROMEDRIVER=/path/to/chromedriver
+```
+
 ### Start the server (optional)
 
 ```bash
