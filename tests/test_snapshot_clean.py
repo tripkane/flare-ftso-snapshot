@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import types
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -45,16 +46,40 @@ def test_clean_snapshots(tmp_path):
     schedule = [
         {"Start (UTC)": "2023-01-01 00:00:00", "End (UTC)": "2023-01-02 23:59:59"},
     ]
+    snap_dir = tmp_path / "snaps"
+    docs_dir = tmp_path / "docs"
+    snap_dir.mkdir()
+    docs_dir.mkdir(parents=True)
 
-    relevant = tmp_path / "flare_snapshot_2023-01-01.json"
-    irrelevant = tmp_path / "flare_snapshot_2023-01-03.json"
-    other_file = tmp_path / "note.txt"
+    relevant = snap_dir / "flare_snapshot_2023-01-01.json"
+    irrelevant = snap_dir / "flare_snapshot_2023-01-03.json"
+    other_file = snap_dir / "note.txt"
 
     for f in (relevant, irrelevant, other_file):
         f.write_text("{}")
 
-    clean_snapshots(schedule, snapshot_dir=str(tmp_path))
+    # mirror files in docs directory
+    for f in (relevant, irrelevant):
+        (docs_dir / f.name).write_text("{}")
+
+    manifest_path = docs_dir / "manifest.json"
+    manifest_path.write_text(
+        json.dumps({"flare": [relevant.name, irrelevant.name], "songbird": []})
+    )
+
+    clean_snapshots(
+        schedule,
+        snapshot_dir=str(snap_dir),
+        docs_dir=str(docs_dir),
+        manifest_path=str(manifest_path),
+        network="flare",
+    )
 
     assert relevant.exists()
     assert not irrelevant.exists()
     assert other_file.exists()
+    assert (docs_dir / relevant.name).exists()
+    assert not (docs_dir / irrelevant.name).exists()
+
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["flare"] == [relevant.name]
