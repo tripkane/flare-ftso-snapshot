@@ -44,6 +44,19 @@ If you want to experiment with the LLM query endpoint, run the server and visit
 `http://localhost:8000`. The dashboard will be served locally and the prompt bar
 sends questions to `http://localhost:8000/query`.
 
+### Ask the data on GitHub Pages
+
+For a quick demo without running a server, open `docs/qna.html`. This page
+loads `docs/data.json` and sends your questions directly to the OpenAI API.
+Create a `docs/config.js` file (do **not** commit it) with your API key:
+
+```js
+window.OPENAI_API_KEY = "sk-...";
+```
+
+When the file is present locally or uploaded via the GitHub Pages UI, you can
+query the dataset straight from the browser.
+
 
 ## Running Tests
 
