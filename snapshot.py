@@ -204,22 +204,60 @@ def is_snapshot_relevant(snapshot_date, schedule):
             return True
     return False
 
-def clean_snapshots(schedule, snapshot_dir="daily_snapshots"):
-    """Delete snapshots that aren't relevant based on the epoch schedule."""
+def clean_snapshots(
+    schedule,
+    snapshot_dir="daily_snapshots",
+    docs_dir=None,
+    manifest_path=None,
+    network=None,
+):
+    """Delete snapshots that aren't relevant and update docs/manifest."""
     if not os.path.exists(snapshot_dir):
         print(f"Snapshot directory '{snapshot_dir}' does not exist.")
         return
 
+    if docs_dir is None:
+        docs_dir = os.path.join("docs", "daily_snapshots")
+    if manifest_path is None:
+        manifest_path = os.path.join(docs_dir, "manifest.json")
+
+    manifest = {"flare": [], "songbird": []}
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+        except Exception:
+            pass
+
     for filename in os.listdir(snapshot_dir):
-        if filename.endswith(".json"):
-            snapshot_date = filename.split("_")[-1].replace(".json", "")
-            try:
-                if not is_snapshot_relevant(snapshot_date, schedule):
-                    file_path = os.path.join(snapshot_dir, filename)
-                    os.remove(file_path)
-                    print(f"Deleted irrelevant snapshot: {file_path}")
-            except Exception as e:
-                print(f"Error processing file '{filename}': {e}")
+        if not filename.endswith(".json"):
+            continue
+        snapshot_date = filename.split("_")[-1].replace(".json", "")
+        try:
+            if not is_snapshot_relevant(snapshot_date, schedule):
+                file_path = os.path.join(snapshot_dir, filename)
+                os.remove(file_path)
+                print(f"Deleted irrelevant snapshot: {file_path}")
+
+                doc_file = os.path.join(docs_dir, filename)
+                if os.path.exists(doc_file):
+                    os.remove(doc_file)
+
+                if network and filename in manifest.get(network, []):
+                    manifest[network].remove(filename)
+        except Exception as e:
+            print(f"Error processing file '{filename}': {e}")
+
+    # Finalize manifest: remove entries with missing files
+    if network:
+        manifest[network] = [
+            f
+            for f in manifest.get(network, [])
+            if os.path.exists(os.path.join(docs_dir, f))
+        ]
+
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
 
 # Main entrypoint
 def main(network="flare"):
@@ -229,7 +267,7 @@ def main(network="flare"):
 
     # Load epoch schedule and clean snapshots
     schedule = load_epoch_schedule()
-    clean_snapshots(schedule)
+    clean_snapshots(schedule, network=network)
 
 if __name__ == '__main__':
     # Usage: python snapshot.py [flare|songbird]
