@@ -14,12 +14,23 @@ RETRY_DELAY = int(os.getenv("SNAPSHOT_RETRY_DELAY", "600"))  # seconds
 
 # Initialize headless browser
 def init_driver():
+    """Initialise a headless Chrome driver.
+
+    Paths to the Chromium binary and chromedriver can be overridden with the
+    ``CHROMIUM_BINARY`` and ``CHROMEDRIVER`` environment variables
+    respectively. This allows the scraper to run in environments where the
+    browser is installed in a non-standard location.
+    """
+
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.binary_location = "/usr/bin/chromium-browser"
-    service = Service("/usr/bin/chromedriver")
+
+    binary_path = os.getenv('CHROMIUM_BINARY', '/usr/bin/chromium-browser')
+    driver_path = os.getenv('CHROMEDRIVER', '/usr/bin/chromedriver')
+    options.binary_location = binary_path
+    service = Service(driver_path)
     return webdriver.Chrome(service=service, options=options)
 
 # Helpers for extracting numbers and decimals
