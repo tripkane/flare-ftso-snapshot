@@ -23,11 +23,13 @@
     document.getElementById('answer').textContent = "Thinking…";
     const data = await fetch('data.json').then(r=>r.text());
     const prompt = `\nHere is some JSON data:\n${data}\n\nQuestion: ${document.getElementById('question').value}\nAnswer:`;
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await fetch('https://api.github.com/copilot/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + window.OPENAI_API_KEY
+        'Authorization': 'Bearer ' + window.GITHUB_TOKEN,
+        'X-GitHub-Api-Version': '2023-07-07'
+
       },
       body: JSON.stringify({
         model: 'gpt-4o',

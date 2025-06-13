@@ -7,6 +7,18 @@ Open `docs/index.html` directly in your browser or visit the published GitHub
 Pages site at `https://tripkane.github.io/flare-ftso-snapshot/`. The dashboard
 fetches all snapshot JSON files from GitHub so no local server is required.
 
+### Enabling GitHub Pages
+
+The workflow in `.github/workflows/pages.yml` deploys the `docs/` folder using
+GitHub Actions. If deployment fails with a `404` error, ensure Pages are enabled
+for the repository:
+
+1. Navigate to **Settings → Pages** in the repository UI.
+2. Under **Build and deployment**, choose **GitHub Actions** as the source.
+3. Save the configuration and re-run the `GitHub Pages` workflow.
+
+Once enabled, every push to the `main` branch will update the site automatically.
+
 ## Querying snapshots with an LLM (optional)
 
 An optional FastAPI server provides an endpoint for LLM powered questions about
@@ -47,11 +59,11 @@ sends questions to `http://localhost:8000/query`.
 ### Ask the data on GitHub Pages
 
 For a quick demo without running a server, open `docs/qna.html`. This page
-loads `docs/data.json` and sends your questions directly to the OpenAI API.
-Create a `docs/config.js` file (do **not** commit it) with your API key:
+loads `docs/data.json` and sends your questions directly to GitHub's models API.
+Create a `docs/config.js` file (do **not** commit it) with a fine-grained token:
 
 ```js
-window.OPENAI_API_KEY = "sk-...";
+window.GITHUB_TOKEN = "ghp_...";
 ```
 
 When the file is present locally or uploaded via the GitHub Pages UI, you can
