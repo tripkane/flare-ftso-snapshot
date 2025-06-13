@@ -85,8 +85,12 @@
           <label class="block font-bold mb-2">Max locked voting power (%):</label>
           <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100"
             class="w-full p-2 bg-gray-800 border border-gray-700 rounded" />
-        </div>
-        <div class="flex-1 min-w-[200px]">
+      </div>
+      <div class="flex-1 min-w-[200px]">
+        <label for="multiProviderSelect" class="block font-bold mb-2">Compare Providers:</label>
+        <select id="multiProviderSelect" multiple size="5" class="w-full p-2 bg-gray-800 border border-gray-700 rounded"></select>
+      </div>
+      <div class="flex-1 min-w-[200px]">
           <label class="block font-bold mb-2">
             <input type="checkbox" id="registeredLatestOnly" class="mr-2" />
             Registered in Latest Snapshot Only
@@ -113,6 +117,9 @@
       <div id="chartContainer" class="overflow-x-auto mb-4">
         <canvas id="rewardRateChart" class="w-full h-[400px]"></canvas>
       </div>
+      <div id="multiProviderChartContainer" class="overflow-x-auto mb-4">
+        <canvas id="multiProviderChart" class="w-full h-[400px]"></canvas>
+      </div>
 
       <h2 class="text-xl font-bold mt-6">Full Data Table</h2>
       <div id="tableContainer" class="max-h-[600px]">
@@ -129,6 +136,9 @@
             <th class="p-2 border border-gray-600">7-Day Avg Reward Rate (%)</th>
             <th class="p-2 border border-gray-600">30-Day Avg Reward Rate (%)</th>
             <th class="p-2 border border-gray-600">Cumulative Avg Reward Rate (%)</th>
+            <th class="p-2 border border-gray-600">Headroom (%)</th>
+            <th class="p-2 border border-gray-600">Trend Slope</th>
+            <th class="p-2 border border-gray-600">Reward Volatility (%)</th>
           </tr>
         </thead>
         <tbody>
@@ -150,6 +160,7 @@
     let singleRewardChart;
     let currentVoteChart;
     let dataTable;
+    let multiProviderChart;
 
     // Base URL for fetching snapshot files directly from GitHub
     const BASE_URL = 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs';
@@ -205,10 +216,90 @@
         window.songbirdSnapshots = songbirdSnapshots;
         window.flareCurrentSnapshots = flareCurrentSnapshots;
         window.songbirdCurrentSnapshots = songbirdCurrentSnapshots;
+        computeProviderStats();
       } catch (error) {
         console.error('Error loading data:', error);
         alert('Failed to load data. Please try again later.');
       }
+    }
+
+    let providerStats = {};
+
+    function computeProviderStats() {
+      const stats = {};
+      const latest = window.flareSnapshots[window.flareSnapshots.length - 1];
+      const lockedMap = {};
+      if (latest) {
+        latest.providers.forEach(p => {
+          lockedMap[p.name] = parseFloat(p.vote_power_pct_locked);
+        });
+      }
+
+      window.flareSnapshots.forEach(snap => {
+        snap.providers.forEach(p => {
+          const name = p.name;
+          if (!stats[name]) {
+            stats[name] = { rewardRates: [], locked: lockedMap[name] || 0 };
+          }
+          stats[name].rewardRates.push({ date: snap.date, rate: parseFloat(p.reward_rate) || 0 });
+        });
+      });
+
+      Object.keys(stats).forEach(name => {
+        const arr = stats[name].rewardRates.map(r => r.rate);
+        const n = arr.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        arr.forEach((y, i) => {
+          const x = i + 1;
+          sumX += x;
+          sumY += y;
+          sumXY += x * y;
+          sumX2 += x * x;
+        });
+        const slope = n > 1 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0;
+        const avg = sumY / n || 0;
+        const variance = arr.reduce((acc, r) => acc + Math.pow(r - avg, 2), 0) / n || 0;
+        const stddev = Math.sqrt(variance);
+        stats[name].trend = slope;
+        stats[name].volatility = stddev;
+      });
+
+      const vpData = {};
+      window.flareCurrentSnapshots.forEach(snap => {
+        snap.providers.forEach(p => {
+          if (!vpData[p.name]) vpData[p.name] = [];
+          vpData[p.name].push(parseFloat(p.vote_power_pct));
+        });
+      });
+
+      Object.keys(vpData).forEach(name => {
+        const arr = vpData[name];
+        const n = arr.length;
+        const current = arr[n - 1];
+        let slope = 0;
+        if (n > 1) {
+          let sx = 0, sy = 0, sxy = 0, sx2 = 0;
+          arr.forEach((y, i) => {
+            const x = i;
+            sx += x;
+            sy += y;
+            sxy += x * y;
+            sx2 += x * x;
+          });
+          slope = (n * sxy - sx * sy) / (n * sx2 - sx * sx);
+        }
+        const projection = current + slope * 6;
+        const locked = stats[name] ? stats[name].locked : 0;
+        if (stats[name]) {
+          stats[name].headroom = locked - projection;
+        }
+      });
+
+      providerStats = stats;
+
+      const multiSelect = document.getElementById('multiProviderSelect');
+      const names = Object.keys(stats).sort();
+      multiSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
     }
 
     function getFilteredProviders() {
@@ -385,6 +476,7 @@
 
         const tr = document.createElement('tr');
         const avg = avgMap[provider.name] || { avg7: '', avg30: '', avgCum: '' };
+        const stats = providerStats[provider.name] || {};
         tr.innerHTML = `
           <td class="p-2 border border-gray-600">${provider.date}</td>
           <td class="p-2 border border-gray-600">${provider.name}</td>
@@ -396,6 +488,9 @@
           <td class="p-2 border border-gray-600">${avg.avg7 !== '' ? avg.avg7.toFixed(2) : ''}</td>
           <td class="p-2 border border-gray-600">${avg.avg30 !== '' ? avg.avg30.toFixed(2) : ''}</td>
           <td class="p-2 border border-gray-600">${avg.avgCum !== '' ? avg.avgCum.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${stats.headroom !== undefined ? stats.headroom.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${stats.trend !== undefined ? stats.trend.toFixed(4) : ''}</td>
+          <td class="p-2 border border-gray-600">${stats.volatility !== undefined ? (stats.volatility * 100).toFixed(2) : ''}</td>
         `;
         tbody.append(tr);
       });
@@ -418,7 +513,7 @@
           scrollCollapse: true,
           columnDefs: [
             { targets: 0, type: 'date' },
-            { targets: [2,3,4,5,6,7,8,9], type: 'num' },
+            { targets: [2,3,4,5,6,7,8,9,10,11,12], type: 'num' },
           ],
         });
       }
@@ -580,6 +675,32 @@
       }
     }
 
+    function renderMultiProviderChart() {
+      const select = document.getElementById('multiProviderSelect');
+      const selected = Array.from(select.selectedOptions).slice(0, 5).map(o => o.value);
+      const dates = window.flareSnapshots.map(s => s.date);
+      const datasets = selected.map((name, idx) => {
+        const colors = ['orange', 'blue', 'purple', 'green', 'red'];
+        const data = dates.map(d => {
+          const snap = window.flareSnapshots.find(s => s.date === d);
+          const p = snap?.providers.find(pr => pr.name === name);
+          return p ? parseFloat(p.reward_rate) * 100 : null;
+        });
+        return { label: name, data, borderColor: colors[idx % colors.length], backgroundColor: colors[idx % colors.length], fill: false };
+      });
+      const ctx = document.getElementById('multiProviderChart').getContext('2d');
+      if (multiProviderChart) multiProviderChart.destroy();
+      multiProviderChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+          responsive: true,
+          plugins: { title: { display: true, text: 'Reward Rate Trends' } },
+          scales: { x: { title: { display: true, text: 'Date' } }, y: { title: { display: true, text: 'Reward Rate (%)' } } }
+        }
+      });
+    }
+
     function renderCurrentVoteChart() {
       if (!window.flareCurrentSnapshots && !window.songbirdCurrentSnapshots) return;
       const provider = document.getElementById('providerFilter').value;
@@ -712,6 +833,7 @@
       debouncedRenderTable();
     });
     document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
+    document.getElementById('multiProviderSelect').addEventListener('change', renderMultiProviderChart);
 
     // Query functionality disabled when no LLM backend is used.
     async function sendQuery() {
@@ -726,6 +848,7 @@
         renderTable();
         renderSingleProviderChart();
         renderCurrentVoteChart();
+        renderMultiProviderChart();
         document.getElementById('providerFilter').addEventListener('change', renderSingleProviderChart);
         document.getElementById('providerFilter').addEventListener('change', renderCurrentVoteChart);
       });
