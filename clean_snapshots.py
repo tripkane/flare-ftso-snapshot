@@ -22,24 +22,61 @@ def is_snapshot_relevant(snapshot_date, start_dates):
     snapshot_date = datetime.datetime.strptime(snapshot_date, "%Y-%m-%d").date()
     return snapshot_date in start_dates
 
-def clean_snapshots(start_dates, snapshot_dir="daily_snapshots"):
-    """Delete snapshots that aren't relevant based on the epoch start dates."""
+def clean_snapshots(
+    start_dates,
+    snapshot_dir="daily_snapshots",
+    docs_dir=None,
+    manifest_path=None,
+    network=None,
+):
+    """Delete irrelevant snapshots and update docs/manifest."""
     if not os.path.exists(snapshot_dir):
         print(f"Snapshot directory '{snapshot_dir}' does not exist.")
         return
 
+    if docs_dir is None:
+        docs_dir = os.path.join("docs", "daily_snapshots")
+    if manifest_path is None:
+        manifest_path = os.path.join(docs_dir, "manifest.json")
+
+    manifest = {"flare": [], "songbird": []}
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+        except Exception:
+            pass
+
     for filename in os.listdir(snapshot_dir):
-        if filename.endswith(".json"):
-            snapshot_date = filename.split("_")[-1].replace(".json", "")
-            try:
-                if not is_snapshot_relevant(snapshot_date, start_dates):
-                    file_path = os.path.join(snapshot_dir, filename)
-                    os.remove(file_path)
-                    print(f"Deleted irrelevant snapshot: {file_path}")
-                else:
-                    print(f"Snapshot is relevant: {filename}")
-            except Exception as e:
-                print(f"Error processing file '{filename}': {e}")
+        if not filename.endswith(".json"):
+            continue
+        snapshot_date = filename.split("_")[-1].replace(".json", "")
+        try:
+            if not is_snapshot_relevant(snapshot_date, start_dates):
+                file_path = os.path.join(snapshot_dir, filename)
+                os.remove(file_path)
+                print(f"Deleted irrelevant snapshot: {file_path}")
+
+                doc_file = os.path.join(docs_dir, filename)
+                if os.path.exists(doc_file):
+                    os.remove(doc_file)
+
+                if network and filename in manifest.get(network, []):
+                    manifest[network].remove(filename)
+            else:
+                print(f"Snapshot is relevant: {filename}")
+        except Exception as e:
+            print(f"Error processing file '{filename}': {e}")
+
+    if network:
+        manifest[network] = [
+            f
+            for f in manifest.get(network, [])
+            if os.path.exists(os.path.join(docs_dir, f))
+        ]
+
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
 
 if __name__ == "__main__":
     import sys
