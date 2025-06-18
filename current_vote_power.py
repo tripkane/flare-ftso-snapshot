@@ -30,7 +30,8 @@ def update_manifest(docs_dir, filename, network):
     else:
         manifest = {"flare": [], "songbird": []}
     manifest.setdefault(network, [])
-    manifest[network].append(filename)
+    if filename not in manifest[network]:
+        manifest[network].append(filename)
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
 
