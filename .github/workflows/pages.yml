@@ -18,6 +18,10 @@ concurrency:
 
 jobs:
   deploy:
+    # Skip deployment on pull request runs or from forks. Pull requests and
+    # forked repositories do not have permission to publish Pages and would
+    # cause the job to fail.
+    if: ${{ github.repository == 'tripkane/flare-ftso-snapshot' && !github.event.pull_request }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
