@@ -76,6 +76,13 @@
         <div id="currentVpChartContainer" style="width: 100%;"></div>
         <input id="currentVpRange" type="range" min="0" max="0" value="0" class="w-full mt-2" />
       </div>
+  </section>
+
+    <section id="nameFilterSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+      <label class="font-bold">
+        <input type="checkbox" id="namedOnly" class="mr-2" checked />
+        Names Only
+      </label>
     </section>
 
     <!-- Multi-provider chart and table -->
@@ -315,18 +322,25 @@
         }
       });
 
-      providerStats = stats;
+        providerStats = stats;
+        updateMultiProviderOptions();
+      }
 
-      const multiSelect = document.getElementById('multiProviderSelect');
-      const names = Object.keys(stats).sort();
-      multiSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
-      updateTopProviders();
-    }
+      function updateMultiProviderOptions() {
+        const multiSelect = document.getElementById('multiProviderSelect');
+        const namesOnly = document.getElementById('namedOnly').checked;
+        const names = Object.keys(providerStats)
+          .filter(n => !(namesOnly && n.startsWith('0x')))
+          .sort();
+        multiSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
+        updateTopProviders();
+      }
 
     function updateTopProviders() {
       const kpi = document.getElementById('topKpi').value;
       const num = parseInt(document.getElementById('numTopProviders').value) || 5;
-      const names = Object.keys(providerStats);
+        const namesOnly = document.getElementById('namedOnly').checked;
+        const names = Object.keys(providerStats).filter(n => !(namesOnly && n.startsWith('0x')));
       const sorted = names.sort((a, b) => {
         const getAvg = (name) => {
           switch (kpi) {
@@ -382,8 +396,9 @@
       return filtered;
     }
 
-    function getFilteredSongbirdProviders() {
-      const providersOverLimit = getProvidersOverLimitCombined();
+      function getFilteredSongbirdProviders() {
+        const providersOverLimit = getProvidersOverLimitCombined();
+        const namesOnly = document.getElementById('namedOnly').checked;
       const filtered = window.songbirdSnapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
           if (providersOverLimit.has(provider.SGB_provider)) return false;
@@ -887,6 +902,7 @@
       debouncedRenderTable();
       renderSingleProviderChart();
       renderCurrentVoteChart();
+      updateMultiProviderOptions();
       renderMultiProviderChart();
     });
     document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
