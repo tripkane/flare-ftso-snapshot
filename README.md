@@ -25,7 +25,7 @@ An optional FastAPI server provides an endpoint for LLM powered questions about
 the dataset.
 
 ### Setup
-This project requires **Python 3.11**. It is recommended to create a virtual
+This project requires **Python 3.10**. It is recommended to create a virtual
 environment before installing dependencies:
 
 ```bash
