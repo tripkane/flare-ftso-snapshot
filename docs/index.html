@@ -99,6 +99,12 @@
           </label>
         </div>
         <div class="flex-1 min-w-[200px]">
+          <label class="block font-bold mb-2">
+            <input type="checkbox" id="namedOnly" class="mr-2" />
+            Names Only
+          </label>
+        </div>
+        <div class="flex-1 min-w-[200px]">
           <label for="timeframe" class="block font-bold mb-2">Timeframe:</label>
           <select id="timeframe" class="w-full p-2 bg-gray-800 border border-gray-700 rounded">
             <option value="latest">Latest</option>
@@ -346,6 +352,7 @@
     function getFilteredProviders() {
       const registeredOnly = document.getElementById('registeredOnly').checked;
       const registeredLatestOnly = document.getElementById('registeredLatestOnly').checked;
+      const namesOnly = document.getElementById('namedOnly').checked;
       let latestSnapshot = window.flareSnapshots[window.flareSnapshots.length - 1];
       let registeredInLatest = new Set();
       if (latestSnapshot) {
@@ -365,6 +372,7 @@
           const isRegisteredLatest = registeredInLatest.has(provider.name);
           if (registeredOnly && !isRegistered) return false;
           if (registeredLatestOnly && !isRegisteredLatest) return false;
+          if (namesOnly && provider.name.startsWith('0x')) return false;
           return true;
         }).map(provider => ({
           ...provider,
@@ -379,6 +387,7 @@
       const filtered = window.songbirdSnapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
           if (providersOverLimit.has(provider.SGB_provider)) return false;
+          if (namesOnly && provider.SGB_provider.startsWith('0x')) return false;
           return true;
         }).map(provider => ({
           ...provider,
@@ -872,6 +881,13 @@
     document.getElementById('registeredOnly').addEventListener('change', () => {
       debouncedRenderChart();
       debouncedRenderTable();
+    });
+    document.getElementById('namedOnly').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+      renderSingleProviderChart();
+      renderCurrentVoteChart();
+      renderMultiProviderChart();
     });
     document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
     document.getElementById('multiProviderSelect').addEventListener('change', renderMultiProviderChart);
