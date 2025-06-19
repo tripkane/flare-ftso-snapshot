@@ -194,9 +194,28 @@
     let dataTable;
     let multiProviderChart;
 
-    // Base URL for fetching snapshot files directly from GitHub
-    // Use relative paths so the dashboard works locally and via GitHub Pages
-    const BASE_URL = '.';
+    // Base URL for snapshot files
+    // Use a relative path when served via HTTP(S) so data loads from the
+    // deployed site. When opened directly from the file system, fall back to
+    // GitHub raw URLs because browsers restrict `file:` fetches.
+    const BASE_URL = location.protocol === 'file:'
+      ? 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs'
+      : '.';
+
+    async function fetchJsonSafe(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn('Missing file', url, res.status);
+          return null;
+        }
+        return await res.json();
+      } catch (err) {
+        console.error('Error fetching', url, err);
+        return null;
+      }
+    }
+
 
     // Small debounce utility
     function debounce(func, delay) {
@@ -211,17 +230,18 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
-        const manifestRes = await fetch(`${BASE_URL}/daily_snapshots/manifest.json`);
-        const manifest = await manifestRes.json();
+        const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
+        if (!manifestRes) throw new Error('Manifest missing');
+        const manifest = manifestRes;
 
         const flareUrls = manifest.flare.map(name => `${BASE_URL}/daily_snapshots/${name}`);
         const songbirdUrls = manifest.songbird.map(name => `${BASE_URL}/daily_snapshots/${name}`);
 
-        const flareData = await Promise.all(flareUrls.map(url => fetch(url).then(r => r.json())));
-        const flareSnapshots = flareData.map(s => ({ date: s.date, providers: s.providers }));
+        const flareData = await Promise.all(flareUrls.map(url => fetchJsonSafe(url)));
+        const flareSnapshots = flareData.filter(Boolean).map(s => ({ date: s.date, providers: s.providers }));
 
-        const songbirdData = await Promise.all(songbirdUrls.map(url => fetch(url).then(r => r.json())));
-        const songbirdSnapshots = songbirdData.map(s => ({
+        const songbirdData = await Promise.all(songbirdUrls.map(url => fetchJsonSafe(url)));
+        const songbirdSnapshots = songbirdData.filter(Boolean).map(s => ({
           date: s.date,
           providers: s.providers.map(p => ({
             SGB_provider: p.name,
@@ -232,18 +252,18 @@
 
         let currentManifest = { flare: [], songbird: [] };
         try {
-          const currentRes = await fetch(`${BASE_URL}/current_vote_power/manifest.json`);
-          currentManifest = await currentRes.json();
+          const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`);
+          if (currentRes) currentManifest = currentRes;
         } catch (err) {
           console.warn('No current vote power manifest found');
         }
         const flareCurrentUrls = currentManifest.flare.map(path => `${BASE_URL}/current_vote_power/${path}`);
-        const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetch(u).then(r => r.json())));
-        const flareCurrentSnapshots = flareCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
+        const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u)));
+        const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
         const songbirdCurrentUrls = currentManifest.songbird.map(path => `${BASE_URL}/current_vote_power/${path}`);
-        const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetch(u).then(r => r.json())));
-        const songbirdCurrentSnapshots = songbirdCurrentData.map(s => ({ timestamp: s.timestamp, providers: s.providers }));
+        const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetchJsonSafe(u)));
+        const songbirdCurrentSnapshots = songbirdCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
         window.flareSnapshots = flareSnapshots;
         window.songbirdSnapshots = songbirdSnapshots;
@@ -259,6 +279,7 @@
     let providerStats = {};
 
     function computeProviderStats() {
+      if (!window.flareSnapshots || !window.flareSnapshots.length) return;
       const stats = {};
       const latest = window.flareSnapshots[window.flareSnapshots.length - 1];
       const lockedMap = {};
