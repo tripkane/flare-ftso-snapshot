@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import types
+import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Stub selenium and bs4 modules to allow importing snapshot without dependencies
@@ -28,7 +29,11 @@ bs4_module = types.ModuleType("bs4")
 bs4_module.BeautifulSoup = object
 sys.modules.setdefault("bs4", bs4_module)
 
-from snapshot import is_snapshot_relevant, clean_snapshots
+from snapshot import (
+    is_snapshot_relevant,
+    clean_snapshots,
+    is_current_time_epoch_start,
+)
 
 
 def test_is_snapshot_relevant():
@@ -83,3 +88,16 @@ def test_clean_snapshots(tmp_path):
 
     manifest = json.loads(manifest_path.read_text())
     assert manifest["flare"] == [relevant.name]
+
+
+def test_is_current_time_epoch_start():
+    schedule = [
+        {"Start (UTC)": "2023-01-01 07:10:00"},
+        {"Start (UTC)": "2023-01-01 19:10:00"},
+    ]
+
+    now = datetime.datetime(2023, 1, 1, 7, 10)
+    assert is_current_time_epoch_start(schedule, now)
+
+    later = datetime.datetime(2023, 1, 1, 8, 0)
+    assert not is_current_time_epoch_start(schedule, later)

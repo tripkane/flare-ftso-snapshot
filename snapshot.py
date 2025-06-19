@@ -218,6 +218,16 @@ def is_snapshot_relevant(snapshot_date, schedule):
             return True
     return False
 
+def is_current_time_epoch_start(schedule, now=None):
+    """Return True if ``now`` matches an epoch start timestamp."""
+    if now is None:
+        now = datetime.datetime.utcnow().replace(second=0, microsecond=0)
+    for epoch in schedule:
+        start = datetime.datetime.strptime(epoch["Start (UTC)"], "%Y-%m-%d %H:%M:%S")
+        if now == start:
+            return True
+    return False
+
 def clean_snapshots(
     schedule,
     snapshot_dir="daily_snapshots",
@@ -277,12 +287,16 @@ def clean_snapshots(
 
 # Main entrypoint
 def main(network="flare"):
+    schedule = load_epoch_schedule()
+    if not is_current_time_epoch_start(schedule):
+        now = datetime.datetime.utcnow().isoformat(timespec="minutes")
+        print(f"{now} is not an epoch start. Exiting.")
+        return
+
     current_data = scrape_with_retries(network)
 
     save_snapshot(current_data, network)
 
-    # Load epoch schedule and clean snapshots
-    schedule = load_epoch_schedule()
     clean_snapshots(schedule, network=network)
 
 if __name__ == '__main__':
