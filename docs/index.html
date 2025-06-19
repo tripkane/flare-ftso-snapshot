@@ -863,74 +863,90 @@
           return (n*sxy - sx*sy)/(n*sx2 - sx*sx);
         }
 
-        const flareSlope = computeSlope(flareData.filter(v => v !== null));
-        const sgbSlope = computeSlope(sgbData.filter(v => v !== null));
+        const flareNonNull = flareData.filter(v => v !== null);
+        const sgbNonNull = sgbData.filter(v => v !== null);
+        const flareSlope = computeSlope(flareNonNull);
+        const sgbSlope = computeSlope(sgbNonNull);
 
         const step = baseLabels.length>1 ? (new Date(baseLabels[1]) - new Date(baseLabels[0])) : 3600*1000;
         const futureLabels = [];
         const flareFuture = [];
         const sgbFuture = [];
-        const lastFlare = flareData[flareData.length-1] ?? 0;
-        const lastSgb = sgbData[sgbData.length-1] ?? 0;
+        const lastFlare = [...flareData].reverse().find(v => v !== null);
+        const lastSgb = [...sgbData].reverse().find(v => v !== null);
         for(let i=1;i<=6;i++){
           const ts = new Date(baseLabels[baseLabels.length-1]);
           ts.setTime(ts.getTime() + step*i);
           futureLabels.push(ts.toISOString());
-          flareFuture.push(lastFlare + flareSlope*i);
-          sgbFuture.push(lastSgb + sgbSlope*i);
+          if (lastFlare !== undefined && flareNonNull.length >= 2) {
+            flareFuture.push(lastFlare + flareSlope*i);
+          }
+          if (lastSgb !== undefined && sgbNonNull.length >= 2) {
+            sgbFuture.push(lastSgb + sgbSlope*i);
+          }
         }
         const labels = baseLabels.concat(futureLabels);
-        const flareAll = Array(flareData.length-1).fill(null).concat([flareData[flareData.length-1]].concat(flareFuture));
-        const sgbAll = Array(sgbData.length-1).fill(null).concat([sgbData[sgbData.length-1]].concat(sgbFuture));
+        const flareAll = Array(flareData.length-1).fill(null);
+        const sgbAll = Array(sgbData.length-1).fill(null);
+        flareAll.push(flareData[flareData.length-1]);
+        sgbAll.push(sgbData[sgbData.length-1]);
+        flareAll.push(...flareFuture);
+        sgbAll.push(...sgbFuture);
 
         if (currentVoteChart) currentVoteChart.destroy();
+
+        const datasets = [
+          {
+            label: 'Flare Current VP',
+            data: flareData,
+            borderColor: 'orange',
+            backgroundColor: 'orange',
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            spanGaps: true
+          }
+        ];
+        if (flareFuture.length) {
+          datasets.push({
+            label: 'Flare Projection',
+            data: flareAll,
+            borderColor: 'orange',
+            borderDash: [5,5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            spanGaps: true
+          });
+        }
+        datasets.push({
+          label: 'Songbird Current VP',
+          data: sgbData,
+          borderColor: 'blue',
+          backgroundColor: 'blue',
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          spanGaps: true
+        });
+        if (sgbFuture.length) {
+          datasets.push({
+            label: 'Songbird Projection',
+            data: sgbAll,
+            borderColor: 'blue',
+            borderDash: [5,5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            spanGaps: true
+          });
+        }
 
         currentVoteChart = new Chart(canvas.getContext('2d'), {
           type: 'line',
           data: {
             labels: labels.map(formatHour),
-            datasets: [
-              {
-                label: 'Flare Current VP',
-                data: flareData,
-                borderColor: 'orange',
-                backgroundColor: 'orange',
-                fill: false,
-                pointRadius: 0,
-                pointHoverRadius: 3,
-                spanGaps: true
-              },
-              {
-                label: 'Flare Projection',
-                data: flareAll,
-                borderColor: 'orange',
-                borderDash: [5,5],
-                fill: false,
-                pointRadius: 0,
-                pointHoverRadius: 0,
-                spanGaps: true
-              },
-              {
-                label: 'Songbird Current VP',
-                data: sgbData,
-                borderColor: 'blue',
-                backgroundColor: 'blue',
-                fill: false,
-                pointRadius: 0,
-                pointHoverRadius: 3,
-                spanGaps: true
-              },
-              {
-                label: 'Songbird Projection',
-                data: sgbAll,
-                borderColor: 'blue',
-                borderDash: [5,5],
-                fill: false,
-                pointRadius: 0,
-                pointHoverRadius: 0,
-                spanGaps: true
-              }
-            ]
+            datasets
           },
           options: {
             responsive: true,
