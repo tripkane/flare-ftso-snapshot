@@ -195,7 +195,8 @@
     let multiProviderChart;
 
     // Base URL for fetching snapshot files directly from GitHub
-    const BASE_URL = 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs';
+    // Use relative paths so the dashboard works locally and via GitHub Pages
+    const BASE_URL = '.';
 
     // Small debounce utility
     function debounce(func, delay) {
