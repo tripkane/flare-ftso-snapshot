@@ -194,9 +194,13 @@
     let dataTable;
     let multiProviderChart;
 
-    // Base URL for fetching snapshot files directly from GitHub
-    // Use relative paths so the dashboard works locally and via GitHub Pages
-    const BASE_URL = '.';
+    // Base URL for snapshot files
+    // Use a relative path when served via HTTP(S) so data loads from the
+    // deployed site. When opened directly from the file system, fall back to
+    // GitHub raw URLs because browsers restrict `file:` fetches.
+    const BASE_URL = location.protocol === 'file:'
+      ? 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs'
+      : '.';
 
     // Small debounce utility
     function debounce(func, delay) {
