@@ -14,30 +14,31 @@ def maybe_split(vp_raw: str):
 
 
 def fix_vote_power(directory="daily_snapshots"):
-    for filename in sorted(os.listdir(directory)):
-        if not filename.endswith(".json"):
-            continue
+    for root, _, files in os.walk(directory):
+        for filename in sorted(files):
+            if not filename.endswith(".json"):
+                continue
 
-        file_path = os.path.join(directory, filename)
-        with open(file_path, "r") as f:
-            data = json.load(f)
+            file_path = os.path.join(root, filename)
+            with open(file_path, "r") as f:
+                data = json.load(f)
 
-        changed = False
-        for provider in data.get("providers", []):
-            vp_raw = str(provider.get("vote_power", ""))
-            locked_raw = str(provider.get("vote_power_locked", ""))
+            changed = False
+            for provider in data.get("providers", []):
+                vp_raw = str(provider.get("vote_power", ""))
+                locked_raw = str(provider.get("vote_power_locked", ""))
 
-            # Detect doubled numbers (vote_power == vote_power_locked and digits repeated)
-            if vp_raw == locked_raw:
-                result = maybe_split(vp_raw)
-                if result:
-                    provider["vote_power"], provider["vote_power_locked"] = result
-                    changed = True
+                # Detect doubled numbers (vote_power == vote_power_locked and digits repeated)
+                if vp_raw == locked_raw:
+                    result = maybe_split(vp_raw)
+                    if result:
+                        provider["vote_power"], provider["vote_power_locked"] = result
+                        changed = True
 
-        if changed:
-            with open(file_path, "w") as f:
-                json.dump(data, f, indent=2)
-            print(f"Fixed: {os.path.join(directory, filename)}")
+            if changed:
+                with open(file_path, "w") as f:
+                    json.dump(data, f, indent=2)
+                print(f"Fixed: {file_path}")
 
 
 if __name__ == "__main__":

@@ -80,7 +80,10 @@ pytest
 
 ## Automated Vote Power Snapshots
 
-GitHub Actions runs `current_vote_power.py` every ten minutes. This process keeps `current_vote_power/` and `docs/current_vote_power/` updated with the latest Flare and Songbird vote-power data.
+GitHub Actions runs `current_vote_power.py` every ten minutes. This process keeps
+`current_vote_power/` and `docs/current_vote_power/` updated with the latest Flare
+and Songbird vote-power data. Files are stored in `YYYY-MM` subfolders to avoid
+exceeding GitHub's 1000 file limit in a single directory.
 
 ## Cleaning Snapshot Directories
 
@@ -94,7 +97,9 @@ python clean_snapshots.py docs/daily_snapshots
 Without an argument it cleans `daily_snapshots/` in the project root. This can
 be used after running the workflow manually if you need to tidy the `docs`
 folder. The scheduled snapshot workflow also runs this script to keep
-`daily_snapshots/` and `docs/daily_snapshots/` free of stray files.
+`daily_snapshots/` and `docs/daily_snapshots/` free of stray files. Snapshot
+files now live in monthly subdirectories (e.g. `2025-06/`), so cleaning will
+also traverse these folders.
 
 ## License
 

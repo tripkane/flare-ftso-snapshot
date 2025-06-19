@@ -47,26 +47,28 @@ def clean_snapshots(
         except Exception:
             pass
 
-    for filename in os.listdir(snapshot_dir):
-        if not filename.endswith(".json"):
-            continue
-        snapshot_date = filename.split("_")[-1].replace(".json", "")
-        try:
-            if not is_snapshot_relevant(snapshot_date, start_dates):
-                file_path = os.path.join(snapshot_dir, filename)
-                os.remove(file_path)
-                print(f"Deleted irrelevant snapshot: {file_path}")
+    for root, _, files in os.walk(snapshot_dir):
+        for filename in files:
+            if not filename.endswith(".json"):
+                continue
+            rel_path = os.path.relpath(os.path.join(root, filename), snapshot_dir)
+            snapshot_date = filename.split("_")[-1].replace(".json", "")
+            try:
+                if not is_snapshot_relevant(snapshot_date, start_dates):
+                    file_path = os.path.join(root, filename)
+                    os.remove(file_path)
+                    print(f"Deleted irrelevant snapshot: {file_path}")
 
-                doc_file = os.path.join(docs_dir, filename)
-                if os.path.exists(doc_file):
-                    os.remove(doc_file)
+                    doc_file = os.path.join(docs_dir, rel_path)
+                    if os.path.exists(doc_file):
+                        os.remove(doc_file)
 
-                if network and filename in manifest.get(network, []):
-                    manifest[network].remove(filename)
-            else:
-                print(f"Snapshot is relevant: {filename}")
-        except Exception as e:
-            print(f"Error processing file '{filename}': {e}")
+                    if network and rel_path in manifest.get(network, []):
+                        manifest[network].remove(rel_path)
+                else:
+                    print(f"Snapshot is relevant: {filename}")
+            except Exception as e:
+                print(f"Error processing file '{filename}': {e}")
 
     if network:
         manifest[network] = [

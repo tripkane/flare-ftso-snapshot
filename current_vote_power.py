@@ -8,7 +8,8 @@ from snapshot import init_driver, scrape_flaremetrics
 
 def save_current_vote_power(data, network="flare"):
     ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
-    out_dir = os.path.join("current_vote_power")
+    subdir = ts[:7]
+    out_dir = os.path.join("current_vote_power", subdir)
     os.makedirs(out_dir, exist_ok=True)
     filename = f"{network}_vp_{ts}.json"
     path = os.path.join(out_dir, filename)
@@ -16,10 +17,11 @@ def save_current_vote_power(data, network="flare"):
         json.dump(data, f, indent=2)
     print(f"Saved current vote power: {path}")
     docs_dir = os.path.join("docs", "current_vote_power")
-    os.makedirs(docs_dir, exist_ok=True)
-    with open(os.path.join(docs_dir, filename), "w") as f:
+    rel_path = os.path.join(subdir, filename)
+    os.makedirs(os.path.join(docs_dir, subdir), exist_ok=True)
+    with open(os.path.join(docs_dir, rel_path), "w") as f:
         json.dump(data, f, indent=2)
-    update_manifest(docs_dir, filename, network)
+    update_manifest(docs_dir, rel_path, network)
 
 
 def update_manifest(docs_dir, filename, network):

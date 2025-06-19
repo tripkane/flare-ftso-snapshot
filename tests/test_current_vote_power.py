@@ -49,10 +49,11 @@ def test_save_current_vote_power_manifest(tmp_path, monkeypatch):
     current_vote_power.save_current_vote_power(data, network=network)
 
     ts = FixedDatetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
+    subdir = ts[:7]
     filename = f"{network}_vp_{ts}.json"
 
     manifest_path = tmp_path / "docs" / "current_vote_power" / "manifest.json"
     assert manifest_path.exists()
 
     manifest = json.loads(manifest_path.read_text())
-    assert manifest[network] == [filename]
+    assert manifest[network] == [f"{subdir}/{filename}"]
