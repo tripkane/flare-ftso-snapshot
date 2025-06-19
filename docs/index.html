@@ -353,7 +353,7 @@
           });
           slope = (n * sxy - sx * sy) / (n * sx2 - sx * sx);
         }
-        const projection = current + slope * 6;
+        const projection = current + slope * 84;
         const locked = stats[name] ? stats[name].locked : 0;
         if (stats[name]) {
           stats[name].headroom = locked - projection;
