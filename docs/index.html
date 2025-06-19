@@ -72,6 +72,12 @@
       </label>
     </section>
 
+    <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+      <h2 class="text-xl font-bold mb-2">Provider Recommendation</h2>
+      <div id="recommendationSummary" class="flex gap-4"></div>
+      <div id="recommendationCharts" class="grid grid-cols-4 gap-2 mt-4"></div>
+    </section>
+
     <!-- Multi-provider chart and table -->
     <section id="multiContainer" class="border-4 border-gray-700 rounded p-4 mb-4">
       <div id="filtersSection" class="flex flex-wrap gap-4 mb-6">
@@ -175,10 +181,6 @@
         </div>
       </section>
 
-      <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4">
-        <h2 class="text-xl font-bold">Recommended Providers</h2>
-        <div id="recommendation"></div>
-      </section>
 
       <div id="miniChartsContainer" style="overflow-y: auto; max-height: 1200px; width: 100%;">
       <!-- Mini charts will be injected here -->
@@ -193,6 +195,7 @@
     let currentVoteChart;
     let dataTable;
     let multiProviderChart;
+    let recommendationCharts = [];
 
     // Base URL for snapshot files
     // Use a relative path when served via HTTP(S) so data loads from the
@@ -406,10 +409,49 @@
       });
       entries.sort((a, b) => b.score - a.score);
       const top = entries.slice(0, 2);
-      const total = top.reduce((t, e) => t + e.score, 0) || 1;
-      const recs = top.map(e => ({ name: e.name, pct: Math.round((e.score / total) * 100) }));
-      const div = document.getElementById('recommendation');
-      div.textContent = recs.map(r => `${r.pct}% ${r.name}`).join(' , ');
+      const summary = document.getElementById('recommendationSummary');
+      summary.innerHTML = top.map(t => `
+        <div class="bg-gray-800 p-2 rounded flex-1 text-center">
+          <div class="text-sm">${t.name}</div>
+          <div class="text-2xl font-bold">${t.score.toFixed(2)}</div>
+        </div>
+      `).join('');
+      renderRecommendationCharts(top.map(t => t.name));
+    }
+
+    function renderRecommendationCharts(names) {
+      const container = document.getElementById('recommendationCharts');
+      container.innerHTML = '';
+      recommendationCharts.forEach(c => c.destroy());
+      recommendationCharts = [];
+      const metrics = [
+        { key: 'avg30', label: '30-Day Avg', color: 'orange' },
+        { key: 'trend', label: 'Trend', color: 'blue' },
+        { key: 'headroom', label: 'Headroom', color: 'green' },
+        { key: 'volatility', label: 'Volatility', color: 'purple' }
+      ];
+      metrics.forEach(m => {
+        const canvas = document.createElement('canvas');
+        container.appendChild(canvas);
+        const data = names.map(n => providerStats[n][m.key] || 0);
+        const chart = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: names,
+            datasets: [{
+              label: m.label,
+              data,
+              backgroundColor: ['orange', 'blue'],
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: {} }
+          }
+        });
+        recommendationCharts.push(chart);
+      });
     }
 
     function getFilteredProviders() {
