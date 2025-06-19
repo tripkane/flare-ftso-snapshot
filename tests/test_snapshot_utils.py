@@ -53,19 +53,20 @@ def test_save_snapshot_updates_manifest(tmp_path, monkeypatch):
     save_snapshot(data, network=network)
 
     today = datetime.date.today().isoformat()
+    subdir = today[:7]
     filename = f"{network}_snapshot_{today}.json"
 
-    snap_file = tmp_path / "daily_snapshots" / filename
-    docs_file = tmp_path / "docs" / "daily_snapshots" / filename
+    snap_file = tmp_path / "daily_snapshots" / subdir / filename
+    docs_file = tmp_path / "docs" / "daily_snapshots" / subdir / filename
     manifest_path = tmp_path / "docs" / "daily_snapshots" / "manifest.json"
 
     assert snap_file.exists()
     assert docs_file.exists()
 
     manifest = json.loads(manifest_path.read_text())
-    assert manifest[network] == [filename]
+    assert manifest[network] == [f"{subdir}/{filename}"]
 
     # call again to ensure manifest entry isn't duplicated
     save_snapshot(data, network=network)
     manifest = json.loads(manifest_path.read_text())
-    assert manifest[network] == [filename]
+    assert manifest[network] == [f"{subdir}/{filename}"]

@@ -4,12 +4,14 @@ import json
 def validate_vote_power(directory="daily_snapshots"):
     """Check if every vote_power entry has an even number of digits."""
     all_valid = True  # Flag to track if all entries are valid
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            file_path = os.path.join(directory, filename)
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            if not filename.endswith(".json"):
+                continue
+            file_path = os.path.join(root, filename)
             with open(file_path, 'r') as f:
                 data = json.load(f)
-            
+
             print(f"Checking file: {filename}")
             for provider in data.get("providers", []):
                 vote_power = str(provider.get("vote_power", ""))

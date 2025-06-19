@@ -159,27 +159,30 @@ def scrape_with_retries(network="flare", max_retries=MAX_RETRIES, delay=RETRY_DE
 # Save snapshot to JSON
 def save_snapshot(data, network="flare"):
     today = datetime.date.today().isoformat()
-    os.makedirs("daily_snapshots", exist_ok=True)
-    filename = f"daily_snapshots/{network}_snapshot_{today}.json"
-    if os.path.exists(filename):
-        print(f"Snapshot already exists: {filename}")
-
+    subdir = today[:7]
+    out_dir = os.path.join("daily_snapshots", subdir)
+    os.makedirs(out_dir, exist_ok=True)
+    filename = f"{network}_snapshot_{today}.json"
+    path = os.path.join(out_dir, filename)
+    if os.path.exists(path):
+        print(f"Snapshot already exists: {path}")
     else:
-        with open(filename, "w") as f:
+        with open(path, "w") as f:
             json.dump({"date": today, "providers": data}, f, indent=2)
-        print(f"Snapshot saved: {filename}")
+        print(f"Snapshot saved: {path}")
 
-    copy_snapshot_to_docs(filename, network)
+    copy_snapshot_to_docs(path, network)
 
 
 def copy_snapshot_to_docs(path, network):
     """Copy snapshot to docs directory and update manifest."""
     docs_dir = os.path.join("docs", "daily_snapshots")
-    os.makedirs(docs_dir, exist_ok=True)
-    dest = os.path.join(docs_dir, os.path.basename(path))
+    rel_path = os.path.relpath(path, "daily_snapshots")
+    dest = os.path.join(docs_dir, rel_path)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
     with open(path) as src, open(dest, "w") as dst:
         dst.write(src.read())
-    update_docs_manifest(docs_dir, os.path.basename(path), network)
+    update_docs_manifest(docs_dir, rel_path, network)
 
 
 def update_docs_manifest(docs_dir, filename, network):
@@ -240,24 +243,26 @@ def clean_snapshots(
         except Exception:
             pass
 
-    for filename in os.listdir(snapshot_dir):
-        if not filename.endswith(".json"):
-            continue
-        snapshot_date = filename.split("_")[-1].replace(".json", "")
-        try:
-            if not is_snapshot_relevant(snapshot_date, schedule):
-                file_path = os.path.join(snapshot_dir, filename)
-                os.remove(file_path)
-                print(f"Deleted irrelevant snapshot: {file_path}")
+    for root, _, files in os.walk(snapshot_dir):
+        for filename in files:
+            if not filename.endswith(".json"):
+                continue
+            rel_path = os.path.relpath(os.path.join(root, filename), snapshot_dir)
+            snapshot_date = filename.split("_")[-1].replace(".json", "")
+            try:
+                if not is_snapshot_relevant(snapshot_date, schedule):
+                    file_path = os.path.join(root, filename)
+                    os.remove(file_path)
+                    print(f"Deleted irrelevant snapshot: {file_path}")
 
-                doc_file = os.path.join(docs_dir, filename)
-                if os.path.exists(doc_file):
-                    os.remove(doc_file)
+                    doc_file = os.path.join(docs_dir, rel_path)
+                    if os.path.exists(doc_file):
+                        os.remove(doc_file)
 
-                if network and filename in manifest.get(network, []):
-                    manifest[network].remove(filename)
-        except Exception as e:
-            print(f"Error processing file '{filename}': {e}")
+                    if network and rel_path in manifest.get(network, []):
+                        manifest[network].remove(rel_path)
+            except Exception as e:
+                print(f"Error processing file '{filename}': {e}")
 
     # Finalize manifest: remove entries with missing files
     if network:
