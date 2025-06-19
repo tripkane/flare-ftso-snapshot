@@ -64,19 +64,6 @@
 
   <main class="container mx-auto p-4">
 
-    <section id="providerSection" class="border-4 border-gray-700 rounded p-4 mb-4">
-      <div class="mb-4">
-        <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
-        <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
-          <!-- Options will be populated dynamically -->
-        </select>
-      </div>
-      <div id="singleChartContainer" style="width: 100%;"></div>
-      <div id="currentVpChartSection" class="mt-4">
-        <div id="currentVpChartContainer" style="width: 100%;"></div>
-        <input id="currentVpRange" type="range" min="0" max="0" value="0" class="w-full mt-2" />
-      </div>
-  </section>
 
     <section id="nameFilterSection" class="border-4 border-gray-700 rounded p-4 mb-4">
       <label class="font-bold">
@@ -122,54 +109,78 @@
         </div>
       </div>
 
-      <!-- Reward Rate Chart -->
-      <div id="chartContainer" class="overflow-x-auto mb-4">
-        <canvas id="rewardRateChart" class="w-full h-[400px]"></canvas>
-      </div>
       <div id="multiProviderChartContainer" class="relative overflow-x-auto mb-4">
-        <div id="trendChartControls" class="absolute top-0 left-0 bg-gray-800 bg-opacity-80 p-2 rounded text-xs z-10">
-          <label for="multiProviderSelect" class="block font-bold mb-1">Compare Providers:</label>
-          <select id="multiProviderSelect" multiple size="5" class="mb-2 w-40 p-1 bg-gray-800 border border-gray-700 rounded text-xs"></select>
-          <label for="numTopProviders" class="block font-bold mb-1">Top N:</label>
-          <input id="numTopProviders" type="number" min="1" value="5" class="mb-2 w-20 p-1 bg-gray-800 border border-gray-700 rounded text-xs" />
+        <div id="trendChartControls" class="absolute top-0 left-0 bg-gray-800 bg-opacity-80 p-2 rounded text-xs z-10 space-y-2">
+          <h3 class="font-bold text-center mb-1">Compare Providers</h3>
           <label for="topKpi" class="block font-bold mb-1">KPI:</label>
-          <select id="topKpi" class="w-40 p-1 bg-gray-800 border border-gray-700 rounded text-xs">
+          <select id="topKpi" class="mb-2 w-40 p-1 bg-gray-800 border border-gray-700 rounded text-xs">
             <option value="30-day">30-Day Avg</option>
             <option value="7-day">7-Day Avg</option>
             <option value="cumulative">Cumulative Avg</option>
           </select>
+          <label for="numTopProviders" class="block font-bold mb-1">Top N:</label>
+          <input id="numTopProviders" type="number" min="1" value="5" class="mb-2 w-20 p-1 bg-gray-800 border border-gray-700 rounded text-xs" />
+          <label for="multiProviderSelect" class="block font-bold mb-1">Select Providers:</label>
+          <select id="multiProviderSelect" multiple size="5" class="w-40 p-1 bg-gray-800 border border-gray-700 rounded text-xs"></select>
         </div>
         <canvas id="multiProviderChart" class="w-full h-[400px]"></canvas>
       </div>
 
-      <h2 class="text-xl font-bold mt-6">Full Data Table</h2>
-      <div id="tableContainer" class="max-h-[600px]">
-        <table id="dataTable" class="display w-full border-collapse mt-4 bg-gray-800 text-gray-100">
-          <thead>
-            <tr class="bg-gray-700">
-              <th class="p-2 border border-gray-600">Date</th>
-            <th class="p-2 border border-gray-600">Provider</th>
-            <th class="p-2 border border-gray-600">Current Voting Power %</th>
-            <th class="p-2 border border-gray-600">Locked Voting Power %</th>
-            <th class="p-2 border border-gray-600">Current Voting Power % (SGB)</th>
-            <th class="p-2 border border-gray-600">Locked Voting Power % (SGB)</th>
-            <th class="p-2 border border-gray-600">Reward Rate (%)</th>
-            <th class="p-2 border border-gray-600">7-Day Avg Reward Rate (%)</th>
-            <th class="p-2 border border-gray-600">30-Day Avg Reward Rate (%)</th>
-            <th class="p-2 border border-gray-600">Cumulative Avg Reward Rate (%)</th>
-            <th class="p-2 border border-gray-600">Headroom (%)</th>
-            <th class="p-2 border border-gray-600">Trend Slope</th>
-            <th class="p-2 border border-gray-600">Reward Volatility (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Rows will be dynamically populated by renderTable() -->
-        </tbody>
-        </table>
+      <!-- Reward Rate Chart -->
+      <div id="chartContainer" class="overflow-x-auto mb-4">
+        <canvas id="rewardRateChart" class="w-full h-[400px]"></canvas>
       </div>
-    </section>
 
-    <div id="miniChartsContainer" style="overflow-y: auto; max-height: 1200px; width: 100%;">
+      </section>
+
+      <section id="providerSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+        <div class="mb-4">
+          <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
+          <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
+            <!-- Options will be populated dynamically -->
+          </select>
+        </div>
+        <div id="singleChartContainer" style="width: 100%;"></div>
+        <div id="currentVpChartSection" class="mt-4">
+          <div id="currentVpChartContainer" style="width: 100%;"></div>
+          <input id="currentVpRange" type="range" min="0" max="0" value="0" class="w-full mt-2" />
+        </div>
+      </section>
+
+      <section id="tableSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+        <h2 class="text-xl font-bold">Full Data Table</h2>
+        <div id="tableContainer" class="max-h-[600px]">
+          <table id="dataTable" class="display w-full border-collapse mt-4 bg-gray-800 text-gray-100">
+            <thead>
+              <tr class="bg-gray-700">
+                <th class="p-2 border border-gray-600">Date</th>
+                <th class="p-2 border border-gray-600">Provider</th>
+                <th class="p-2 border border-gray-600">Current Voting Power %</th>
+                <th class="p-2 border border-gray-600">Locked Voting Power %</th>
+                <th class="p-2 border border-gray-600">Current Voting Power % (SGB)</th>
+                <th class="p-2 border border-gray-600">Locked Voting Power % (SGB)</th>
+                <th class="p-2 border border-gray-600">Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">7-Day Avg Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">30-Day Avg Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">Cumulative Avg Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">Headroom (%)</th>
+                <th class="p-2 border border-gray-600">Trend Slope</th>
+                <th class="p-2 border border-gray-600">Reward Volatility (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be dynamically populated by renderTable() -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+        <h2 class="text-xl font-bold">Recommended Providers</h2>
+        <div id="recommendation"></div>
+      </section>
+
+      <div id="miniChartsContainer" style="overflow-y: auto; max-height: 1200px; width: 100%;">
       <!-- Mini charts will be injected here -->
     </div>
   </main>
@@ -184,7 +195,8 @@
     let multiProviderChart;
 
     // Base URL for fetching snapshot files directly from GitHub
-    const BASE_URL = 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs';
+    // Use relative paths so the dashboard works locally and via GitHub Pages
+    const BASE_URL = '.';
 
     // Small debounce utility
     function debounce(func, delay) {
@@ -260,9 +272,11 @@
         snap.providers.forEach(p => {
           const name = p.name;
           if (!stats[name]) {
-            stats[name] = { rewardRates: [], locked: lockedMap[name] || 0 };
+            stats[name] = { rewardRates: [], locked: lockedMap[name] || 0, zeroCount: 0 };
           }
-          stats[name].rewardRates.push({ date: snap.date, rate: parseFloat(p.reward_rate) || 0 });
+          const rate = parseFloat(p.reward_rate) || 0;
+          stats[name].rewardRates.push({ date: snap.date, rate });
+          if (rate === 0) stats[name].zeroCount += 1;
         });
       });
 
@@ -324,6 +338,7 @@
 
         providerStats = stats;
         updateMultiProviderOptions();
+        recommendProviders();
       }
 
       function updateMultiProviderOptions() {
@@ -361,6 +376,19 @@
         opt.selected = top.includes(opt.value);
       });
       renderMultiProviderChart();
+    }
+
+    function recommendProviders() {
+      const entries = Object.entries(providerStats).map(([name, s]) => {
+        const score = (s.avg30 || 0) + (s.trend || 0) + ((s.headroom || 0) / 100) - (s.volatility || 0) - (s.zeroCount || 0) * 0.1;
+        return { name, score };
+      });
+      entries.sort((a, b) => b.score - a.score);
+      const top = entries.slice(0, 2);
+      const total = top.reduce((t, e) => t + e.score, 0) || 1;
+      const recs = top.map(e => ({ name: e.name, pct: Math.round((e.score / total) * 100) }));
+      const div = document.getElementById('recommendation');
+      div.textContent = recs.map(r => `${r.pct}% ${r.name}`).join(' , ');
     }
 
     function getFilteredProviders() {
@@ -599,12 +627,8 @@
         providerMap[p.SGB_provider].songbird.push(p);
       });
 
-      // Sort by reward rate (highest to lowest)
-      const sortedProviders = Object.keys(providerMap).sort((a, b) => {
-        const aReward = providerMap[a].flare.concat(providerMap[a].songbird).slice(-1)[0]?.reward_rate || 0;
-        const bReward = providerMap[b].flare.concat(providerMap[b].songbird).slice(-1)[0]?.reward_rate || 0;
-        return bReward - aReward;
-      });
+      // Sort providers alphabetically
+      const sortedProviders = Object.keys(providerMap).sort((a, b) => a.localeCompare(b));
 
       const providerFilter = document.getElementById('providerFilter');
       const currentValue = providerFilter.value;
@@ -797,21 +821,53 @@
       const flareValues = timestamps.map(t => flareMap[t] ?? null);
       const sgbValues = timestamps.map(t => songbirdMap[t] ?? null);
 
+      function formatHour(ts) {
+        return new Date(ts).toISOString().slice(0, 13).replace('T', ' ');
+      }
+
       range.max = Math.max(timestamps.length - 1, 0);
       if (!range.value) range.value = Math.max(timestamps.length - 100, 0);
 
       function updateCurrentChart() {
         const start = parseInt(range.value) || 0;
-        const labels = timestamps.slice(start);
+        const baseLabels = timestamps.slice(start);
         const flareData = flareValues.slice(start);
         const sgbData = sgbValues.slice(start);
+
+        function computeSlope(arr) {
+          const n = arr.length;
+          if (n < 2) return 0;
+          let sx=0, sy=0, sxy=0, sx2=0;
+          arr.forEach((y,i)=>{ sx+=i; sy+=y; sxy+=i*y; sx2+=i*i; });
+          return (n*sxy - sx*sy)/(n*sx2 - sx*sx);
+        }
+
+        const flareSlope = computeSlope(flareData.filter(v => v !== null));
+        const sgbSlope = computeSlope(sgbData.filter(v => v !== null));
+
+        const step = baseLabels.length>1 ? (new Date(baseLabels[1]) - new Date(baseLabels[0])) : 3600*1000;
+        const futureLabels = [];
+        const flareFuture = [];
+        const sgbFuture = [];
+        const lastFlare = flareData[flareData.length-1] ?? 0;
+        const lastSgb = sgbData[sgbData.length-1] ?? 0;
+        for(let i=1;i<=6;i++){
+          const ts = new Date(baseLabels[baseLabels.length-1]);
+          ts.setTime(ts.getTime() + step*i);
+          futureLabels.push(ts.toISOString());
+          flareFuture.push(lastFlare + flareSlope*i);
+          sgbFuture.push(lastSgb + sgbSlope*i);
+        }
+        const labels = baseLabels.concat(futureLabels);
+        const flareAll = Array(flareData.length-1).fill(null).concat([flareData[flareData.length-1]].concat(flareFuture));
+        const sgbAll = Array(sgbData.length-1).fill(null).concat([sgbData[sgbData.length-1]].concat(sgbFuture));
 
         if (currentVoteChart) currentVoteChart.destroy();
 
         currentVoteChart = new Chart(canvas.getContext('2d'), {
           type: 'line',
           data: {
-            labels,
+            labels: labels.map(formatHour),
             datasets: [
               {
                 label: 'Flare Current VP',
@@ -824,6 +880,16 @@
                 spanGaps: true
               },
               {
+                label: 'Flare Projection',
+                data: flareAll,
+                borderColor: 'orange',
+                borderDash: [5,5],
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                spanGaps: true
+              },
+              {
                 label: 'Songbird Current VP',
                 data: sgbData,
                 borderColor: 'blue',
@@ -831,6 +897,16 @@
                 fill: false,
                 pointRadius: 0,
                 pointHoverRadius: 3,
+                spanGaps: true
+              },
+              {
+                label: 'Songbird Projection',
+                data: sgbAll,
+                borderColor: 'blue',
+                borderDash: [5,5],
+                fill: false,
+                pointRadius: 0,
+                pointHoverRadius: 0,
                 spanGaps: true
               }
             ]
@@ -855,11 +931,7 @@
                   maxRotation: 0,
                   minRotation: 0,
                   callback: function (value, index) {
-                    const label = labels[index];
-                    const date = label.slice(0, 10);
-                    if (index === 0) return date;
-                    const prevDate = labels[index - 1].slice(0, 10);
-                    return date !== prevDate ? date : '';
+                    return formatHour(labels[index]);
                   }
                 }
               },
