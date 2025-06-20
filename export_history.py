@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-from requests.exceptions import JSONDecodeError
+from requests.exceptions import JSONDecodeError, HTTPError
 
 DEFAULT_GRAPHQL_URL = "https://flare-explorer.flare.network/graphql"
 
@@ -26,7 +26,17 @@ def fetch_all_delegations(url: str, first: int = 1000) -> list:
     while True:
         payload = {"query": QUERY, "variables": {"first": first, "skip": skip}}
         resp = requests.post(url, json=payload, timeout=30)
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except HTTPError as exc:
+            if resp.status_code == 404 and url.endswith("/graphql"):
+                alt = url[:-len("graphql")] + "graphiql"
+                print(f"{url} returned 404, retrying {alt}")
+                url = alt
+                resp = requests.post(url, json=payload, timeout=30)
+                resp.raise_for_status()
+            else:
+                raise
         try:
             json_resp = resp.json()
         except JSONDecodeError as exc:
