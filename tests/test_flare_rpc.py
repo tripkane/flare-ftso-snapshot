@@ -36,6 +36,7 @@ def test_delegation_logs():
     assert result == [1]
     assert logs_called['params']['fromBlock'] == 1
     assert logs_called['params']['toBlock'] == 2
+
     assert logs_called['params']['topics'][0][0] == flare_rpc.DELEGATED_TOPIC
     assert logs_called['params']['topics'][0][1] == flare_rpc.UNDELEGATED_TOPIC
 
@@ -61,4 +62,5 @@ def test_get_all_delegation_logs():
     assert calls[0]['fromBlock'] == 0
     assert calls[1]['fromBlock'] == 100
     assert calls[2]['toBlock'] == 210
+
 
