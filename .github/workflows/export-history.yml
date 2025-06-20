@@ -29,6 +29,7 @@ jobs:
         env:
           FLARE_GRAPHQL_URL: https://flare-explorer.flare.network/graphql
 
+
         run: python export_history.py
 
       - name: Commit and push results
