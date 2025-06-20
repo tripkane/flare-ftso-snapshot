@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+from requests.exceptions import JSONDecodeError
 
 DEFAULT_GRAPHQL_URL = "https://flare-explorer.flare.network/graphql"
 
@@ -26,7 +27,12 @@ def fetch_all_delegations(url: str, first: int = 1000) -> list:
         payload = {"query": QUERY, "variables": {"first": first, "skip": skip}}
         resp = requests.post(url, json=payload, timeout=30)
         resp.raise_for_status()
-        data = resp.json().get("data", {}).get("delegationChangedEvents", [])
+        try:
+            json_resp = resp.json()
+        except JSONDecodeError as exc:
+            snippet = resp.text[:200]
+            raise RuntimeError(f"Failed to decode JSON from {url}: {snippet!r}") from exc
+        data = json_resp.get("data", {}).get("delegationChangedEvents", [])
         if not data:
             break
         delegations.extend(data)
