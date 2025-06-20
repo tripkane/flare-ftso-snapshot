@@ -6,5 +6,4 @@ fastapi
 uvicorn
 transformers
 torch
-selenium
-beautifulsoup4
+web3

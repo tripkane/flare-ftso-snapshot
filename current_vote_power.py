@@ -3,7 +3,7 @@ import datetime
 import os
 import sys
 
-from snapshot import init_driver, scrape_flaremetrics
+from flare_rpc import connect, list_providers
 
 
 def save_current_vote_power(data, network="flare"):
@@ -45,18 +45,11 @@ def main(network=None):
         networks = ["flare", "songbird"]
 
     for net in networks:
-        driver = init_driver()
-        try:
-            providers = scrape_flaremetrics(driver, net)
-        finally:
-            driver.quit()
-
+        w3 = connect()
+        addresses = list_providers(w3)
         data = {
             "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-            "providers": [
-                {"name": p["name"], "vote_power_pct": p.get("vote_power_pct", 0.0)}
-                for p in providers
-            ],
+            "providers": [{"address": addr} for addr in addresses],
         }
         save_current_vote_power(data, net)
 

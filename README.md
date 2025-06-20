@@ -1,5 +1,5 @@
 # flare-ftso-snapshot
-This repo is designed to scrape the FTSO provider rewards data and associated registration information on a daily timeframe so one can make informed decisions about which FTSO providers over times are the best to choose to maximise reward rates and reduce network fees associated with swapping delegations too often
+This project collects FTSO provider data directly from the Flare blockchain. Snapshots are taken at each reward epoch so delegators can analyse provider performance without relying on third party websites.
 
 ## Viewing the dashboard
 
@@ -33,17 +33,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
-This installs all dependencies required to run the snapshot scripts,
-including `selenium` and `beautifulsoup4` for web scraping.
-
-The scraper expects `chromium-browser` and `chromedriver` to be installed.
-If they are located in non‑standard paths, set the `CHROMIUM_BINARY` and
-`CHROMEDRIVER` environment variables before running any snapshot scripts, e.g.:
-
-```bash
-export CHROMIUM_BINARY=/path/to/chromium
-export CHROMEDRIVER=/path/to/chromedriver
-```
+This installs all dependencies required to run the snapshot scripts which now
+connect directly to a Flare RPC node. Set the `FLARE_RPC_URL` environment
+variable if you want to use a custom endpoint.
 
 ### Start the server (optional)
 
