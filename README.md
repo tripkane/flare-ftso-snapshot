@@ -1,5 +1,5 @@
 # flare-ftso-snapshot
-This repo is designed to scrape the FTSO provider rewards data and associated registration information on a daily timeframe so one can make informed decisions about which FTSO providers over times are the best to choose to maximise reward rates and reduce network fees associated with swapping delegations too often
+This project collects FTSO provider data directly from the Flare blockchain. Snapshots are taken at each reward epoch so delegators can analyse provider performance without relying on third party websites.
 
 ## Viewing the dashboard
 
@@ -33,17 +33,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
-This installs all dependencies required to run the snapshot scripts,
-including `selenium` and `beautifulsoup4` for web scraping.
-
-The scraper expects `chromium-browser` and `chromedriver` to be installed.
-If they are located in non‑standard paths, set the `CHROMIUM_BINARY` and
-`CHROMEDRIVER` environment variables before running any snapshot scripts, e.g.:
-
-```bash
-export CHROMIUM_BINARY=/path/to/chromium
-export CHROMEDRIVER=/path/to/chromedriver
-```
+This installs all dependencies required to run the snapshot scripts which now
+connect directly to a Flare RPC node. Set the `FLARE_RPC_URL` environment
+variable if you want to use a custom endpoint.
 
 ### Start the server (optional)
 
@@ -100,6 +92,18 @@ folder. The scheduled snapshot workflow also runs this script to keep
 `daily_snapshots/` and `docs/daily_snapshots/` free of stray files. Snapshot
 files now live in monthly subdirectories (e.g. `2025-06/`), so cleaning will
 also traverse these folders.
+
+## Exporting Delegation History
+
+Use `export_history.py` to fetch all delegation events from block `0` onwards.
+The script queries the configured RPC endpoint and stores the logs in
+`history/<network>_delegations.json`.
+
+```bash
+python export_history.py    # uses FLARE_RPC_URL if set
+```
+
+This dataset can be used for deeper analysis of vote power changes over time.
 
 ## License
 
