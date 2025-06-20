@@ -236,6 +236,7 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
+
         const remoteUrl = 'https://raw.githubusercontent.com/TowoLabs/ftso-signal-providers/next/bifrost-wallet.providerlist.json';
         let listRes = await fetchJsonSafe(remoteUrl);
         if (!listRes) {
@@ -256,6 +257,7 @@
             ? listRes.songbird.map(p => typeof p === 'string' ? p : p.name)
             : [];
         }
+
         const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
         if (!manifestRes) throw new Error('Manifest missing');
         const manifest = manifestRes;
