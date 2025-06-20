@@ -78,8 +78,12 @@ FTSO_MANAGER_ABI = [
 
 
 # Event signatures for delegation events
-DELEGATED_TOPIC = Web3.keccak(text="VotingPowerDelegated(address,address,uint256)").hex()
-UNDELEGATED_TOPIC = Web3.keccak(text="VotingPowerUndelegated(address,address,uint256)").hex()
+DELEGATED_TOPIC = "0x" + Web3.keccak(
+    text="VotingPowerDelegated(address,address,uint256)"
+).hex()
+UNDELEGATED_TOPIC = "0x" + Web3.keccak(
+    text="VotingPowerUndelegated(address,address,uint256)"
+).hex()
 
 
 
