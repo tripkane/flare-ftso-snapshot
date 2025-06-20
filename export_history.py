@@ -42,6 +42,9 @@ def fetch_all_delegations(url: str, first: int = 1000) -> list:
 
 def main(network: str = "flare") -> None:
     url = os.getenv("FLARE_GRAPHQL_URL", DEFAULT_GRAPHQL_URL)
+    if url.endswith("/graphiql"):
+        url = url[: -len("graphiql")] + "graphql"
+    print(f"Using GraphQL endpoint: {url}")
     logs = fetch_all_delegations(url)
     out_dir = os.path.join("history")
     os.makedirs(out_dir, exist_ok=True)
