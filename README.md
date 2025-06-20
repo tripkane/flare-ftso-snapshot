@@ -95,12 +95,13 @@ also traverse these folders.
 
 ## Exporting Delegation History
 
-Use `export_history.py` to fetch all delegation events from block `0` onwards.
-The script queries the configured RPC endpoint and stores the logs in
-`history/<network>_delegations.json`.
+Use `export_history.py` to fetch all delegation events via the public GraphQL
+endpoint. Results are stored in `history/<network>_delegations.json`.
+The workflow `export-history.yml` runs this script every day so the dataset
+stays up to date.
 
 ```bash
-python export_history.py    # uses FLARE_RPC_URL if set
+python export_history.py    # uses FLARE_GRAPHQL_URL if set
 ```
 
 This dataset can be used for deeper analysis of vote power changes over time.
