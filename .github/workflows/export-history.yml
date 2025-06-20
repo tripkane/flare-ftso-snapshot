@@ -27,7 +27,7 @@ jobs:
       - name: Run export history script
 
         env:
-          FLARE_GRAPHQL_URL: https://flare-explorer.flare.network/graphql
+          FLARE_GRAPHQL_URL: https://flare-explorer.flare.network/graphiql
 
 
         run: python export_history.py
