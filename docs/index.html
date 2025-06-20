@@ -66,9 +66,13 @@
 
 
     <section id="nameFilterSection" class="border-4 border-gray-700 rounded p-4 mb-4">
-      <label class="font-bold">
+      <label class="font-bold mr-4">
         <input type="checkbox" id="namedOnly" class="mr-2" checked />
         Names Only
+      </label>
+      <label class="font-bold">
+        <input type="checkbox" id="bifrostOnly" class="mr-2" checked />
+        Bifrost Delegation
       </label>
     </section>
 
@@ -232,6 +236,13 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
+        const listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`);
+        window.bifrostFlare = Array.isArray(listRes?.flare)
+          ? listRes.flare.map(p => typeof p === 'string' ? p : p.name)
+          : [];
+        window.bifrostSongbird = Array.isArray(listRes?.songbird)
+          ? listRes.songbird.map(p => typeof p === 'string' ? p : p.name)
+          : [];
         const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
         if (!manifestRes) throw new Error('Manifest missing');
         const manifest = manifestRes;
@@ -367,8 +378,10 @@
       function updateMultiProviderOptions() {
         const multiSelect = document.getElementById('multiProviderSelect');
         const namesOnly = document.getElementById('namedOnly').checked;
+        const bifrostOnly = document.getElementById('bifrostOnly').checked;
         const names = Object.keys(providerStats)
           .filter(n => !(namesOnly && n.startsWith('0x')))
+          .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
           .sort();
         multiSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
         updateTopProviders();
@@ -377,8 +390,11 @@
     function updateTopProviders() {
       const kpi = document.getElementById('topKpi').value;
       const num = parseInt(document.getElementById('numTopProviders').value) || 5;
-        const namesOnly = document.getElementById('namedOnly').checked;
-        const names = Object.keys(providerStats).filter(n => !(namesOnly && n.startsWith('0x')));
+      const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const names = Object.keys(providerStats)
+        .filter(n => !(namesOnly && n.startsWith('0x')))
+        .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)));
       const sorted = names.sort((a, b) => {
         const getAvg = (name) => {
           switch (kpi) {
@@ -402,10 +418,13 @@
     }
 
     function recommendProviders() {
-      const entries = Object.entries(providerStats).map(([name, s]) => {
-        const score = (s.avg30 || 0) + (s.trend || 0) + ((s.headroom || 0) / 100) - (s.volatility || 0) - (s.zeroCount || 0) * 0.1;
-        return { name, score };
-      });
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const entries = Object.entries(providerStats)
+        .filter(([n]) => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .map(([name, s]) => {
+          const score = (s.avg30 || 0) + (s.trend || 0) + ((s.headroom || 0) / 100) - (s.volatility || 0) - (s.zeroCount || 0) * 0.1;
+          return { name, score };
+        });
       entries.sort((a, b) => b.score - a.score);
       const top = entries.slice(0, 2);
       const total = top.reduce((sum, t) => sum + t.score, 0);
@@ -458,6 +477,7 @@
       const registeredOnly = document.getElementById('registeredOnly').checked;
       const registeredLatestOnly = document.getElementById('registeredLatestOnly').checked;
       const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
       let latestSnapshot = window.flareSnapshots[window.flareSnapshots.length - 1];
       let registeredInLatest = new Set();
       if (latestSnapshot) {
@@ -478,6 +498,7 @@
           if (registeredOnly && !isRegistered) return false;
           if (registeredLatestOnly && !isRegisteredLatest) return false;
           if (namesOnly && provider.name.startsWith('0x')) return false;
+          if (bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(provider.name)) return false;
           return true;
         }).map(provider => ({
           ...provider,
@@ -490,18 +511,20 @@
       function getFilteredSongbirdProviders() {
         const providersOverLimit = getProvidersOverLimitCombined();
         const namesOnly = document.getElementById('namedOnly').checked;
-      const filtered = window.songbirdSnapshots.flatMap(snapshot =>
-        snapshot.providers.filter(provider => {
-          if (providersOverLimit.has(provider.SGB_provider)) return false;
-          if (namesOnly && provider.SGB_provider.startsWith('0x')) return false;
-          return true;
-        }).map(provider => ({
-          ...provider,
-          date: snapshot.date
-        }))
-      );
-      return filtered;
-    }
+        const bifrostOnly = document.getElementById('bifrostOnly').checked;
+        const filtered = window.songbirdSnapshots.flatMap(snapshot =>
+          snapshot.providers.filter(provider => {
+            if (providersOverLimit.has(provider.SGB_provider)) return false;
+            if (namesOnly && provider.SGB_provider.startsWith('0x')) return false;
+            if (bifrostOnly && window.bifrostSongbird && !window.bifrostSongbird.includes(provider.SGB_provider)) return false;
+            return true;
+          }).map(provider => ({
+            ...provider,
+            date: snapshot.date
+          }))
+        );
+        return filtered;
+      }
 
     function getProvidersOverLimitCombined() {
       const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
@@ -1055,6 +1078,16 @@
       renderCurrentVoteChart();
       updateMultiProviderOptions();
       renderMultiProviderChart();
+      recommendProviders();
+    });
+    document.getElementById('bifrostOnly').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+      renderSingleProviderChart();
+      renderCurrentVoteChart();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
     });
     document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
     document.getElementById('multiProviderSelect').addEventListener('change', renderMultiProviderChart);
