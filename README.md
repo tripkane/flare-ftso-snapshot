@@ -99,9 +99,10 @@ Use `export_history.py` to fetch all delegation events via the public GraphQL
 endpoint. Results are stored in `history/<network>_delegations.json`.
 Set `FLARE_GRAPHQL_URL` to the GraphQL endpoint (e.g.
 `https://flare-explorer.flare.network/graphql`) if it differs from the default.
-The endpoint returns a 404 page when opened in a browser because it only
-accepts POST requests. Use `curl` or `export_history.py` to send a GraphQL
-query, for example:
+If the `/graphql` path returns a 404 error, the script automatically falls back
+to `/graphiql`. The endpoint may return a 404 page when opened in a browser
+because it only accepts POST requests. Use `curl` or `export_history.py` to send
+a GraphQL query, for example:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" \
