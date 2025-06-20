@@ -98,6 +98,7 @@ also traverse these folders.
 Use `export_history.py` to fetch all delegation events via the public GraphQL
 endpoint. Results are stored in `history/<network>_delegations.json`.
 
+
 ```bash
 python export_history.py    # uses FLARE_GRAPHQL_URL if set
 ```

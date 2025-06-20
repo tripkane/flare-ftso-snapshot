@@ -1,6 +1,10 @@
 name: Export Delegation History
 
 on:
+
+  schedule:
+    - cron: '0 1 * * *'
+
   workflow_dispatch:
 
 jobs:
@@ -21,8 +25,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run export history script
+
         env:
           FLARE_GRAPHQL_URL: https://flare-explorer.flare.network/graphql
+
+
         run: python export_history.py
 
       - name: Commit and push results
