@@ -76,8 +76,11 @@ FTSO_MANAGER_ABI = [
     }
 ]
 
-# Event signature for VotingPowerDelegated(address indexed _from, address indexed _to, uint256 _amount)
+
+# Event signatures for delegation events
 DELEGATED_TOPIC = Web3.keccak(text="VotingPowerDelegated(address,address,uint256)").hex()
+UNDELEGATED_TOPIC = Web3.keccak(text="VotingPowerUndelegated(address,address,uint256)").hex()
+
 
 
 def connect(url: Optional[str] = None) -> Web3:
@@ -115,9 +118,16 @@ def delegation_logs(
     from_block: int,
     to_block: int,
     provider: Optional[str] = None,
+
+    include_undelegations: bool = True,
 ) -> List[Any]:
-    """Return VotingPowerDelegated logs in the block range."""
-    topics = [DELEGATED_TOPIC]
+    """Return delegation and undelegation logs in the block range."""
+    topics: List[Any]
+    if include_undelegations:
+        topics = [[DELEGATED_TOPIC, UNDELEGATED_TOPIC]]
+    else:
+        topics = [DELEGATED_TOPIC]
+
     if provider:
         topics.append(w3.to_hex(w3.to_bytes(hexstr=provider).rjust(32, b"\x00")))
 
@@ -128,3 +138,26 @@ def delegation_logs(
             "topics": topics,
         }
     )
+
+
+
+def get_all_delegation_logs(
+    w3: Web3,
+    provider: Optional[str] = None,
+    chunk_size: int = 50000,
+    include_undelegations: bool = True,
+) -> List[Any]:
+    """Return delegation logs from block 0 to the latest block."""
+    latest = w3.eth.block_number
+    logs: List[Any] = []
+    start = 0
+    while start <= latest:
+        end = min(start + chunk_size - 1, latest)
+        logs.extend(
+            delegation_logs(
+                w3, start, end, provider=provider, include_undelegations=include_undelegations
+            )
+        )
+        start = end + 1
+    return logs
+

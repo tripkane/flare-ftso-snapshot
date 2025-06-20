@@ -37,3 +37,30 @@ def test_delegation_logs():
     assert logs_called['params']['fromBlock'] == 1
     assert logs_called['params']['toBlock'] == 2
 
+    assert logs_called['params']['topics'][0][0] == flare_rpc.DELEGATED_TOPIC
+    assert logs_called['params']['topics'][0][1] == flare_rpc.UNDELEGATED_TOPIC
+
+
+def test_get_all_delegation_logs():
+    calls = []
+    def get_logs(params):
+        calls.append(params)
+        return [params['fromBlock']]
+
+    w3 = types.SimpleNamespace(
+        eth=types.SimpleNamespace(
+            contract=lambda a,b: None,
+            get_logs=get_logs,
+            block_number=210
+        ),
+        to_bytes=lambda hexstr: bytes.fromhex(hexstr[2:]),
+        to_hex=lambda b: '0x'+b.hex()
+    )
+
+    result = flare_rpc.get_all_delegation_logs(w3, chunk_size=100)
+    assert len(result) == 3
+    assert calls[0]['fromBlock'] == 0
+    assert calls[1]['fromBlock'] == 100
+    assert calls[2]['toBlock'] == 210
+
+

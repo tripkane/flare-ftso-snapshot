@@ -93,6 +93,18 @@ folder. The scheduled snapshot workflow also runs this script to keep
 files now live in monthly subdirectories (e.g. `2025-06/`), so cleaning will
 also traverse these folders.
 
+## Exporting Delegation History
+
+Use `export_history.py` to fetch all delegation events from block `0` onwards.
+The script queries the configured RPC endpoint and stores the logs in
+`history/<network>_delegations.json`.
+
+```bash
+python export_history.py    # uses FLARE_RPC_URL if set
+```
+
+This dataset can be used for deeper analysis of vote power changes over time.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
