@@ -74,8 +74,8 @@
 
     <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4">
       <h2 class="text-xl font-bold mb-2">Provider Recommendation</h2>
-      <div id="recommendationSummary" class="flex gap-4"></div>
-      <div id="recommendationCharts" class="grid grid-cols-4 gap-2 mt-4"></div>
+      <div id="recommendationSummary" class="flex flex-wrap gap-4"></div>
+      <table id="recommendationTable" class="w-full text-sm text-center mt-4 border-collapse"></table>
     </section>
 
     <!-- Multi-provider chart and table -->
@@ -195,7 +195,6 @@
     let currentVoteChart;
     let dataTable;
     let multiProviderChart;
-    let recommendationCharts = [];
 
     // Base URL for snapshot files
     // Use a relative path when served via HTTP(S) so data loads from the
@@ -409,49 +408,50 @@
       });
       entries.sort((a, b) => b.score - a.score);
       const top = entries.slice(0, 2);
+      const total = top.reduce((sum, t) => sum + t.score, 0);
       const summary = document.getElementById('recommendationSummary');
-      summary.innerHTML = top.map(t => `
-        <div class="bg-gray-800 p-2 rounded flex-1 text-center">
-          <div class="text-sm">${t.name}</div>
-          <div class="text-2xl font-bold">${t.score.toFixed(2)}</div>
-        </div>
-      `).join('');
-      renderRecommendationCharts(top.map(t => t.name));
+      summary.innerHTML = top
+        .map(t => {
+          const pct = total > 0 ? (t.score / total) * 100 : 0;
+          t.pct = pct;
+          return `
+            <div class="bg-gray-800 p-2 rounded flex-1 text-center">
+              <div class="text-sm font-semibold">${t.name}</div>
+              <div class="text-3xl font-extrabold text-green-400">${pct.toFixed(0)}%</div>
+            </div>
+          `;
+        })
+        .join('');
+      renderRecommendationTable(top);
     }
 
-    function renderRecommendationCharts(names) {
-      const container = document.getElementById('recommendationCharts');
-      container.innerHTML = '';
-      recommendationCharts.forEach(c => c.destroy());
-      recommendationCharts = [];
-      const metrics = [
-        { key: 'avg30', label: '30-Day Avg', color: 'orange' },
-        { key: 'trend', label: 'Trend', color: 'blue' },
-        { key: 'headroom', label: 'Headroom', color: 'green' },
-        { key: 'volatility', label: 'Volatility', color: 'purple' }
-      ];
-      metrics.forEach(m => {
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-        const data = names.map(n => providerStats[n][m.key] || 0);
-        const chart = new Chart(canvas.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: names,
-            datasets: [{
-              label: m.label,
-              data,
-              backgroundColor: ['orange', 'blue'],
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: {} }
-          }
-        });
-        recommendationCharts.push(chart);
-      });
+    function renderRecommendationTable(providers) {
+      const table = document.getElementById('recommendationTable');
+      const header = `
+        <tr class="bg-gray-700">
+          <th class="p-2 border border-gray-600">Provider</th>
+          <th class="p-2 border border-gray-600">Share (%)</th>
+          <th class="p-2 border border-gray-600">Score</th>
+          <th class="p-2 border border-gray-600">30-Day Avg (%)</th>
+          <th class="p-2 border border-gray-600">Trend</th>
+          <th class="p-2 border border-gray-600">Headroom (%)</th>
+          <th class="p-2 border border-gray-600">Volatility</th>
+        </tr>`;
+      const rows = providers.map(p => {
+        const s = providerStats[p.name] || {};
+        const score = p.score;
+        return `
+          <tr>
+            <td class="p-2 border border-gray-600">${p.name}</td>
+            <td class="p-2 border border-gray-600">${p.pct.toFixed(0)}</td>
+            <td class="p-2 border border-gray-600">${score.toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.avg30 || 0).toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.trend || 0).toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.headroom || 0).toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.volatility || 0).toFixed(2)}</td>
+          </tr>`;
+      }).join('');
+      table.innerHTML = `<thead>${header}</thead><tbody>${rows}</tbody>`;
     }
 
     function getFilteredProviders() {
