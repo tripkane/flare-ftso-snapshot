@@ -1,0 +1,405 @@
+{
+  "timestamp": "2025-06-23T22:26:03.865095Z",
+  "providers": [
+    {
+      "name": "A-FTSO",
+      "vote_power_pct": 4.54
+    },
+    {
+      "name": "NORTSO",
+      "vote_power_pct": 4.14
+    },
+    {
+      "name": "Bifrost Wallet",
+      "vote_power_pct": 4.02
+    },
+    {
+      "name": "Atlas TSO",
+      "vote_power_pct": 3.71
+    },
+    {
+      "name": "Flare Dienst",
+      "vote_power_pct": 3.32
+    },
+    {
+      "name": "EvolveFTSO",
+      "vote_power_pct": 3.16
+    },
+    {
+      "name": "AlphaOracle",
+      "vote_power_pct": 3.13
+    },
+    {
+      "name": "Flare Oracle",
+      "vote_power_pct": 2.89
+    },
+    {
+      "name": "AU",
+      "vote_power_pct": 2.7
+    },
+    {
+      "name": "Flare.Space",
+      "vote_power_pct": 2.16
+    },
+    {
+      "name": "PRICEKRAKEN",
+      "vote_power_pct": 2.06
+    },
+    {
+      "name": "FTSO Plus",
+      "vote_power_pct": 2.05
+    },
+    {
+      "name": "Oracle Daemon",
+      "vote_power_pct": 2.04
+    },
+    {
+      "name": "EDPFTSO",
+      "vote_power_pct": 1.89
+    },
+    {
+      "name": "FlareFi",
+      "vote_power_pct": 1.87
+    },
+    {
+      "name": "Aureus Ox",
+      "vote_power_pct": 1.79
+    },
+    {
+      "name": "Use Your Spark",
+      "vote_power_pct": 1.69
+    },
+    {
+      "name": "Solarius",
+      "vote_power_pct": 1.68
+    },
+    {
+      "name": "Flare Beacon",
+      "vote_power_pct": 1.55
+    },
+    {
+      "name": "FTSO London",
+      "vote_power_pct": 1.5
+    },
+    {
+      "name": "ACDTftso",
+      "vote_power_pct": 1.35
+    },
+    {
+      "name": "Lena Instruments",
+      "vote_power_pct": 1.29
+    },
+    {
+      "name": "XTerraMetrics",
+      "vote_power_pct": 1.27
+    },
+    {
+      "name": "Wonderftso",
+      "vote_power_pct": 1.23
+    },
+    {
+      "name": "Envision",
+      "vote_power_pct": 1.21
+    },
+    {
+      "name": "DataVector",
+      "vote_power_pct": 1.21
+    },
+    {
+      "name": "Defi Oracles",
+      "vote_power_pct": 1.17
+    },
+    {
+      "name": "Ivy Oracle",
+      "vote_power_pct": 1.06
+    },
+    {
+      "name": "0x48dc...b3a5b0",
+      "vote_power_pct": 0.95
+    },
+    {
+      "name": "Bushido FTSO",
+      "vote_power_pct": 0.95
+    },
+    {
+      "name": "Aternety",
+      "vote_power_pct": 0.94
+    },
+    {
+      "name": "4DadsFTSO",
+      "vote_power_pct": 0.9
+    },
+    {
+      "name": "LightFTSO",
+      "vote_power_pct": 0.9
+    },
+    {
+      "name": "African Proofs",
+      "vote_power_pct": 0.9
+    },
+    {
+      "name": "True FTSO",
+      "vote_power_pct": 0.9
+    },
+    {
+      "name": "uGaenn",
+      "vote_power_pct": 0.85
+    },
+    {
+      "name": "FTSO PARIS",
+      "vote_power_pct": 0.81
+    },
+    {
+      "name": "Ugly Kitty",
+      "vote_power_pct": 0.76
+    },
+    {
+      "name": "Tailwind FTSO",
+      "vote_power_pct": 0.76
+    },
+    {
+      "name": "Knot Nodes",
+      "vote_power_pct": 0.74
+    },
+    {
+      "name": "InGen.FTSO",
+      "vote_power_pct": 0.71
+    },
+    {
+      "name": "FTSO EU",
+      "vote_power_pct": 0.66
+    },
+    {
+      "name": "Sun-Dara",
+      "vote_power_pct": 0.65
+    },
+    {
+      "name": "Mickey B Fresh",
+      "vote_power_pct": 0.65
+    },
+    {
+      "name": "Flaris",
+      "vote_power_pct": 0.6
+    },
+    {
+      "name": "HEWG",
+      "vote_power_pct": 0.59
+    },
+    {
+      "name": "sToadz FTSO",
+      "vote_power_pct": 0.58
+    },
+    {
+      "name": "0xcdea...c5598c",
+      "vote_power_pct": 0.58
+    },
+    {
+      "name": "TempestFTSO",
+      "vote_power_pct": 0.58
+    },
+    {
+      "name": "WitterFTSO",
+      "vote_power_pct": 0.57
+    },
+    {
+      "name": "FTSOCAN",
+      "vote_power_pct": 0.57
+    },
+    {
+      "name": "Xdrops Oracle",
+      "vote_power_pct": 0.56
+    },
+    {
+      "name": "AFOracle",
+      "vote_power_pct": 0.54
+    },
+    {
+      "name": "Burst FTSO",
+      "vote_power_pct": 0.5
+    },
+    {
+      "name": "Aimlezz",
+      "vote_power_pct": 0.44
+    },
+    {
+      "name": "Comfy Nodes",
+      "vote_power_pct": 0.4
+    },
+    {
+      "name": "Scintilla",
+      "vote_power_pct": 0.37
+    },
+    {
+      "name": "FlareFTSO",
+      "vote_power_pct": 0.35
+    },
+    {
+      "name": "0x1a34...5ad900",
+      "vote_power_pct": 0.33
+    },
+    {
+      "name": "FTSOExpress",
+      "vote_power_pct": 0.27
+    },
+    {
+      "name": "Sparkles FTSO",
+      "vote_power_pct": 0.27
+    },
+    {
+      "name": "Flare Portal",
+      "vote_power_pct": 0.26
+    },
+    {
+      "name": "SolidiFi FTSO",
+      "vote_power_pct": 0.24
+    },
+    {
+      "name": "FTSO4ALL",
+      "vote_power_pct": 0.23
+    },
+    {
+      "name": "0xb6b4...c7ae8a",
+      "vote_power_pct": 0.23
+    },
+    {
+      "name": "0xa36b...26e919",
+      "vote_power_pct": 0.23
+    },
+    {
+      "name": "0xa3b8...7149b7",
+      "vote_power_pct": 0.23
+    },
+    {
+      "name": "0x6976...60a967",
+      "vote_power_pct": 0.15
+    },
+    {
+      "name": "O1 FTSO",
+      "vote_power_pct": 0.12
+    },
+    {
+      "name": "0xe6b8...fc2f1b",
+      "vote_power_pct": 0.02
+    },
+    {
+      "name": "0x90c0...5f3432",
+      "vote_power_pct": 0.01
+    },
+    {
+      "name": "0x736e...f6c7c9",
+      "vote_power_pct": 0.01
+    },
+    {
+      "name": "0x526e...641642",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x63ed...afbd01",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xce10...7ffeab",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x7fbe...f18393",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x3b18...7d558d",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x20d4...d832e8",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xeedd...3fa438",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x0b65...13298c",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x8b74...854ae8",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x749e...f216e1",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x38f9...cb2f63",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x606c...bef483",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x8b54...026603",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x2778...45c5fd",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x5ef6...63c7fb",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x8dd6...ba38f1",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xc4a1...8b6269",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x8938...3187a2",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xcc5c...d79479",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xadc0...60419a",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x6b5a...946c3c",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xd43b...344b71",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x0f1e...40e5bc",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0xa1e7...c63a88",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x51ed...eeaa2c",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x7e8a...a653b5",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x82f4...0b0945",
+      "vote_power_pct": 0.0
+    },
+    {
+      "name": "0x0998...c609f6",
+      "vote_power_pct": 0.0
+    }
+  ]
+}
