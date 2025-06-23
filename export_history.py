@@ -31,20 +31,15 @@ def fetch_all_delegations_graphql(url: str, first: int = 1000) -> list:
         resp = requests.post(url, json=payload, timeout=30)
         try:
             resp.raise_for_status()
-        except HTTPError as exc:
-            if resp.status_code == 404 and url.endswith("/graphql"):
-                alt = url[:-len("graphql")] + "graphiql"
-                print(f"{url} returned 404, retrying {alt}")
-                url = alt
-                resp = requests.post(url, json=payload, timeout=30)
-                resp.raise_for_status()
-            else:
-                raise
+        except HTTPError:
+            print(f"HTTP error {resp.status_code} from {url}: {resp.text[:200]}")
+            raise
         try:
             json_resp = resp.json()
         except JSONDecodeError as exc:
             snippet = resp.text[:200]
-            raise RuntimeError(f"Failed to decode JSON from {url}: {snippet!r}") from exc
+            print(f"Invalid JSON response from {url}: {snippet!r}")
+            raise RuntimeError(f"Failed to decode JSON from {url}") from exc
         data = json_resp.get("data", {}).get("delegationChangedEvents", [])
         if not data:
             break
