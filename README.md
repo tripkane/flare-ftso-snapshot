@@ -100,11 +100,10 @@ endpoint. Results are stored in `history/<network>_delegations.json`.
 Set `FLARE_GRAPHQL_URL` to the GraphQL endpoint (e.g.
 `https://flare-explorer.flare.network/graphql`) if it differs from the default.
 If GraphQL fails (for example due to a 404 or invalid response) the script
-falls back to scraping data from `flaremetrics.io`. When the `/graphql` path
-specifically returns a 404 error, the code first retries the `/graphiql`
-path. The endpoint may return a 404 page when opened in a browser because it
-only accepts POST requests. Use `curl` or `export_history.py` to send a
-GraphQL query, for example:
+falls back to scraping data from `flaremetrics.io`. The endpoint only accepts
+POST requests. When a request fails `export_history.py` prints the HTTP status
+code and response snippet to help diagnose the problem. Use `curl` or
+`export_history.py` to send a GraphQL query, for example:
 
 ```bash
 curl -X POST -H "Content-Type: application/json" \

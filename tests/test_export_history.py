@@ -57,20 +57,21 @@ def test_fetch_all_delegations_bad_json_scrape(monkeypatch):
     ]
 
 
-def test_fallback_to_graphiql(monkeypatch):
+def test_graphql_404_triggers_scrape(monkeypatch):
     calls = []
 
     def fake_post(url, json=None, timeout=0):
         calls.append(url)
-        if url.endswith("/graphql"):
-            return DummyResponse("not found", status_code=404)
-        return DummyResponse('{"data":{"delegationChangedEvents":[]}}', status_code=200)
+        return DummyResponse("not found", status_code=404)
+
+    html = "<table><tbody></tbody></table>"
 
     monkeypatch.setattr(export_history.requests, "post", fake_post)
+    monkeypatch.setattr(export_history.requests, "get", lambda url, timeout=0: DummyResponse(html))
 
-    result = export_history.fetch_all_delegations("http://example.com/graphql", first=1)
+    result = export_history.fetch_all_delegations("http://example.com/graphql", first=1, network="flare")
     assert result == []
-    assert calls == ["http://example.com/graphql", "http://example.com/graphiql"]
+    assert calls == ["http://example.com/graphql"]
 
 
 def test_scrape_failure_raises_error(monkeypatch):
