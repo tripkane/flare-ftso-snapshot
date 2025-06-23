@@ -157,18 +157,32 @@ def scrape_with_retries(network="flare", max_retries=MAX_RETRIES, delay=RETRY_DE
     return []
 
 # Save snapshot to JSON
-def save_snapshot(data, network="flare"):
-    today = datetime.date.today().isoformat()
-    subdir = today[:7]
+def save_snapshot(data, network="flare", snapshot_date=None):
+    """Save provider data to ``daily_snapshots`` and docs.
+
+    Parameters
+    ----------
+    data : list
+        Provider records returned by the scraper.
+    network : str, optional
+        Either ``"flare"`` or ``"songbird"``. Defaults to ``"flare"``.
+    snapshot_date : str, optional
+        ISO formatted date string (``YYYY-MM-DD``) to use for the file name.
+        When ``None`` the current UTC date is used.
+    """
+
+    if snapshot_date is None:
+        snapshot_date = datetime.date.today().isoformat()
+    subdir = snapshot_date[:7]
     out_dir = os.path.join("daily_snapshots", subdir)
     os.makedirs(out_dir, exist_ok=True)
-    filename = f"{network}_snapshot_{today}.json"
+    filename = f"{network}_snapshot_{snapshot_date}.json"
     path = os.path.join(out_dir, filename)
     if os.path.exists(path):
         print(f"Snapshot already exists: {path}")
     else:
         with open(path, "w") as f:
-            json.dump({"date": today, "providers": data}, f, indent=2)
+            json.dump({"date": snapshot_date, "providers": data}, f, indent=2)
         print(f"Snapshot saved: {path}")
 
     copy_snapshot_to_docs(path, network)
@@ -185,6 +199,14 @@ def copy_snapshot_to_docs(path, network):
     update_docs_manifest(docs_dir, rel_path, network)
 
 
+def snapshot_exists(snapshot_date, network):
+    """Return True if a snapshot file already exists for ``snapshot_date``."""
+    subdir = snapshot_date[:7]
+    filename = f"{network}_snapshot_{snapshot_date}.json"
+    path = os.path.join("daily_snapshots", subdir, filename)
+    return os.path.exists(path)
+
+
 def update_docs_manifest(docs_dir, filename, network):
     manifest_path = os.path.join(docs_dir, "manifest.json")
     if os.path.exists(manifest_path):
@@ -199,6 +221,20 @@ def update_docs_manifest(docs_dir, filename, network):
 
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
+
+
+def check_for_missing_snapshots(schedule, network="flare"):
+    """Capture snapshots for any past epoch start dates with missing files."""
+    today = datetime.date.today()
+    for epoch in schedule:
+        start_dt = datetime.datetime.strptime(epoch["Start (UTC)"], "%Y-%m-%d %H:%M:%S")
+        if start_dt.date() > today:
+            break
+        date_str = start_dt.date().isoformat()
+        if not snapshot_exists(date_str, network):
+            print(f"Missing snapshot for {network} on {date_str}. Capturing now...")
+            data = scrape_with_retries(network)
+            save_snapshot(data, network=network, snapshot_date=date_str)
 
 def load_epoch_schedule(file_path="flare_epoch_schedule.json"):
     """Load the epoch schedule from a JSON file."""
@@ -286,24 +322,32 @@ def clean_snapshots(
         json.dump(manifest, f, indent=2)
 
 # Main entrypoint
-def main(network="flare"):
+def main(network="flare", force=False):
     schedule = load_epoch_schedule()
-    if not is_current_time_epoch_start(schedule):
+
+    if force or is_current_time_epoch_start(schedule):
+        current_data = scrape_with_retries(network)
+        save_snapshot(current_data, network)
+    else:
         now = datetime.datetime.utcnow().isoformat(timespec="minutes")
-        print(f"{now} is not an epoch start. Exiting.")
-        return
+        print(f"{now} is not an epoch start. Skipping live snapshot.")
 
-    current_data = scrape_with_retries(network)
-
-    save_snapshot(current_data, network)
-
+    check_for_missing_snapshots(schedule, network)
     clean_snapshots(schedule, network=network)
 
 if __name__ == '__main__':
-    # Usage: python snapshot.py [flare|songbird]
+    # Usage: python snapshot.py [flare|songbird] [--force|-f]
     networks = ["flare", "songbird"]
-    if len(sys.argv) > 1 and sys.argv[1] in networks:
-        main(sys.argv[1])
-    else:
-        for net in networks:
-            main(net)
+    force = False
+    selected = []
+    for arg in sys.argv[1:]:
+        if arg in ("--force", "-f"):
+            force = True
+        elif arg in networks:
+            selected.append(arg)
+
+    if not selected:
+        selected = networks
+
+    for net in selected:
+        main(net, force=force)
