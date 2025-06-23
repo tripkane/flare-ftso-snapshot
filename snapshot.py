@@ -218,14 +218,54 @@ def is_snapshot_relevant(snapshot_date, schedule):
             return True
     return False
 
-def is_current_time_epoch_start(schedule, now=None):
-    """Return True if ``now`` matches an epoch start timestamp."""
+def is_current_time_epoch_start(schedule, now=None, window_minutes=30):
+    """Return True if ``now`` is within ``window_minutes`` of an epoch start."""
     if now is None:
         now = datetime.datetime.utcnow().replace(second=0, microsecond=0)
+    window = datetime.timedelta(minutes=window_minutes)
+    for epoch in schedule:
+        start = datetime.datetime.strptime(
+            epoch["Start (UTC)"], "%Y-%m-%d %H:%M:%S"
+        )
+        if abs(now - start) <= window:
+            return True
+    return False
+
+
+def _latest_epoch_start(schedule, now):
+    """Return the datetime of the most recent epoch start on or before ``now``."""
+    latest = None
     for epoch in schedule:
         start = datetime.datetime.strptime(epoch["Start (UTC)"], "%Y-%m-%d %H:%M:%S")
-        if now == start:
+        if start <= now:
+            latest = start
+        else:
+            break
+    return latest
+
+
+def _snapshot_exists(network, date_str, snapshot_dir="daily_snapshots"):
+    """Check if a snapshot JSON file exists for ``network`` and ``date_str``."""
+    subdir = date_str[:7]
+    filename = f"{network}_snapshot_{date_str}.json"
+    path = os.path.join(snapshot_dir, subdir, filename)
+    return os.path.exists(path)
+
+
+def should_run_snapshot(schedule, network="flare", now=None, window_minutes=30):
+    """Return True if a snapshot should be captured at ``now``."""
+    if now is None:
+        now = datetime.datetime.utcnow().replace(second=0, microsecond=0)
+
+    if is_current_time_epoch_start(schedule, now, window_minutes):
+        return True
+
+    latest = _latest_epoch_start(schedule, now)
+    if latest and now >= latest:
+        date_str = latest.date().isoformat()
+        if not _snapshot_exists(network, date_str):
             return True
+
     return False
 
 def clean_snapshots(
@@ -288,7 +328,7 @@ def clean_snapshots(
 # Main entrypoint
 def main(network="flare"):
     schedule = load_epoch_schedule()
-    if not is_current_time_epoch_start(schedule):
+    if not should_run_snapshot(schedule, network=network):
         now = datetime.datetime.utcnow().isoformat(timespec="minutes")
         print(f"{now} is not an epoch start. Exiting.")
         return

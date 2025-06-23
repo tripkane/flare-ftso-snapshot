@@ -33,6 +33,7 @@ from snapshot import (
     is_snapshot_relevant,
     clean_snapshots,
     is_current_time_epoch_start,
+    should_run_snapshot,
 )
 
 
@@ -96,8 +97,27 @@ def test_is_current_time_epoch_start():
         {"Start (UTC)": "2023-01-01 19:10:00"},
     ]
 
-    now = datetime.datetime(2023, 1, 1, 7, 10)
-    assert is_current_time_epoch_start(schedule, now)
+    # within the 30 minute default window
+    near = datetime.datetime(2023, 1, 1, 7, 25)
+    assert is_current_time_epoch_start(schedule, near)
 
+    # outside the window
     later = datetime.datetime(2023, 1, 1, 8, 0)
     assert not is_current_time_epoch_start(schedule, later)
+
+
+def test_should_run_snapshot_when_missing(tmp_path, monkeypatch):
+    schedule = [{"Start (UTC)": "2023-01-01 07:10:00"}]
+    now = datetime.datetime(2023, 1, 1, 8, 0)
+    monkeypatch.chdir(tmp_path)
+    assert should_run_snapshot(schedule, "flare", now)
+
+
+def test_should_run_snapshot_skips_when_exists(tmp_path, monkeypatch):
+    schedule = [{"Start (UTC)": "2023-01-01 07:10:00"}]
+    now = datetime.datetime(2023, 1, 1, 8, 0)
+    monkeypatch.chdir(tmp_path)
+    os.makedirs("daily_snapshots/2023-01", exist_ok=True)
+    open("daily_snapshots/2023-01/flare_snapshot_2023-01-01.json", "w").write("{}")
+    assert not should_run_snapshot(schedule, "flare", now)
+
