@@ -4,7 +4,7 @@ import re
 import requests
 from requests.exceptions import JSONDecodeError, HTTPError
 from html import unescape
-from flare_rpc import connect, get_all_delegation_logs
+
 
 DEFAULT_GRAPHQL_URL = "https://flare-explorer.flare.network/graphql"
 
@@ -53,13 +53,6 @@ def fetch_all_delegations_graphql(url: str, first: int = 1000) -> list:
     return delegations
 
 
-def fetch_delegations_rpc() -> list:
-    """Fetch delegation change logs via RPC as a fallback."""
-    w3 = connect()
-    logs = get_all_delegation_logs(w3)
-    return [{k: log[k] for k in log} for log in logs]
-
-
 def scrape_delegations_flaremetrics(network: str = "flare") -> list:
     """Scrape delegation events from flaremetrics.io."""
     url = f"https://flaremetrics.io/{network}"
@@ -92,11 +85,7 @@ def fetch_all_delegations(url: str, first: int = 1000, network: str = "flare") -
         return fetch_all_delegations_graphql(url, first=first)
     except Exception as exc:
         print(f"GraphQL fetch failed: {exc}; trying flaremetrics")
-        try:
-            return scrape_delegations_flaremetrics(network)
-        except Exception as exc2:
-            print(f"Flaremetrics scrape failed: {exc2}; falling back to RPC")
-            return fetch_delegations_rpc()
+        return scrape_delegations_flaremetrics(network)
 
 
 def main(network: str = "flare") -> None:
