@@ -3,13 +3,12 @@ import datetime
 import os
 import sys
 
-from flare_rpc import connect, list_providers
+from snapshot import init_driver, scrape_flaremetrics
 
 
 def save_current_vote_power(data, network="flare"):
     ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
-    subdir = ts[:7]
-    out_dir = os.path.join("current_vote_power", subdir)
+    out_dir = os.path.join("current_vote_power")
     os.makedirs(out_dir, exist_ok=True)
     filename = f"{network}_vp_{ts}.json"
     path = os.path.join(out_dir, filename)
@@ -17,11 +16,10 @@ def save_current_vote_power(data, network="flare"):
         json.dump(data, f, indent=2)
     print(f"Saved current vote power: {path}")
     docs_dir = os.path.join("docs", "current_vote_power")
-    rel_path = os.path.join(subdir, filename)
-    os.makedirs(os.path.join(docs_dir, subdir), exist_ok=True)
-    with open(os.path.join(docs_dir, rel_path), "w") as f:
+    os.makedirs(docs_dir, exist_ok=True)
+    with open(os.path.join(docs_dir, filename), "w") as f:
         json.dump(data, f, indent=2)
-    update_manifest(docs_dir, rel_path, network)
+    update_manifest(docs_dir, filename, network)
 
 
 def update_manifest(docs_dir, filename, network):
@@ -45,11 +43,18 @@ def main(network=None):
         networks = ["flare", "songbird"]
 
     for net in networks:
-        w3 = connect()
-        addresses = list_providers(w3)
+        driver = init_driver()
+        try:
+            providers = scrape_flaremetrics(driver, net)
+        finally:
+            driver.quit()
+
         data = {
             "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-            "providers": [{"address": addr} for addr in addresses],
+            "providers": [
+                {"name": p["name"], "vote_power_pct": p.get("vote_power_pct", 0.0)}
+                for p in providers
+            ],
         }
         save_current_vote_power(data, net)
 

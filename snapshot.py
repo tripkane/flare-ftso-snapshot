@@ -1,14 +1,37 @@
 import json
 import datetime
 import os
+import time
 import re
 import sys
-from typing import List, Dict
-
-from flare_rpc import connect, list_providers
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from bs4 import BeautifulSoup
 
 MAX_RETRIES = int(os.getenv("SNAPSHOT_RETRIES", "6"))
 RETRY_DELAY = int(os.getenv("SNAPSHOT_RETRY_DELAY", "600"))  # seconds
+
+# Initialize headless browser
+def init_driver():
+    """Initialise a headless Chrome driver.
+
+    Paths to the Chromium binary and chromedriver can be overridden with the
+    ``CHROMIUM_BINARY`` and ``CHROMEDRIVER`` environment variables
+    respectively. This allows the scraper to run in environments where the
+    browser is installed in a non-standard location.
+    """
+
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+    binary_path = os.getenv('CHROMIUM_BINARY', '/usr/bin/chromium-browser')
+    driver_path = os.getenv('CHROMEDRIVER', '/usr/bin/chromedriver')
+    options.binary_location = binary_path
+    service = Service(driver_path)
+    return webdriver.Chrome(service=service, options=options)
 
 # Helpers for extracting numbers and decimals
 
@@ -29,11 +52,109 @@ def extract_decimal(text):
     return cleaned
 
 # Scrape flaremetrics.io (Flare or Songbird network)
-def fetch_chain_data(network: str = "flare") -> List[Dict[str, str]]:
-    """Return basic provider data directly from the blockchain."""
-    w3 = connect()
-    addresses = list_providers(w3)
-    return [{"address": addr} for addr in addresses]
+def scrape_flaremetrics(driver, network="flare"):
+    if network == "flare":
+        url = "https://flaremetrics.io/"
+    elif network == "songbird":
+        url = "https://flaremetrics.io/songbird"
+    else:
+        raise ValueError("Unknown network: " + network)
+    driver.get(url)
+    time.sleep(5)  # allow JS to render table
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    providers = []
+    # Table columns: rank, Name, Vote Power, Vote Power %, 24h %, Reward Rate, Registered
+    for row in soup.select("table tbody tr"):
+        cols = row.find_all("td")
+        if len(cols) >= 7:
+            rank = cols[0].get_text(strip=True)
+            name = cols[1].get_text(strip=True)
+            raw_vote = cols[2].get_text("", strip=True)
+            raw_vote_pct = cols[3].get_text("", strip=True)
+            raw_change_24h = cols[4].get_text("", strip=True)
+            raw_reward = cols[5].get_text("", strip=True)
+            registered = cols[6].get_text(strip=True)
+
+            # --- Updated vote_power/vote_power_locked logic ---
+            vote_nums = extract_numbers(raw_vote)
+            if len(vote_nums) >= 2:
+                # Already split, just clean commas and convert to int
+                vote_power = int(vote_nums[0].replace(",", "")) if vote_nums[0] else 0
+                vote_power_locked = int(vote_nums[1].replace(",", "")) if vote_nums[1] else 0
+            elif len(vote_nums) == 1:
+                # Single number present. Check for doubled value pattern.
+                num = vote_nums[0].replace(",", "")
+                if num and len(num) % 2 == 0:
+                    half = len(num) // 2
+                    first, second = num[:half], num[half:]
+                    if first == second:
+                        vote_power = int(first)
+                        vote_power_locked = int(second)
+                    else:
+                        vote_power = int(num)
+                        vote_power_locked = int(num)
+                else:
+                    vote_power = int(num) if num else 0
+                    vote_power_locked = int(num) if num else 0
+            else:
+                # Fallback: try to split the raw_vote string in half (legacy case)
+                vp = raw_vote.replace(",", "")
+                if vp and len(vp) % 2 == 0:
+                    mid = len(vp) // 2
+                    vp1 = vp[:mid]
+                    vp2 = vp[mid:]
+                    vote_power = int(vp1) if vp1.isdigit() else 0
+                    vote_power_locked = int(vp2) if vp2.isdigit() else 0
+                else:
+                    vote_power = 0
+                    vote_power_locked = 0
+
+            # Extract vote power percentages
+            pcts = re.findall(r"[0-9][0-9.,]*%", raw_vote_pct)
+            vote_power_pct = float(pcts[0].replace('%', '').replace(',', '')) if len(pcts) > 0 else 0.0
+            vote_power_pct_locked = float(pcts[1].replace('%', '').replace(',', '')) if len(pcts) > 1 else 0.0
+
+            # 24h change percent
+            change_pcts = re.findall(r"[0-9][0-9.,]*%", raw_change_24h)
+            change_24h_pct = float(change_pcts[0].replace('%', '').replace(',', '')) if change_pcts else 0.0
+
+            # Reward rate as decimal
+            reward_rate = float(extract_decimal(raw_reward)) if extract_decimal(raw_reward) else 0.0
+
+            providers.append({
+                "rank": rank,
+                "name": name,
+                "vote_power": vote_power,
+                "vote_power_locked": vote_power_locked,
+                "vote_power_pct": vote_power_pct,
+                "vote_power_pct_locked": vote_power_pct_locked,
+                "change_24h_pct": change_24h_pct,
+                "reward_rate": reward_rate,
+                "registered": registered
+            })
+    return providers
+
+def scrape_with_retries(network="flare", max_retries=MAX_RETRIES, delay=RETRY_DELAY):
+    """Scrape flaremetrics with retry logic."""
+    attempt = 0
+    while attempt < max_retries:
+        driver = init_driver()
+        try:
+            data = scrape_flaremetrics(driver, network)
+            if data:
+                return data
+            else:
+                print(f"No data retrieved for {network} on attempt {attempt + 1}")
+        except Exception as e:
+            print(f"Error scraping {network} on attempt {attempt + 1}: {e}")
+        finally:
+            driver.quit()
+        attempt += 1
+        if attempt < max_retries:
+            print(f"Retrying in {delay} seconds...")
+            time.sleep(delay)
+    print(f"Failed to scrape data for {network} after {max_retries} attempts")
+    return []
 
 # Save snapshot to JSON
 def save_snapshot(data, network="flare"):
@@ -172,7 +293,7 @@ def main(network="flare"):
         print(f"{now} is not an epoch start. Exiting.")
         return
 
-    current_data = fetch_chain_data(network)
+    current_data = scrape_with_retries(network)
 
     save_snapshot(current_data, network)
 
