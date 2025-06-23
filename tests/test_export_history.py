@@ -43,8 +43,6 @@ def test_fetch_all_delegations_bad_json_scrape(monkeypatch):
 
     monkeypatch.setattr(export_history.requests, "post", fake_post)
     monkeypatch.setattr(export_history.requests, "get", lambda url, timeout=0: DummyResponse(html))
-    monkeypatch.setattr(export_history, "connect", lambda: (_ for _ in ()).throw(AssertionError("connect should not be called")))
-    monkeypatch.setattr(export_history, "get_all_delegation_logs", lambda w3: (_ for _ in ()).throw(AssertionError("logs should not be called")))
 
     result = export_history.fetch_all_delegations("http://example.com", network="flare")
 
@@ -69,37 +67,21 @@ def test_fallback_to_graphiql(monkeypatch):
         return DummyResponse('{"data":{"delegationChangedEvents":[]}}', status_code=200)
 
     monkeypatch.setattr(export_history.requests, "post", fake_post)
-    monkeypatch.setattr(export_history, "connect", lambda: (_ for _ in ()).throw(AssertionError("connect should not be called")))
-    monkeypatch.setattr(export_history, "get_all_delegation_logs", lambda w3: (_ for _ in ()).throw(AssertionError("logs should not be called")))
 
     result = export_history.fetch_all_delegations("http://example.com/graphql", first=1)
     assert result == []
     assert calls == ["http://example.com/graphql", "http://example.com/graphiql"]
 
 
-def test_scrape_failure_fallback_to_rpc(monkeypatch):
+def test_scrape_failure_raises_error(monkeypatch):
     def fake_post(url, json=None, timeout=0):
         return DummyResponse("bad html")
 
     def fake_get(url, timeout=0):
         raise export_history.requests.exceptions.HTTPError()
 
-    rpc_called = {}
-
-    def fake_connect():
-        rpc_called["connect"] = True
-        return "w3"
-
-    def fake_logs(w3):
-        rpc_called["logs"] = True
-        return [{"log": 1}]
-
     monkeypatch.setattr(export_history.requests, "post", fake_post)
     monkeypatch.setattr(export_history.requests, "get", fake_get)
-    monkeypatch.setattr(export_history, "connect", fake_connect)
-    monkeypatch.setattr(export_history, "get_all_delegation_logs", fake_logs)
 
-    result = export_history.fetch_all_delegations("http://example.com", network="flare")
-
-    assert result == [{"log": 1}]
-    assert rpc_called == {"connect": True, "logs": True}
+    with pytest.raises(export_history.requests.exceptions.HTTPError):
+        export_history.fetch_all_delegations("http://example.com", network="flare")
