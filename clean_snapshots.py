@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+import re
 
 def load_epoch_schedule(file_path="flare_epoch_schedule.json"):
     """Load the epoch schedule from a JSON file and extract only the start dates."""
@@ -47,9 +48,14 @@ def clean_snapshots(
         except Exception:
             pass
 
+    date_pattern = re.compile(r"\d{4}-\d{2}-\d{2}")
     for root, _, files in os.walk(snapshot_dir):
         for filename in files:
+            if filename == "manifest.json":
+                continue
             if not filename.endswith(".json"):
+                continue
+            if not date_pattern.search(filename):
                 continue
             rel_path = os.path.relpath(os.path.join(root, filename), snapshot_dir)
             snapshot_date = filename.split("_")[-1].replace(".json", "")
