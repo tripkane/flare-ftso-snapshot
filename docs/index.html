@@ -74,11 +74,19 @@
         <input type="checkbox" id="bifrostOnly" class="mr-2" checked />
         Bifrost Delegation
       </label>
+      <label class="font-bold ml-4">
+        <input type="checkbox" id="excludeDisabled" class="mr-2" checked />
+        Exclude Disabled
+      </label>
     </section>
 
     <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4">
       <h2 class="text-xl font-bold mb-2">Provider Recommendation</h2>
       <div id="recommendationSummary" class="flex flex-wrap gap-4"></div>
+      <div class="mt-2">
+        <label for="excludeProviders" class="font-bold mr-2">Exclude Providers:</label>
+        <select id="excludeProviders" multiple size="5" class="p-1 bg-gray-800 border border-gray-700 rounded text-xs min-w-[150px]"></select>
+      </div>
       <table id="recommendationTable" class="w-full text-sm text-center mt-4 border-collapse"></table>
     </section>
 
@@ -199,6 +207,7 @@
     let currentVoteChart;
     let dataTable;
     let multiProviderChart;
+    let userExcludedProviders = new Set();
 
     // Base URL for snapshot files
     // Use a relative path when served via HTTP(S) so data loads from the
@@ -243,12 +252,12 @@
           listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`);
         }
         if (listRes?.providers) {
-          window.bifrostFlare = listRes.providers
-            .filter(p => p.chainId === 14)
-            .map(p => p.name);
-          window.bifrostSongbird = listRes.providers
-            .filter(p => p.chainId === 19)
-            .map(p => p.name);
+          const flare = listRes.providers.filter(p => p.chainId === 14);
+          const songbird = listRes.providers.filter(p => p.chainId === 19);
+          window.bifrostFlare = flare.map(p => p.name);
+          window.bifrostSongbird = songbird.map(p => p.name);
+          window.disabledFlare = new Set(flare.filter(p => p.disabled).map(p => p.name));
+          window.disabledSongbird = new Set(songbird.filter(p => p.disabled).map(p => p.name));
         } else {
           window.bifrostFlare = Array.isArray(listRes?.flare)
             ? listRes.flare.map(p => typeof p === 'string' ? p : p.name)
@@ -256,6 +265,8 @@
           window.bifrostSongbird = Array.isArray(listRes?.songbird)
             ? listRes.songbird.map(p => typeof p === 'string' ? p : p.name)
             : [];
+          window.disabledFlare = new Set();
+          window.disabledSongbird = new Set();
         }
 
         const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
@@ -394,9 +405,12 @@
         const multiSelect = document.getElementById('multiProviderSelect');
         const namesOnly = document.getElementById('namedOnly').checked;
         const bifrostOnly = document.getElementById('bifrostOnly').checked;
+        const excludeDisabled = document.getElementById('excludeDisabled').checked;
         const names = Object.keys(providerStats)
           .filter(n => !(namesOnly && n.startsWith('0x')))
           .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+          .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+          .filter(n => !userExcludedProviders.has(n))
           .sort();
         multiSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
         updateTopProviders();
@@ -407,9 +421,12 @@
       const num = parseInt(document.getElementById('numTopProviders').value) || 5;
       const namesOnly = document.getElementById('namedOnly').checked;
       const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
       const names = Object.keys(providerStats)
         .filter(n => !(namesOnly && n.startsWith('0x')))
-        .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)));
+        .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+        .filter(n => !userExcludedProviders.has(n));
       const sorted = names.sort((a, b) => {
         const getAvg = (name) => {
           switch (kpi) {
@@ -434,14 +451,21 @@
 
     function recommendProviders() {
       const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
       const entries = Object.entries(providerStats)
         .filter(([n]) => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .filter(([n]) => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
         .map(([name, s]) => {
           const score = (s.avg30 || 0) + (s.trend || 0) + ((s.headroom || 0) / 100) - (s.volatility || 0) - (s.zeroCount || 0) * 0.1;
           return { name, score };
         });
       entries.sort((a, b) => b.score - a.score);
-      const top = entries.slice(0, 2);
+
+      const excludeSelect = document.getElementById('excludeProviders');
+      excludeSelect.innerHTML = entries.map(e => `<option value="${e.name}" ${userExcludedProviders.has(e.name) ? 'selected' : ''}>${e.name}</option>`).join('');
+
+      const filteredEntries = entries.filter(e => !userExcludedProviders.has(e.name));
+      const top = filteredEntries.slice(0, 2);
       const total = top.reduce((sum, t) => sum + t.score, 0);
       const summary = document.getElementById('recommendationSummary');
       summary.innerHTML = top
@@ -514,6 +538,8 @@
           if (registeredLatestOnly && !isRegisteredLatest) return false;
           if (namesOnly && provider.name.startsWith('0x')) return false;
           if (bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(provider.name)) return false;
+          if (excludeDisabled && window.disabledFlare && window.disabledFlare.has(provider.name)) return false;
+          if (userExcludedProviders.has(provider.name)) return false;
           return true;
         }).map(provider => ({
           ...provider,
@@ -525,13 +551,16 @@
 
       function getFilteredSongbirdProviders() {
         const providersOverLimit = getProvidersOverLimitCombined();
-        const namesOnly = document.getElementById('namedOnly').checked;
-        const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
         const filtered = window.songbirdSnapshots.flatMap(snapshot =>
           snapshot.providers.filter(provider => {
             if (providersOverLimit.has(provider.SGB_provider)) return false;
             if (namesOnly && provider.SGB_provider.startsWith('0x')) return false;
             if (bifrostOnly && window.bifrostSongbird && !window.bifrostSongbird.includes(provider.SGB_provider)) return false;
+            if (excludeDisabled && window.disabledSongbird && window.disabledSongbird.has(provider.SGB_provider)) return false;
+            if (userExcludedProviders.has(provider.SGB_provider)) return false;
             return true;
           }).map(provider => ({
             ...provider,
@@ -1091,6 +1120,22 @@
       debouncedRenderTable();
       renderSingleProviderChart();
       renderCurrentVoteChart();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
+    });
+    document.getElementById('excludeDisabled').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
+    });
+    document.getElementById('excludeProviders').addEventListener('change', () => {
+      const select = document.getElementById('excludeProviders');
+      userExcludedProviders = new Set(Array.from(select.selectedOptions).map(o => o.value));
+      debouncedRenderChart();
+      debouncedRenderTable();
       updateMultiProviderOptions();
       renderMultiProviderChart();
       recommendProviders();
