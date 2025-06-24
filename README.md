@@ -7,6 +7,11 @@ Open `docs/index.html` directly in your browser or visit the published GitHub
 Pages site at `https://tripkane.github.io/flare-ftso-snapshot/`. The dashboard
 fetches all snapshot JSON files from GitHub so no local server is required.
 
+The Provider Recommendation section now includes an **Exclude Disabled** option
+to hide providers that cannot be delegated to via Bifrost. It also offers an
+**Exclude Providers** dropdown so users can manually remove any providers from
+the recommendations.
+
 ### Enabling GitHub Pages
 
 The workflow in `.github/workflows/pages.yml` deploys the `docs/` folder using
