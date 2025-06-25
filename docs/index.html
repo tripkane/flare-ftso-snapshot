@@ -402,18 +402,42 @@
       }
 
       function updateMultiProviderOptions() {
-        const multiSelect = document.getElementById('multiProviderSelect');
+        // Get current KPI and Top N
+        const kpi = document.getElementById('topKpi').value;
+        const num = parseInt(document.getElementById('numTopProviders').value) || 5;
         const namesOnly = document.getElementById('namedOnly').checked;
         const bifrostOnly = document.getElementById('bifrostOnly').checked;
         const excludeDisabled = document.getElementById('excludeDisabled').checked;
+
+        // Filter and sort providers by KPI
         const names = Object.keys(providerStats)
           .filter(n => !(namesOnly && n.startsWith('0x')))
           .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
           .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
-          .filter(n => !userExcludedProviders.has(n))
-          .sort();
-        multiSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
-        updateTopProviders();
+          .filter(n => !userExcludedProviders.has(n));
+
+        const sorted = names.sort((a, b) => {
+          const getAvg = (name) => {
+            switch (kpi) {
+              case '7-day':
+                return providerStats[name].avg7 || 0;
+              case 'cumulative':
+                return providerStats[name].avgCum || 0;
+              default:
+                return providerStats[name].avg30 || 0;
+            }
+          };
+          return getAvg(b) - getAvg(a);
+        });
+
+        // Only show top N in the Names list
+        const top = sorted.slice(0, num);
+        const multiSelect = document.getElementById('multiProviderSelect');
+        multiSelect.innerHTML = top.map(n => `<option value="${n}">${n}</option>`).join('');
+        // Optionally, select all by default
+        Array.from(multiSelect.options).forEach(opt => opt.selected = true);
+
+        renderMultiProviderChart();
       }
 
     function updateTopProviders() {
@@ -1172,6 +1196,35 @@
         document.getElementById('providerFilter').addEventListener('change', renderCurrentVoteChart);
       });
     });
+
+
+    document.getElementById('kpi-select').addEventListener('change', updateNames);
+document.getElementById('topn-select').addEventListener('change', updateNames);
+
+function getTopProviders(kpi, n) {
+  // Replace this with your actual data logic
+  // Example: providersData is an array of provider objects with KPI values
+  return providersData
+    .sort((a, b) => b[kpi] - a[kpi])
+    .slice(0, n);
+}
+
+function updateNames() {
+  const kpi = document.getElementById('kpi-select').value;
+  const n = parseInt(document.getElementById('topn-select').value, 10);
+  const providers = getTopProviders(kpi, n);
+  const nameSelect = document.getElementById('name-select');
+  nameSelect.innerHTML = '';
+  providers.forEach(p => {
+    const option = document.createElement('option');
+    option.value = p.name;
+    option.textContent = p.name;
+    nameSelect.appendChild(option);
+  });
+}
+
+// Initial population
+updateNames();
   </script>
 </body>
 
