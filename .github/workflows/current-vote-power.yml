@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
-          pip install selenium beautifulsoup4 bs4
+          pip install -r requirements.txt
 
       - name: Run current vote power script
         run: python current_vote_power.py
