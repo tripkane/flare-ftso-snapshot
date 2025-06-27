@@ -7,3 +7,7 @@ uvicorn
 transformers
 torch
 web3
+selenium
+beautifulsoup4
+pydantic
+slowapi
