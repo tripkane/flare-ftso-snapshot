@@ -10,11 +10,11 @@ class ProviderData(BaseModel):
     """Schema for FTSO provider data."""
     name: str = Field(..., min_length=1, max_length=100)
     vote_power: float = Field(..., ge=0.0, le=100.0)
-    vote_power_percentage: Optional[str] = Field(None, regex=r'^\d+(\.\d+)?%?$')
+    vote_power_percentage: Optional[str] = Field(None, pattern=r'^\d+(\.\d+)?%?$')
     fee: Optional[float] = Field(None, ge=0.0, le=100.0)
     availability: Optional[float] = Field(None, ge=0.0, le=100.0)
     reward_rate: Optional[float] = Field(None, ge=0.0)
-    address: Optional[str] = Field(None, regex=r'^0x[a-fA-F0-9]{40}$')
+    address: Optional[str] = Field(None, pattern=r'^0x[a-fA-F0-9]{40}$')
     
     @validator('name')
     def validate_name(cls, v):
@@ -43,8 +43,8 @@ class ProviderData(BaseModel):
 
 class SnapshotData(BaseModel):
     """Schema for complete snapshot data."""
-    timestamp: str = Field(..., regex=r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$')
-    network: str = Field(..., regex=r'^(flare|songbird)$')
+    timestamp: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$')
+    network: str = Field(..., pattern=r'^(flare|songbird)$')
     epoch: Optional[int] = Field(None, ge=0)
     providers: List[ProviderData] = Field(..., min_items=1)
     total_vote_power: Optional[float] = Field(None, ge=0.0)
