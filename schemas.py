@@ -43,8 +43,8 @@ class ProviderData(BaseModel):
 
 class SnapshotData(BaseModel):
     """Schema for complete snapshot data."""
-    timestamp: str = Field(..., regex=r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$')
-    network: str = Field(..., regex=r'^(flare|songbird)$')
+    timestamp: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$')
+    network: str = Field(..., pattern=r'^(flare|songbird)$')
     epoch: Optional[int] = Field(None, ge=0)
     providers: List[ProviderData] = Field(..., min_items=1)
     total_vote_power: Optional[float] = Field(None, ge=0.0)
