@@ -2,8 +2,17 @@ import json
 import datetime
 import os
 import sys
+import logging
+from typing import Dict, List, Any, Optional
 
-from snapshot import init_driver, scrape_flaremetrics
+from snapshot import scrape_flaremetrics
+from webdriver_manager import get_webdriver
+from schemas import validate_snapshot_data, sanitize_file_path
+from exceptions import FileOperationError, WebDriverError, DataValidationError
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def save_current_vote_power(data, network="flare"):
@@ -36,27 +45,61 @@ def update_manifest(docs_dir, filename, network):
         json.dump(manifest, f, indent=2)
 
 
-def main(network=None):
+def main(network: Optional[str] = None) -> None:
+    """
+    Main function to collect current vote power data.
+    
+    Args:
+        network: Network to collect data for ('flare', 'songbird', or None for both)
+    """
     if network in ("flare", "songbird"):
         networks = [network]
     else:
         networks = ["flare", "songbird"]
 
     for net in networks:
-        driver = init_driver()
+        logger.info(f"Starting vote power collection for {net}")
+        
         try:
-            providers = scrape_flaremetrics(driver, net)
-        finally:
-            driver.quit()
-
-        data = {
-            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-            "providers": [
-                {"name": p["name"], "vote_power_pct": p.get("vote_power_pct", 0.0)}
-                for p in providers
-            ],
-        }
-        save_current_vote_power(data, net)
+            # Use context manager for proper resource cleanup
+            with get_webdriver(max_retries=3, retry_delay=10) as driver:
+                providers = scrape_flaremetrics(driver, net)
+                
+            if not providers:
+                logger.warning(f"No providers found for {net}")
+                continue
+                
+            # Prepare data with validation
+            data = {
+                "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                "network": net,
+                "providers": [
+                    {
+                        "name": p["name"], 
+                        "vote_power": p.get("vote_power_pct", 0.0)
+                    }
+                    for p in providers
+                ],
+            }
+            
+            # Validate data before saving
+            try:
+                validated_data = validate_snapshot_data(data)
+                logger.info(f"Data validation successful for {net}")
+            except Exception as e:
+                logger.error(f"Data validation failed for {net}: {e}")
+                # Continue with unvalidated data but log the issue
+                validated_data = data
+            
+            save_current_vote_power(validated_data, net)
+            logger.info(f"Successfully collected vote power data for {net}")
+            
+        except WebDriverError as e:
+            logger.error(f"WebDriver error for {net}: {e}")
+            continue
+        except Exception as e:
+            logger.error(f"Unexpected error collecting data for {net}: {e}")
+            continue
 
 
 if __name__ == "__main__":
