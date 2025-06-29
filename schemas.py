@@ -10,7 +10,7 @@ class ProviderData(BaseModel):
     """Schema for FTSO provider data."""
     name: str = Field(..., min_length=1, max_length=100)
     vote_power: float = Field(..., ge=0.0, le=100.0)
-    vote_power_percentage: Optional[str] = Field(None, regex=r'^\d+(\.\d+)?%?$')
+    vote_power_percentage: Optional[str] = Field(None, pattern=r'^\d+(\.\d+)?%?$')
     fee: Optional[float] = Field(None, ge=0.0, le=100.0)
     availability: Optional[float] = Field(None, ge=0.0, le=100.0)
     reward_rate: Optional[float] = Field(None, ge=0.0)
