@@ -14,7 +14,7 @@ class ProviderData(BaseModel):
     fee: Optional[float] = Field(None, ge=0.0, le=100.0)
     availability: Optional[float] = Field(None, ge=0.0, le=100.0)
     reward_rate: Optional[float] = Field(None, ge=0.0)
-    address: Optional[str] = Field(None, regex=r'^0x[a-fA-F0-9]{40}$')
+    address: Optional[str] = Field(None, pattern=r'^0x[a-fA-F0-9]{40}$')
     
     @validator('name')
     def validate_name(cls, v):
