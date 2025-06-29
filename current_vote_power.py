@@ -4,11 +4,14 @@ import os
 import sys
 import logging
 from typing import Dict, List, Any, Optional
+from datetime import datetime, timezone
 
 from snapshot import scrape_flaremetrics
 from webdriver_manager import get_webdriver
 from schemas import validate_snapshot_data, sanitize_file_path
 from exceptions import FileOperationError, WebDriverError, DataValidationError
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -61,8 +64,14 @@ def main(network: Optional[str] = None) -> None:
         logger.info(f"Starting vote power collection for {net}")
         
         try:
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.binary_location = '/usr/bin/google-chrome'  # or the path from your runner
+
             # Use context manager for proper resource cleanup
-            with get_webdriver(max_retries=3, retry_delay=10) as driver:
+            with webdriver.Chrome(
+                service=Service('/usr/local/bin/chromedriver'),  # adjust path if needed
+                options=chrome_options
+            ) as driver:
                 providers = scrape_flaremetrics(driver, net)
                 
             if not providers:
@@ -71,7 +80,7 @@ def main(network: Optional[str] = None) -> None:
                 
             # Prepare data with validation
             data = {
-                "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 "network": net,
                 "providers": [
                     {
