@@ -23,6 +23,16 @@ jobs:
           sudo apt-get install -y chromium-browser chromium-chromedriver
           pip install -r requirements.txt
 
+      - name: Set up Chrome 137
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: '137.0.7151.119'
+
+      - name: Set up ChromeDriver 137
+        uses: nanasess/setup-chromedriver@v2
+        with:
+          chromedriver-version: '137.0.7151.119'
+
       - name: Run current vote power script
         run: python current_vote_power.py
 
