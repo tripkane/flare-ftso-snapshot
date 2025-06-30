@@ -5,6 +5,7 @@ import sys
 import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone
+import tempfile  # <-- Added for unique Chrome user data dir
 
 from snapshot import scrape_flaremetrics
 from webdriver_manager import get_webdriver
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_current_vote_power(data, network="flare"):
-    ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
+    ts = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
     out_dir = os.path.join("current_vote_power")
     os.makedirs(out_dir, exist_ok=True)
     filename = f"{network}_vp_{ts}.json"
@@ -67,6 +68,10 @@ def main(network: Optional[str] = None) -> None:
             chrome_options = webdriver.ChromeOptions()
             chrome_options.binary_location = '/usr/bin/google-chrome'  # or the path from your runner
 
+            # Use a unique temp directory for user data to avoid session conflicts
+            user_data_dir = tempfile.mkdtemp()
+            chrome_options.add_argument(f'--user-data-dir={user_data_dir}')
+
             # Use context manager for proper resource cleanup
             with webdriver.Chrome(
                 service=Service('/usr/local/bin/chromedriver'),  # adjust path if needed
@@ -80,7 +85,7 @@ def main(network: Optional[str] = None) -> None:
                 
             # Prepare data with validation
             data = {
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ"),
                 "network": net,
                 "providers": [
                     {
