@@ -1198,33 +1198,6 @@
     });
 
 
-    document.getElementById('kpi-select').addEventListener('change', updateNames);
-document.getElementById('topn-select').addEventListener('change', updateNames);
-
-function getTopProviders(kpi, n) {
-  // Replace this with your actual data logic
-  // Example: providersData is an array of provider objects with KPI values
-  return providersData
-    .sort((a, b) => b[kpi] - a[kpi])
-    .slice(0, n);
-}
-
-function updateNames() {
-  const kpi = document.getElementById('kpi-select').value;
-  const n = parseInt(document.getElementById('topn-select').value, 10);
-  const providers = getTopProviders(kpi, n);
-  const nameSelect = document.getElementById('name-select');
-  nameSelect.innerHTML = '';
-  providers.forEach(p => {
-    const option = document.createElement('option');
-    option.value = p.name;
-    option.textContent = p.name;
-    nameSelect.appendChild(option);
-  });
-}
-
-// Initial population
-updateNames();
   </script>
 </body>
 
