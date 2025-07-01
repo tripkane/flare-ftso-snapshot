@@ -541,6 +541,7 @@
       const registeredLatestOnly = document.getElementById('registeredLatestOnly').checked;
       const namesOnly = document.getElementById('namedOnly').checked;
       const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
       let latestSnapshot = window.flareSnapshots[window.flareSnapshots.length - 1];
       let registeredInLatest = new Set();
       if (latestSnapshot) {
@@ -974,6 +975,14 @@
       const timestamps = Array.from(timestampsSet).sort();
       const flareValues = timestamps.map(t => flareMap[t] ?? null);
       const sgbValues = timestamps.map(t => songbirdMap[t] ?? null);
+
+      if (timestamps.length === 0) {
+        canvas.remove();
+        container.textContent = 'Current vote power data not available.';
+        range.max = 0;
+        range.value = 0;
+        return;
+      }
 
       function formatHour(ts) {
         return new Date(ts).toISOString().slice(0, 13).replace('T', ' ');
