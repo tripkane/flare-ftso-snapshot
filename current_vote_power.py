@@ -5,6 +5,8 @@ import sys
 import logging
 from typing import Dict, List, Any, Optional
 
+from pydantic import BaseModel
+
 from snapshot import scrape_flaremetrics
 from webdriver_manager import get_webdriver
 from schemas import validate_snapshot_data, sanitize_file_path
@@ -15,19 +17,29 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _to_serializable(obj):
+    """Return JSON-serializable data from a Pydantic model or plain object."""
+    if isinstance(obj, BaseModel):
+        if hasattr(obj, "model_dump"):
+            return obj.model_dump()
+        return obj.dict()
+    return obj
+
+
 def save_current_vote_power(data, network="flare"):
     ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
     out_dir = os.path.join("current_vote_power")
     os.makedirs(out_dir, exist_ok=True)
     filename = f"{network}_vp_{ts}.json"
     path = os.path.join(out_dir, filename)
+    serializable = _to_serializable(data)
     with open(path, "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(serializable, f, indent=2)
     print(f"Saved current vote power: {path}")
     docs_dir = os.path.join("docs", "current_vote_power")
     os.makedirs(docs_dir, exist_ok=True)
     with open(os.path.join(docs_dir, filename), "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(serializable, f, indent=2)
     update_manifest(docs_dir, filename, network)
 
 
