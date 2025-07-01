@@ -56,3 +56,21 @@ def test_save_current_vote_power_manifest(tmp_path, monkeypatch):
 
     manifest = json.loads(manifest_path.read_text())
     assert manifest[network] == [filename]
+
+
+def test_save_current_vote_power_with_pydantic(tmp_path, monkeypatch):
+    """Ensure Pydantic SnapshotData can be saved without errors."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(current_vote_power.datetime, "datetime", FixedDatetime)
+
+    data = {
+        "timestamp": FixedDatetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ"),
+        "network": "flare",
+        "providers": [{"name": "A", "vote_power": 1.0}],
+    }
+    snap = current_vote_power.validate_snapshot_data(data)
+    current_vote_power.save_current_vote_power(snap, network="flare")
+
+    ts = FixedDatetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
+    file_path = tmp_path / "current_vote_power" / f"flare_vp_{ts}.json"
+    assert file_path.exists()
