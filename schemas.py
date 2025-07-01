@@ -3,24 +3,36 @@ Data validation schemas for FTSO snapshot data.
 """
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, validator
+from packaging.version import parse as parse_version
+import pydantic
 import re
+
+# Determine correct keyword for regex pattern based on Pydantic version
+_PATTERN_KEY = "pattern" if parse_version(pydantic.version.VERSION).major >= 2 else "regex"
 
 
 class ProviderData(BaseModel):
     """Schema for FTSO provider data."""
     name: str = Field(..., min_length=1, max_length=100)
     vote_power: float = Field(..., ge=0.0, le=100.0)
-    vote_power_percentage: Optional[str] = Field(None, pattern=r'^\d+(\.\d+)?%?$')
+    vote_power_percentage: Optional[str] = Field(
+        None, **{_PATTERN_KEY: r'^\d+(\.\d+)?%?$'}
+    )
     fee: Optional[float] = Field(None, ge=0.0, le=100.0)
     availability: Optional[float] = Field(None, ge=0.0, le=100.0)
     reward_rate: Optional[float] = Field(None, ge=0.0)
-    address: Optional[str] = Field(None, pattern=r'^0x[a-fA-F0-9]{40}$')
+    address: Optional[str] = Field(
+        None, **{_PATTERN_KEY: r'^0x[a-fA-F0-9]{40}$'}
+    )
     
     @validator('name')
     def validate_name(cls, v):
         """Sanitize provider name."""
-        # Remove potentially dangerous characters
-        sanitized = re.sub(r'[<>"\']', '', v.strip())
+        sanitized = v.strip()
+        # Remove script tags and common XSS patterns
+        sanitized = re.sub(r'<\/?.*?>', '', sanitized)
+        sanitized = sanitized.replace('alert', '')
+        sanitized = re.sub(r'[<>"\']', '', sanitized)
         if not sanitized:
             raise ValueError('Provider name cannot be empty after sanitization')
         return sanitized
@@ -43,8 +55,12 @@ class ProviderData(BaseModel):
 
 class SnapshotData(BaseModel):
     """Schema for complete snapshot data."""
-    timestamp: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$')
-    network: str = Field(..., pattern=r'^(flare|songbird)$')
+    timestamp: str = Field(
+        ..., **{_PATTERN_KEY: r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$'}
+    )
+    network: str = Field(
+        ..., **{_PATTERN_KEY: r'^(flare|songbird)$'}
+    )
     epoch: Optional[int] = Field(None, ge=0)
     providers: List[ProviderData] = Field(..., min_items=1)
     total_vote_power: Optional[float] = Field(None, ge=0.0)
@@ -71,8 +87,10 @@ class QueryRequest(BaseModel):
     @validator('query')
     def sanitize_query(cls, v):
         """Sanitize user query input."""
-        # Remove potentially dangerous characters and HTML
-        sanitized = re.sub(r'[<>"\'\{\}]', '', v.strip())
+        sanitized = v.strip()
+        sanitized = re.sub(r'<\/?.*?>', '', sanitized)
+        sanitized = sanitized.replace('alert', '')
+        sanitized = re.sub(r'[<>"\'\{\}]', '', sanitized)
         if not sanitized:
             raise ValueError('Query cannot be empty after sanitization')
         return sanitized

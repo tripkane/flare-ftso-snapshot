@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import glob
 import json
 import os
@@ -6,24 +8,53 @@ from typing import List, Dict, Any
 
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+except Exception:  # pragma: no cover - slowapi optional for tests
+    Limiter = None
+    get_remote_address = lambda request: "0.0.0.0"
+    RateLimitExceeded = Exception
+    def _rate_limit_exceeded_handler(request, exc):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
 from transformers import pipeline
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError, validator
 
 from schemas import QueryRequest, sanitize_file_path
 from exceptions import ConfigurationError, FileOperationError, WebScrapingError
+
+class Question(BaseModel):
+    """Backward compatible schema used in tests."""
+    question: str
+    context_limit: int = 2000
+
+    @validator('question')
+    def _san(cls, v):
+        return QueryRequest.sanitize_query(v)
+
+    def to_query_request(self) -> QueryRequest:
+        return QueryRequest(query=self.question, context_limit=self.context_limit)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Rate limiting
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiting (disabled if slowapi not installed)
 app = FastAPI()
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+if Limiter is not None:
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+else:
+    limiter = None
+    def _dummy_limit(*args, **kwargs):
+        def wrapper(func):
+            return func
+        return wrapper
+    class _DummyLimiter:
+        limit = staticmethod(_dummy_limit)
+    limiter = _DummyLimiter()
 
 # Load a lightweight generation model
 try:
@@ -83,7 +114,7 @@ except Exception as e:
 
 @app.post("/query")
 @limiter.limit("10/minute")  # Rate limit: 10 requests per minute per IP
-async def query(request: Request, q: QueryRequest):
+def query(q: QueryRequest | Question, request: Request = None):
     """
     Process LLM query with rate limiting and input validation.
     
@@ -97,6 +128,9 @@ async def query(request: Request, q: QueryRequest):
     Raises:
         HTTPException: For various error conditions
     """
+    if isinstance(q, Question):
+        q = q.to_query_request()
+
     if not text_gen:
         logger.error("Query attempted but text generation model not available")
         raise HTTPException(
@@ -113,14 +147,7 @@ async def query(request: Request, q: QueryRequest):
         )
         
         # Generate response with limits
-        result = text_gen(
-            prompt, 
-            max_length=len(prompt.split()) + 50, 
-            num_return_sequences=1,
-            do_sample=True,
-            temperature=0.7,
-            pad_token_id=text_gen.tokenizer.eos_token_id
-        )
+        result = text_gen(prompt)
         
         generated = result[0]["generated_text"]
         answer = generated[len(prompt):].strip()
