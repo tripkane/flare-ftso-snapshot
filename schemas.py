@@ -15,6 +15,7 @@ class ProviderData(BaseModel):
     """Schema for FTSO provider data."""
     name: str = Field(..., min_length=1, max_length=100)
     vote_power: float = Field(..., ge=0.0, le=100.0)
+
     vote_power_percentage: Optional[str] = Field(
         None, **{_PATTERN_KEY: r'^\d+(\.\d+)?%?$'}
     )
@@ -24,6 +25,7 @@ class ProviderData(BaseModel):
     address: Optional[str] = Field(
         None, **{_PATTERN_KEY: r'^0x[a-fA-F0-9]{40}$'}
     )
+
     
     @validator('name')
     def validate_name(cls, v):
@@ -55,12 +57,14 @@ class ProviderData(BaseModel):
 
 class SnapshotData(BaseModel):
     """Schema for complete snapshot data."""
+
     timestamp: str = Field(
         ..., **{_PATTERN_KEY: r'^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z$'}
     )
     network: str = Field(
         ..., **{_PATTERN_KEY: r'^(flare|songbird)$'}
     )
+
     epoch: Optional[int] = Field(None, ge=0)
     providers: List[ProviderData] = Field(..., min_items=1)
     total_vote_power: Optional[float] = Field(None, ge=0.0)
