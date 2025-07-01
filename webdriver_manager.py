@@ -1,6 +1,7 @@
 """
 WebDriver resource management with proper cleanup and context managers.
 """
+from __future__ import annotations
 import os
 import time
 import atexit
@@ -11,7 +12,12 @@ from typing import Optional, Generator
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import WebDriverException
+try:
+    from selenium.common.exceptions import WebDriverException
+except Exception:  # pragma: no cover - used only when selenium not installed
+    class WebDriverException(Exception):
+        """Fallback exception when selenium is unavailable."""
+        pass
 
 from exceptions import WebDriverError, ConfigurationError
 
