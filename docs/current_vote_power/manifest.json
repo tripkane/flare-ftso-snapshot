@@ -684,7 +684,8 @@
     "flare_vp_2025-07-10T08-37-08Z.json",
     "flare_vp_2025-07-10T09-32-04Z.json",
     "flare_vp_2025-07-10T10-31-14Z.json",
-    "flare_vp_2025-07-10T11-25-05Z.json"
+    "flare_vp_2025-07-10T11-25-05Z.json",
+    "flare_vp_2025-07-10T12-57-13Z.json"
   ],
   "songbird": [
     "2025-06/songbird_vp_2025-06-01T00-00.json",
@@ -1371,6 +1372,7 @@
     "songbird_vp_2025-07-10T08-37-14Z.json",
     "songbird_vp_2025-07-10T09-32-11Z.json",
     "songbird_vp_2025-07-10T10-31-20Z.json",
-    "songbird_vp_2025-07-10T11-25-11Z.json"
+    "songbird_vp_2025-07-10T11-25-11Z.json",
+    "songbird_vp_2025-07-10T12-57-20Z.json"
   ]
 }
