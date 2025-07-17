@@ -1,0 +1,908 @@
+{
+  "timestamp": "2025-07-17T18-41-33Z",
+  "network": "songbird",
+  "epoch": null,
+  "providers": [
+    {
+      "name": "A-FTSO",
+      "vote_power": 4.19,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "NORTSO",
+      "vote_power": 3.97,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Bifrost Wallet",
+      "vote_power": 3.92,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "EvolveFTSO",
+      "vote_power": 3.54,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Atlas TSO",
+      "vote_power": 3.35,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare Dienst",
+      "vote_power": 3.22,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "AlphaOracle",
+      "vote_power": 3.2,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare Oracle",
+      "vote_power": 2.92,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "AU",
+      "vote_power": 2.68,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "PRICEKRAKEN",
+      "vote_power": 2.16,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO Plus",
+      "vote_power": 2.06,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Oracle Daemon",
+      "vote_power": 2.05,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare.Space",
+      "vote_power": 2.03,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "EDPFTSO",
+      "vote_power": 1.89,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FlareFi",
+      "vote_power": 1.88,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Aureus Ox",
+      "vote_power": 1.76,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Use Your Spark",
+      "vote_power": 1.65,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare Beacon",
+      "vote_power": 1.51,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO London",
+      "vote_power": 1.47,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Solarius",
+      "vote_power": 1.45,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "4DadsFTSO",
+      "vote_power": 1.38,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "ACDTftso",
+      "vote_power": 1.35,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Lena Instruments",
+      "vote_power": 1.28,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Envision",
+      "vote_power": 1.19,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "XTerraMetrics",
+      "vote_power": 1.16,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "DataVector",
+      "vote_power": 1.15,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Scintilla",
+      "vote_power": 1.13,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x48dc...b3a5b0",
+      "vote_power": 1.12,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "LightFTSO",
+      "vote_power": 1.04,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Ivy Oracle",
+      "vote_power": 1.04,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Aternety",
+      "vote_power": 1.03,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Defi Oracles",
+      "vote_power": 1.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Bushido FTSO",
+      "vote_power": 0.99,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "African Proofs",
+      "vote_power": 0.91,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Ugly Kitty",
+      "vote_power": 0.83,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "uGaenn",
+      "vote_power": 0.82,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO PARIS",
+      "vote_power": 0.79,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Wonderftso",
+      "vote_power": 0.78,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Tailwind FTSO",
+      "vote_power": 0.75,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "InGen.FTSO",
+      "vote_power": 0.75,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Aimlezz",
+      "vote_power": 0.74,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Xdrops Oracle",
+      "vote_power": 0.74,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Mickey B Fresh",
+      "vote_power": 0.7,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO EU",
+      "vote_power": 0.69,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flaris",
+      "vote_power": 0.62,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "HEWG",
+      "vote_power": 0.6,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "WitterFTSO",
+      "vote_power": 0.58,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSOCAN",
+      "vote_power": 0.58,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Knot Nodes",
+      "vote_power": 0.56,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x1a34...5ad900",
+      "vote_power": 0.54,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "AFOracle",
+      "vote_power": 0.53,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "sToadz FTSO",
+      "vote_power": 0.53,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Sun-Dara",
+      "vote_power": 0.52,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Burst FTSO",
+      "vote_power": 0.49,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "TempestFTSO",
+      "vote_power": 0.47,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xcdea...c5598c",
+      "vote_power": 0.45,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Comfy Nodes",
+      "vote_power": 0.42,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FlareFTSO",
+      "vote_power": 0.35,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x6976...60a967",
+      "vote_power": 0.27,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "True FTSO",
+      "vote_power": 0.27,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Sparkles FTSO",
+      "vote_power": 0.27,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSOExpress",
+      "vote_power": 0.26,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare Portal",
+      "vote_power": 0.25,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "SolidiFi FTSO",
+      "vote_power": 0.24,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO4ALL",
+      "vote_power": 0.23,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xb6b4...c7ae8a",
+      "vote_power": 0.23,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xa36b...26e919",
+      "vote_power": 0.23,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xa3b8...7149b7",
+      "vote_power": 0.23,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "O1 FTSO",
+      "vote_power": 0.11,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xe6b8...fc2f1b",
+      "vote_power": 0.02,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x90c0...5f3432",
+      "vote_power": 0.01,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x05d8...6e2bdb",
+      "vote_power": 0.01,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x736e...f6c7c9",
+      "vote_power": 0.01,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x526e...641642",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x63ed...afbd01",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xce10...7ffeab",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x7fbe...f18393",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x3b18...7d558d",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x20d4...d832e8",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xeedd...3fa438",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x0b65...13298c",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x8b74...854ae8",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x749e...f216e1",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x606c...bef483",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x8b54...026603",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x5ef6...63c7fb",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xcc5c...d79479",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x0f1e...40e5bc",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x51ed...eeaa2c",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x9870...e0d78a",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x55a6...15b9a7",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xca0e...ef9933",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0xe0bf...2267b6",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x8786...fed2d9",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x3284...dea1c8",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x6b02...e0f930",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x0998...c609f6",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x47af...187873",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x2778...45c5fd",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "0x8dd6...ba38f1",
+      "vote_power": 0.0,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    }
+  ],
+  "total_vote_power": null
+}
