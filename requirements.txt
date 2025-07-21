@@ -1,13 +1,29 @@
 
-requests
-python-dotenv
-pytest
-fastapi
-uvicorn
-transformers
-torch
-web3
-selenium
-beautifulsoup4
-pydantic
-slowapi
+# Core dependencies for RPC-based data collection
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Web framework and API
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.5.0
+slowapi>=0.1.9
+
+# Blockchain and RPC interaction
+web3>=6.12.0
+
+# Data processing and validation
+pytest>=7.4.0
+
+# Web scraping (legacy - keeping for fallback)
+selenium>=4.15.0
+beautifulsoup4>=4.12.0
+
+# AI/ML (for future enhancements)
+transformers>=4.35.0
+torch>=2.1.0
+
+# Additional RPC system dependencies
+eth-hash>=0.5.2
+eth-typing>=3.5.2
+hexbytes>=0.3.1
