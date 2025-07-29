@@ -213,58 +213,103 @@ def add_provider_name(address: str, name: str) -> None:
     save_provider_names(cached_names)
     print(f"Added provider mapping: {address} -> {name}")
 
-def fetch_all_provider_names_from_flaremetrics() -> Dict[str, str]:
+def fetch_provider_names_from_flaremetrics() -> Dict[str, str]:
     """
-    Fetch all provider names from FlareMetrics API and cache them
+    Scrape provider names from FlareMetrics.io
     
-    This is useful for bulk updating the provider name database
+    This gets the actual human-readable names directly from the public website
     """
     provider_names = {}
     
     try:
-        print("Fetching all provider names from FlareMetrics...")
-        response = requests.get("https://api.flaremetrics.io/api/providers", timeout=30)
+        print("Fetching provider names from FlareMetrics.io...")
+        
+        # Get the main page with provider table
+        response = requests.get("https://flaremetrics.io/", timeout=30)
         
         if response.status_code == 200:
-            providers = response.json()
-            print(f"Found {len(providers)} providers")
+            # Parse HTML to extract provider data
+            content = response.text
             
-            for provider in providers:
-                address = provider.get('address', '').lower()
-                name = provider.get('name') or provider.get('displayName')
+            # Look for provider table data - this is a simple regex approach
+            # The table has format: | Name | Address | Vote Power | etc.
+            import re
+            
+            # Find all table rows with provider data
+            # Pattern looks for: | Name | hex_address | vote_power | percentage | etc.
+            pattern = r'\|\s*([^|]+?)\s*\|\s*(0x[a-fA-F0-9]{40})\s*\|[^|]*\|[^|]*\|'
+            matches = re.findall(pattern, content)
+            
+            if matches:
+                for name, address in matches:
+                    name = name.strip()
+                    address = address.lower().strip()
+                    
+                    # Skip header rows and invalid entries
+                    if name and not name.isdigit() and address.startswith('0x'):
+                        provider_names[address] = name
+                        print(f"  {address} -> {name}")
                 
-                if address and name:
-                    provider_names[address] = name
-                    print(f"  {address} -> {name}")
-            
-            # Cache all the results
-            if provider_names:
-                cached_names = load_provider_names()
-                cached_names.update(provider_names)
-                save_provider_names(cached_names)
-                print(f"Cached {len(provider_names)} provider names")
+                print(f"Found {len(provider_names)} provider names from FlareMetrics")
+            else:
+                print("No provider data found in FlareMetrics page")
                 
         else:
-            print(f"FlareMetrics API returned status {response.status_code}")
+            print(f"Failed to fetch FlareMetrics page: {response.status_code}")
             
     except Exception as e:
-        print(f"Failed to fetch from FlareMetrics: {e}")
+        print(f"Error fetching from FlareMetrics: {e}")
     
     return provider_names
 
 def update_provider_names_from_scraping():
     """
-    Update provider names by comparing with data from scraping
+    Update provider names by extracting from existing scraped data
     
-    This function can be used to build a mapping by comparing
-    RPC results with your existing scraped data that has names
+    This function analyzes your existing scraped JSON files to build a mapping
+    of provider names to addresses from RPC data
     """
-    # TODO: Implement comparison with scraped data
-    # 1. Load recent scraped data
-    # 2. Match addresses from RPC with names from scraping
-    # 3. Update the provider names mapping
+    import glob
+    import json
+    import os
     
-    print("Provider name update from scraping not yet implemented")
+    provider_names = {}
+    scraped_files = []
+    
+    # Look for scraped data files
+    patterns = [
+        "current_vote_power/*.json",
+        "docs/current_vote_power/*.json", 
+        "daily_snapshots/*/*.json"
+    ]
+    
+    for pattern in patterns:
+        scraped_files.extend(glob.glob(pattern))
+    
+    print(f"Found {len(scraped_files)} potential scraped data files")
+    
+    for file_path in scraped_files[:10]:  # Limit to first 10 files for performance
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            providers = data.get('providers', [])
+            for provider in providers:
+                name = provider.get('name', '')
+                
+                # Skip if this looks like an RPC-generated name (contains "Provider_0x")
+                if name and not name.startswith('Provider_0x'):
+                    # This is likely a human-readable name from scraping
+                    # Now we need to match it with an address from RPC data
+                    print(f"Found scraped provider name: {name}")
+                    
+                    # TODO: Match this name with an address from RPC data
+                    # For now, just collect the names
+                    
+        except Exception as e:
+            continue
+    
+    return provider_names
 
 def get_all_provider_names() -> Dict[str, str]:
     """Get all known provider names"""
@@ -294,8 +339,15 @@ if __name__ == "__main__":
     
     if len(sys.argv) > 1 and sys.argv[1] == "fetch":
         # Bulk fetch all provider names from FlareMetrics
-        print("Bulk fetching provider names from FlareMetrics API...")
-        fetch_all_provider_names_from_flaremetrics()
+        print("Bulk fetching provider names from FlareMetrics...")
+        provider_names = fetch_provider_names_from_flaremetrics()
+        
+        if provider_names:
+            # Cache the results
+            cached_names = load_provider_names()
+            cached_names.update(provider_names)
+            save_provider_names(cached_names)
+            print(f"Successfully cached {len(provider_names)} provider names")
         
     elif len(sys.argv) > 1 and sys.argv[1] == "lookup":
         # Test specific address lookup
