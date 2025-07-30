@@ -76,7 +76,7 @@
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
         <h3 class="text-lg font-semibold text-purple-300 mb-2">Loading FTSO Dashboard</h3>
         <p class="text-gray-400 text-sm">Fetching provider data and snapshots...</p>
-        <div class="text-xs text-gray-500 mt-2">v2025.07.30 - Timeout Fix Active</div>
+        <div class="text-xs text-gray-500 mt-2">v2025.07.30 - Emergency Loading Fix</div>
         <button id="skipLoadingBtn" onclick="forceHideLoading()" 
           class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm hidden">
           Skip Loading (Use Cached Data)
@@ -321,7 +321,7 @@
       ? 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs'
       : '.';
 
-    async function fetchJsonSafe(url, timeoutMs = 10000) {
+    async function fetchJsonSafe(url, timeoutMs = 8000) {
       try {
         console.log('🔄 Fetching:', url);
         
@@ -334,7 +334,7 @@
         
         const res = await fetch(url, { 
           signal: controller.signal,
-          cache: 'no-cache' // Force fresh data
+          cache: 'default' // Use browser caching
         });
         
         clearTimeout(timeoutId);
@@ -379,13 +379,14 @@
 
         const remoteUrl = 'https://raw.githubusercontent.com/TowoLabs/ftso-signal-providers/next/bifrost-wallet.providerlist.json';
         console.log('🌐 Attempting remote provider list:', remoteUrl);
-        let listRes = await fetchJsonSafe(remoteUrl);
+        let listRes = await fetchJsonSafe(remoteUrl, 5000); // Reduced timeout for provider list
         if (!listRes) {
           console.log('🔄 Falling back to local bifrost list');
-          listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`);
+          listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`, 5000);
         }
         console.log('📋 Provider list result:', listRes ? 'Success' : 'Failed');
         
+        // Set sensible defaults even if provider list fails
         if (listRes?.providers) {
           const flare = listRes.providers.filter(p => p.chainId === 14);
           const songbird = listRes.providers.filter(p => p.chainId === 19);
@@ -395,40 +396,46 @@
           window.disabledSongbird = new Set(songbird.filter(p => p.disabled).map(p => p.name));
           console.log('✅ Bifrost providers loaded:', flare.length, 'Flare,', songbird.length, 'Songbird');
         } else {
-          window.bifrostFlare = Array.isArray(listRes?.flare)
-            ? listRes.flare.map(p => typeof p === 'string' ? p : p.name)
-            : [];
-          window.bifrostSongbird = Array.isArray(listRes?.songbird)
-            ? listRes.songbird.map(p => typeof p === 'string' ? p : p.name)
-            : [];
+          // Fallback defaults
+          window.bifrostFlare = [];
+          window.bifrostSongbird = [];
           window.disabledFlare = new Set();
           window.disabledSongbird = new Set();
-          console.log('⚠️ Using fallback provider format');
+          console.log('⚠️ Using empty provider fallback');
         }
 
         updateLoadingProgress('Loading data manifest...');
         console.log('📋 Step 2: Loading manifest');
-        const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
+        const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`, 5000);
         if (!manifestRes) {
-          console.error('💥 CRITICAL: Manifest missing');
-          throw new Error('Manifest missing');
+          console.error('💥 CRITICAL: Manifest missing - using emergency fallback');
+          // Emergency fallback - try to initialize with minimal data
+          window.flareSnapshots = [];
+          window.songbirdSnapshots = [];
+          window.flareCurrentSnapshots = [];
+          window.songbirdCurrentSnapshots = [];
+          computeProviderStats();
+          return; // Exit early with empty data
         }
         const manifest = manifestRes;
         console.log('✅ Manifest loaded:', manifest.flare?.length, 'Flare files,', manifest.songbird?.length, 'Songbird files');
 
         updateLoadingProgress('Loading historical data...');
         console.log('📋 Step 3: Loading historical snapshots');
-        const flareUrls = manifest.flare.map(name => `${BASE_URL}/daily_snapshots/${name}`);
-        const songbirdUrls = manifest.songbird.map(name => `${BASE_URL}/daily_snapshots/${name}`);
+        
+        // Limit to the most recent files to prevent timeout
+        const maxFiles = 30; // Only load last 30 files
+        const flareUrls = (manifest.flare || []).slice(-maxFiles).map(name => `${BASE_URL}/daily_snapshots/${name}`);
+        const songbirdUrls = (manifest.songbird || []).slice(-maxFiles).map(name => `${BASE_URL}/daily_snapshots/${name}`);
         console.log('📁 Will load', flareUrls.length, 'Flare files and', songbirdUrls.length, 'Songbird files');
 
         console.log('⏳ Loading Flare data...');
-        const flareData = await Promise.all(flareUrls.map(url => fetchJsonSafe(url)));
+        const flareData = await Promise.all(flareUrls.map(url => fetchJsonSafe(url, 3000))); // Reduced individual timeout
         const flareSnapshots = flareData.filter(Boolean).map(s => ({ date: s.date, providers: s.providers }));
         console.log('✅ Flare data loaded:', flareSnapshots.length, 'snapshots');
 
         console.log('⏳ Loading Songbird data...');
-        const songbirdData = await Promise.all(songbirdUrls.map(url => fetchJsonSafe(url)));
+        const songbirdData = await Promise.all(songbirdUrls.map(url => fetchJsonSafe(url, 3000))); // Reduced individual timeout
         const songbirdSnapshots = songbirdData.filter(Boolean).map(s => ({
           date: s.date,
           providers: s.providers.map(p => ({
@@ -443,19 +450,21 @@
         console.log('📋 Step 4: Loading current vote power');
         let currentManifest = { flare: [], songbird: [] };
         try {
-          const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`);
+          const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`, 3000);
           if (currentRes) currentManifest = currentRes;
           console.log('✅ Current manifest loaded:', currentManifest.flare?.length, 'Flare,', currentManifest.songbird?.length, 'Songbird');
         } catch (err) {
           console.warn('⚠️ No current vote power manifest found');
         }
         
-        const flareCurrentUrls = currentManifest.flare.map(path => `${BASE_URL}/current_vote_power/${path}`);
-        const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u)));
+        // Limit current data loading too
+        const maxCurrentFiles = 10;
+        const flareCurrentUrls = (currentManifest.flare || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
+        const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
         const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
-        const songbirdCurrentUrls = currentManifest.songbird.map(path => `${BASE_URL}/current_vote_power/${path}`);
-        const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetchJsonSafe(u)));
+        const songbirdCurrentUrls = (currentManifest.songbird || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
+        const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
         const songbirdCurrentSnapshots = songbirdCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
 
         window.flareSnapshots = flareSnapshots;
@@ -476,7 +485,19 @@
       } catch (error) {
         console.error('💥 FATAL ERROR loading data:', error);
         console.error('💥 Error stack:', error.stack);
-        throw error; // Re-throw to trigger the catch block in DOMContentLoaded
+        
+        // Emergency fallback - don't throw error, just initialize with empty data
+        window.flareSnapshots = window.flareSnapshots || [];
+        window.songbirdSnapshots = window.songbirdSnapshots || [];
+        window.flareCurrentSnapshots = window.flareCurrentSnapshots || [];
+        window.songbirdCurrentSnapshots = window.songbirdCurrentSnapshots || [];
+        window.bifrostFlare = window.bifrostFlare || [];
+        window.bifrostSongbird = window.bifrostSongbird || [];
+        window.disabledFlare = window.disabledFlare || new Set();
+        window.disabledSongbird = window.disabledSongbird || new Set();
+        
+        console.log('🚨 Using emergency fallback data');
+        computeProviderStats();
       }
     }
 
@@ -525,7 +546,22 @@
     let providerStats = {};
 
     function computeProviderStats() {
-      if (!window.flareSnapshots || !window.flareSnapshots.length) return;
+      console.log('📊 Computing provider stats...');
+      
+      // Initialize with empty data if needed
+      if (!window.flareSnapshots || !Array.isArray(window.flareSnapshots)) {
+        console.warn('⚠️ No flareSnapshots available, initializing empty');
+        window.flareSnapshots = [];
+      }
+      
+      if (!window.flareSnapshots.length) {
+        console.warn('⚠️ Empty flareSnapshots, setting minimal provider stats');
+        providerStats = {};
+        updateMultiProviderOptions();
+        recommendProviders();
+        return;
+      }
+      
       const stats = {};
       const latest = window.flareSnapshots[window.flareSnapshots.length - 1];
       const lockedMap = {};
@@ -1781,18 +1817,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       console.log('🚀 DOM loaded, starting data initialization...');
       
-      // Show skip button after 10 seconds
+      // Show skip button after 5 seconds
       setTimeout(() => {
         const skipBtn = document.getElementById('skipLoadingBtn');
         if (skipBtn) {
           skipBtn.classList.remove('hidden');
           console.log('⏰ Skip button now available');
         }
-      }, 10000);
+      }, 5000);
       
-      // Set a maximum timeout for data loading (15 seconds)
+      // Set a maximum timeout for data loading (10 seconds)
       const maxLoadTimeout = setTimeout(() => {
-        console.error('💥 Data loading timed out after 15 seconds');
+        console.error('💥 Data loading timed out after 10 seconds');
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
           loadingIndicator.innerHTML = `
@@ -1810,7 +1846,7 @@
             </div>
           `;
         }
-      }, 15000);
+      }, 10000);
       
       loadData().then(() => {
         console.log('✅ Data loaded successfully, initializing UI...');
