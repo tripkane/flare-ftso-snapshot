@@ -427,21 +427,53 @@
         let currentManifest = { flare: [], songbird: [] };
         try {
           const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`, 3000);
-          if (currentRes) {
+          if (currentRes && (currentRes.flare?.length > 0 || currentRes.songbird?.length > 0)) {
             currentManifest = currentRes;
-            console.log('✅ Current manifest loaded:', currentManifest.flare?.length, 'Flare,', currentManifest.songbird?.length, 'Songbird');
+            console.log('✅ Current manifest loaded:', currentRes.flare?.length, 'Flare,', currentRes.songbird?.length, 'Songbird');
           } else {
-            console.warn('⚠️ Current vote power manifest not found - checking for files directly');
-            // Fallback: try to load some recent files directly
-            const testFiles = ['flare_current_2025-07-30.json', 'flare_current_latest.json'];
-            for (const filename of testFiles) {
+            console.warn('⚠️ Current vote power manifest empty or missing - scanning for recent files');
+            // Generate recent file patterns to try
+            const today = new Date();
+            const recentFiles = [];
+            
+            // Try today and last few days
+            for (let i = 0; i < 3; i++) {
+              const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+              const dateStr = date.toISOString().split('T')[0];
+              
+              // Try various hour patterns for the date
+              for (let hour = 23; hour >= 0; hour -= 2) {
+                const hourStr = hour.toString().padStart(2, '0');
+                recentFiles.push(`flare_vp_${dateStr}T${hourStr}-*-*Z.json`);
+                recentFiles.push(`songbird_vp_${dateStr}T${hourStr}-*-*Z.json`);
+              }
+            }
+            
+            // Try some specific recent patterns we know exist
+            const knownPatterns = [
+              'flare_vp_2025-07-30T19-26-08Z.json',
+              'flare_vp_2025-07-30T18-42-05Z.json', 
+              'flare_vp_2025-07-30T17-29-43Z.json',
+              'songbird_vp_2025-07-30T19-26-15Z.json',
+              'songbird_vp_2025-07-30T18-42-12Z.json',
+              'songbird_vp_2025-07-30T17-29-50Z.json'
+            ];
+            
+            // Test files in order of preference
+            for (const filename of knownPatterns) {
               const testRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/${filename}`, 2000);
               if (testRes) {
                 console.log('✅ Found current file:', filename);
-                currentManifest.flare = [filename];
-                break;
+                if (filename.startsWith('flare_')) {
+                  currentManifest.flare.push(filename);
+                } else if (filename.startsWith('songbird_')) {
+                  currentManifest.songbird.push(filename);
+                }
+                if (currentManifest.flare.length >= 3 && currentManifest.songbird.length >= 3) break;
               }
             }
+            
+            console.log('📁 Discovered files:', currentManifest.flare.length, 'Flare,', currentManifest.songbird.length, 'Songbird');
           }
         } catch (err) {
           console.warn('⚠️ Error loading current vote power manifest:', err);
@@ -451,11 +483,23 @@
         const maxCurrentFiles = 10;
         const flareCurrentUrls = (currentManifest.flare || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
         const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
-        const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
+        const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ 
+          timestamp: s.timestamp, 
+          providers: s.providers.map(p => ({
+            name: p.name,
+            vote_power_pct: p.vote_power || p.vote_power_percentage || 0
+          }))
+        }));
 
         const songbirdCurrentUrls = (currentManifest.songbird || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
         const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
-        const songbirdCurrentSnapshots = songbirdCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
+        const songbirdCurrentSnapshots = songbirdCurrentData.filter(Boolean).map(s => ({ 
+          timestamp: s.timestamp, 
+          providers: s.providers.map(p => ({
+            name: p.name,
+            vote_power_pct: p.vote_power || p.vote_power_percentage || 0
+          }))
+        }));
 
         window.flareSnapshots = flareSnapshots;
         window.songbirdSnapshots = songbirdSnapshots;
@@ -617,12 +661,18 @@
       });
 
       const vpData = {};
-      window.flareCurrentSnapshots.forEach(snap => {
-        snap.providers.forEach(p => {
-          if (!vpData[p.name]) vpData[p.name] = [];
-          vpData[p.name].push(parseFloat(p.vote_power_pct));
+      if (window.flareCurrentSnapshots && window.flareCurrentSnapshots.length > 0) {
+        console.log('📊 Processing current vote power data for', window.flareCurrentSnapshots.length, 'snapshots');
+        window.flareCurrentSnapshots.forEach(snap => {
+          snap.providers.forEach(p => {
+            if (!vpData[p.name]) vpData[p.name] = [];
+            vpData[p.name].push(parseFloat(p.vote_power_pct) || 0);
+          });
         });
-      });
+        console.log('📊 Current vote power data processed for', Object.keys(vpData).length, 'providers');
+      } else {
+        console.warn('⚠️ No current vote power data available for headroom calculation');
+      }
 
       Object.keys(vpData).forEach(name => {
         const arr = vpData[name];
@@ -1448,6 +1498,15 @@
       
       if (!window.flareCurrentSnapshots && !window.songbirdCurrentSnapshots) {
         console.warn('⚠️ No current snapshot data available');
+        const container = document.getElementById('currentVpChartContainer');
+        if (container) {
+          container.innerHTML = `
+            <div class="bg-yellow-800 p-4 rounded-lg text-center">
+              <div class="text-lg font-semibold text-yellow-300">⚠️ Current Vote Power Data Not Available</div>
+              <div class="text-sm text-yellow-400 mt-1">Recent current vote power snapshots could not be loaded. This may be due to missing or outdated data files.</div>
+            </div>
+          `;
+        }
         return;
       }
       const provider = document.getElementById('providerFilter').value;
