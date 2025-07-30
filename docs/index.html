@@ -310,7 +310,12 @@
         
         const res = await fetch(url, { 
           signal: controller.signal,
-          cache: 'default' // Use browser caching
+          cache: 'no-cache', // Force fresh data load
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
         });
         
         clearTimeout(timeoutId);
