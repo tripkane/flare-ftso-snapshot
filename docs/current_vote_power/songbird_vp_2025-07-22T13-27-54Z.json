@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-07-22T13-27-54Z",
+  "network": "songbird",
+  "epoch": null,
+  "providers": [
+    {
+      "name": "Provider_0x7d9f...d06b",
+      "vote_power": 73.81,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0x7174...fd65",
+      "vote_power": 16.8,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0x421c...8516",
+      "vote_power": 9.39,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    }
+  ],
+  "total_vote_power": null
+}

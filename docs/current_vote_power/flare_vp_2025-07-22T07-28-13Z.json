@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-07-22T07-28-13Z",
+  "network": "flare",
+  "epoch": null,
+  "providers": [
+    {
+      "name": "Lena Instruments",
+      "vote_power": 59.09,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "A-Block Analytics",
+      "vote_power": 15.42,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Songbird Capital",
+      "vote_power": 8.31,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Interoracle",
+      "vote_power": 7.13,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO.EU",
+      "vote_power": 7.12,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "FTSO Monitor",
+      "vote_power": 2.93,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    }
+  ],
+  "total_vote_power": null
+}

@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-07-22T13-50-32Z",
+  "network": "flare",
+  "epoch": null,
+  "providers": [
+    {
+      "name": "NORTSO",
+      "vote_power": 59.5,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare Oracle",
+      "vote_power": 16.41,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "AlphaOracle",
+      "vote_power": 7.59,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Bifrost Wallet",
+      "vote_power": 7.58,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Flare.Space",
+      "vote_power": 5.8,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Atlas TSO",
+      "vote_power": 3.12,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    }
+  ],
+  "total_vote_power": null
+}

@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-07-22T13-27-53Z",
+  "network": "flare",
+  "epoch": null,
+  "providers": [
+    {
+      "name": "Provider_0xdbf7...4dd1",
+      "vote_power": 62.18,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0x9c7a...38d0",
+      "vote_power": 14.91,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0xbce1...3a5c",
+      "vote_power": 6.9,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0x4d92...a02c",
+      "vote_power": 6.89,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0x7b61...6c22",
+      "vote_power": 5.27,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    },
+    {
+      "name": "Provider_0x89e5...d0d4",
+      "vote_power": 3.85,
+      "vote_power_percentage": null,
+      "fee": null,
+      "availability": null,
+      "reward_rate": null,
+      "address": null
+    }
+  ],
+  "total_vote_power": null
+}
