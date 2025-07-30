@@ -64,6 +64,15 @@
 
   <main class="container mx-auto p-4">
 
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+        <h3 class="text-lg font-semibold text-purple-300 mb-2">Loading FTSO Dashboard</h3>
+        <p class="text-gray-400 text-sm">Fetching provider data and snapshots...</p>
+      </div>
+    </div>
+
     <!-- Consolidated Top Filter Bar -->
     <section id="topFilterSection" class="border-4 border-gray-700 rounded p-4 mb-6 bg-gray-800">
       <h2 class="text-lg font-bold mb-4 text-center">Dashboard Filters & Controls</h2>
@@ -307,12 +316,15 @@
 
     async function fetchJsonSafe(url) {
       try {
+        console.log('Fetching:', url);
         const res = await fetch(url);
         if (!res.ok) {
-          console.warn('Missing file', url, res.status);
+          console.warn('Missing file', url, res.status, res.statusText);
           return null;
         }
-        return await res.json();
+        const data = await res.json();
+        console.log('Successfully loaded:', url, 'Size:', JSON.stringify(data).length);
+        return data;
       } catch (err) {
         console.error('Error fetching', url, err);
         return null;
@@ -333,10 +345,13 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
+        console.log('Starting data load. BASE_URL:', BASE_URL);
+        console.log('Current location:', location.href);
 
         const remoteUrl = 'https://raw.githubusercontent.com/TowoLabs/ftso-signal-providers/next/bifrost-wallet.providerlist.json';
         let listRes = await fetchJsonSafe(remoteUrl);
         if (!listRes) {
+          console.log('Falling back to local bifrost list');
           listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`);
         }
         if (listRes?.providers) {
@@ -396,10 +411,17 @@
         window.songbirdSnapshots = songbirdSnapshots;
         window.flareCurrentSnapshots = flareCurrentSnapshots;
         window.songbirdCurrentSnapshots = songbirdCurrentSnapshots;
+        
+        console.log('Data loading complete:');
+        console.log('- Flare snapshots:', window.flareSnapshots.length);
+        console.log('- Songbird snapshots:', window.songbirdSnapshots.length);
+        console.log('- Flare current:', window.flareCurrentSnapshots.length);
+        console.log('- Songbird current:', window.songbirdCurrentSnapshots.length);
+        
         computeProviderStats();
       } catch (error) {
         console.error('Error loading data:', error);
-        alert('Failed to load data. Please try again later.');
+        alert(`Failed to load data: ${error.message}\n\nPlease check the browser console for more details and try refreshing the page.`);
       }
     }
 
@@ -1601,7 +1623,15 @@
     document.getElementById('queryButton').addEventListener('click', sendQuery);
 
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, starting data initialization...');
       loadData().then(() => {
+        console.log('Data loaded successfully, initializing UI...');
+        // Hide loading indicator
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+        
         // Initialize recommendation strategy display
         updateRecommendationStrategy();
         
@@ -1612,6 +1642,22 @@
         renderMultiProviderChart();
         document.getElementById('providerFilter').addEventListener('change', renderSingleProviderChart);
         document.getElementById('providerFilter').addEventListener('change', renderCurrentVoteChart);
+        
+        console.log('Dashboard initialization complete!');
+      }).catch(error => {
+        console.error('Failed to initialize dashboard:', error);
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.innerHTML = `
+            <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center">
+              <h3 class="text-lg font-semibold text-red-300 mb-2">⚠️ Loading Failed</h3>
+              <p class="text-red-400 text-sm mb-4">Failed to load dashboard data</p>
+              <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                Retry
+              </button>
+            </div>
+          `;
+        }
       });
     });
 

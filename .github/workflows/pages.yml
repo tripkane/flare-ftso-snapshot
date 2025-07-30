@@ -8,19 +8,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read       # for checkout, build, etc.
-  pages: write         # to push the Pages deployment
-  id-token: write      # to mint the OIDC token for verification
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    # Skip deployment on pull request runs or from forks. Pull requests and
-    # forked repositories do not have permission to publish Pages and would
-    # cause the job to fail.
     if: ${{ github.repository == 'tripkane/flare-ftso-snapshot' && !github.event.pull_request }}
     runs-on: ubuntu-latest
     environment:
@@ -29,15 +26,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v4
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
-      - name: Deploy
+          
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/deploy-pages@v4
 
