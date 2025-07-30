@@ -122,7 +122,7 @@
           <h3 class="font-semibold text-sm text-gray-300">Power Limits</h3>
           <label class="block">
             <span class="text-sm">Max Voting Power (%):</span>
-            <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100"
+            <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="2.5"
               class="w-full mt-1 p-2 bg-gray-700 border border-gray-600 rounded text-sm" />
           </label>
         </div>
@@ -1039,7 +1039,7 @@
       }
 
     function getProvidersOverLimitCombined() {
-      const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 100;
+      const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 2.5;
       const overLimit = new Set();
 
       // Flare
