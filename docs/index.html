@@ -127,7 +127,10 @@
 
     <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4 bg-gradient-to-r from-gray-800 to-gray-750">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-purple-300">🎯 Smart Provider Recommendations</h2>
+        <div>
+          <h2 class="text-xl font-bold text-purple-300">🎯 Smart Provider Recommendations</h2>
+          <p class="text-sm text-blue-300 mt-1">💡 Bifrost Wallet: Maximum 2 providers allowed</p>
+        </div>
         <div class="flex items-center space-x-3">
           <div class="text-sm">
             <span class="text-gray-400">Strategy:</span>
@@ -135,7 +138,7 @@
               <option value="balanced" selected>Balanced</option>
               <option value="conservative">Conservative</option>
               <option value="aggressive">Aggressive</option>
-              <option value="diversified">Diversified</option>
+              <option value="diversified">Diversified (50/50)</option>
             </select>
           </div>
           <div class="text-sm">
@@ -549,29 +552,17 @@
         .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
         .filter(n => !userExcludedProviders.has(n));
       const sorted = names.sort((a, b) => {
-        const getMetric = (name) => {
+        const getAvg = (name) => {
           switch (kpi) {
-            case 'latest':
-              return providerStats[name].latest || 0;
             case '7-day':
               return providerStats[name].avg7 || 0;
-            case '30-day':
-              return providerStats[name].avg30 || 0;
-            case 'peak':
-              return Math.max(...(providerStats[name].history || [0]));
-            case 'volatility':
-              return -(providerStats[name].volatility || 0); // Lower volatility is better
-            case 'trend':
-              return providerStats[name].trend || 0;
-            case 'efficiency':
-              return (providerStats[name].avg30 || 0) / Math.max(providerStats[name].volatility || 1, 0.1);
             case 'cumulative':
               return providerStats[name].avgCum || 0;
             default:
               return providerStats[name].avg30 || 0;
           }
         };
-        return getMetric(b) - getMetric(a);
+        return getAvg(b) - getAvg(a);
       });
 
       const top = sorted.slice(0, num);
@@ -1337,30 +1328,30 @@
       const diversificationScore = document.getElementById('diversificationScore');
       const expectedReturn = document.getElementById('expectedReturn');
       
-      // Update display based on strategy
+      // Update display based on strategy (Bifrost: 2 providers max)
       switch(strategy) {
         case 'conservative':
           riskLevel.textContent = 'Low';
           riskLevel.className = 'text-green-400 font-semibold';
-          diversificationScore.textContent = 'High';
+          diversificationScore.textContent = 'Moderate (60/40)';
           expectedReturn.textContent = '~2.8%';
           break;
         case 'aggressive':
           riskLevel.textContent = 'High';
           riskLevel.className = 'text-red-400 font-semibold';
-          diversificationScore.textContent = 'Low';
+          diversificationScore.textContent = 'Low (70/30)';
           expectedReturn.textContent = '~4.1%';
           break;
         case 'diversified':
           riskLevel.textContent = 'Very Low';
           riskLevel.className = 'text-green-500 font-semibold';
-          diversificationScore.textContent = 'Very High';
+          diversificationScore.textContent = 'Max (50/50)';
           expectedReturn.textContent = '~2.9%';
           break;
         default: // balanced
           riskLevel.textContent = 'Moderate';
           riskLevel.className = 'text-yellow-400 font-semibold';
-          diversificationScore.textContent = 'Good';
+          diversificationScore.textContent = 'Good (65/35)';
           expectedReturn.textContent = '~3.2%';
       }
     }
@@ -1452,40 +1443,38 @@
     }
 
     function allocateConservative(entries) {
-      const top = entries.slice(0, 4);
+      // Bifrost constraint: Only 2 providers allowed
+      const top = entries.slice(0, 2);
       return [
-        { name: top[0].name, pct: 35, score: top[0].score },
-        { name: top[1].name, pct: 30, score: top[1].score },
-        { name: top[2].name, pct: 20, score: top[2].score },
-        { name: top[3].name, pct: 15, score: top[3].score }
+        { name: top[0].name, pct: 60, score: top[0].score },
+        { name: top[1].name, pct: 40, score: top[1].score }
       ];
     }
 
     function allocateAggressive(entries) {
-      const top = entries.slice(0, 3);
+      // Bifrost constraint: Only 2 providers allowed
+      const top = entries.slice(0, 2);
       return [
-        { name: top[0].name, pct: 50, score: top[0].score },
-        { name: top[1].name, pct: 35, score: top[1].score },
-        { name: top[2].name, pct: 15, score: top[2].score }
+        { name: top[0].name, pct: 70, score: top[0].score },
+        { name: top[1].name, pct: 30, score: top[1].score }
       ];
     }
 
     function allocateDiversified(entries) {
-      const top = entries.slice(0, 6);
-      return top.map((entry, idx) => ({
-        name: entry.name,
-        pct: idx === 0 ? 20 : idx === 1 ? 18 : idx === 2 ? 16 : idx === 3 ? 16 : idx === 4 ? 15 : 15,
-        score: entry.score
-      }));
+      // Bifrost constraint: Only 2 providers allowed - equal split for maximum diversification
+      const top = entries.slice(0, 2);
+      return [
+        { name: top[0].name, pct: 50, score: top[0].score },
+        { name: top[1].name, pct: 50, score: top[1].score }
+      ];
     }
 
     function allocateBalanced(entries) {
-      const top = entries.slice(0, 4);
+      // Bifrost constraint: Only 2 providers allowed
+      const top = entries.slice(0, 2);
       return [
-        { name: top[0].name, pct: 30, score: top[0].score },
-        { name: top[1].name, pct: 28, score: top[1].score },
-        { name: top[2].name, pct: 22, score: top[2].score },
-        { name: top[3].name, pct: 20, score: top[3].score }
+        { name: top[0].name, pct: 65, score: top[0].score },
+        { name: top[1].name, pct: 35, score: top[1].score }
       ];
     }
 
@@ -1599,7 +1588,9 @@
     document.getElementById('applyRecommendations').addEventListener('click', () => {
       // This could integrate with wallet connections in the future
       const strategy = document.getElementById('strategySelector').value;
-      alert(`Apply ${strategy} strategy recommendations?\n\nThis feature will be available when wallet integration is implemented.`);
+      const recommendations = enhancedRecommendProviders();
+      const allocText = recommendations.map(r => `${r.name}: ${r.pct}%`).join('\n');
+      alert(`Apply ${strategy} strategy to Bifrost Wallet?\n\n${allocText}\n\nNote: Bifrost allows maximum 2 providers.\nThis feature will be available when wallet integration is implemented.`);
     });
 
     // Query functionality disabled when no LLM backend is used.
