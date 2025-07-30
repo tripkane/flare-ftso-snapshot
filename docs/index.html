@@ -9,6 +9,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <!-- Favicon fallback to prevent 404 -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
@@ -513,6 +515,17 @@
       }
     }
 
+    // Utility function to safely add event listeners
+    function safeAddEventListener(elementId, event, handler) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.addEventListener(event, handler);
+        console.log(`✅ Event listener added to ${elementId}`);
+      } else {
+        console.warn(`⚠️ Element not found: ${elementId}`);
+      }
+    }
+
     let providerStats = {};
 
     function computeProviderStats() {
@@ -833,7 +846,8 @@
     }
 
     function renderChart() {
-      const timeframe = document.getElementById('timeframe').value;
+      const kpiElement = document.getElementById('kpiSelector');
+      const timeframe = kpiElement ? kpiElement.value : '7-day';
       const filteredProviders = getFilteredProviders();
 
       const rewardRates = {};
@@ -1676,12 +1690,16 @@
       renderMultiProviderChart();
       recommendProviders();
     });
-    document.getElementById('timeframe').addEventListener('change', debouncedRenderChart);
+    // Removed timeframe listener - element doesn't exist
     document.getElementById('kpiSelector').addEventListener('change', () => {
       // Sync with topKpi for chart consistency
-      document.getElementById('topKpi').value = document.getElementById('kpiSelector').value;
-      debouncedRenderChart();
-      updateTopProviders();
+      const topKpi = document.getElementById('topKpi');
+      const kpiSelector = document.getElementById('kpiSelector');
+      if (topKpi && kpiSelector) {
+        topKpi.value = kpiSelector.value;
+        debouncedRenderChart();
+        updateTopProviders();
+      }
     });
     document.getElementById('multiProviderSelect').addEventListener('change', renderMultiProviderChart);
     document.getElementById('numTopProviders').addEventListener('input', updateTopProviders);
@@ -1762,8 +1780,13 @@
         renderSingleProviderChart();
         renderCurrentVoteChart();
         renderMultiProviderChart();
-        document.getElementById('providerFilter').addEventListener('change', renderSingleProviderChart);
-        document.getElementById('providerFilter').addEventListener('change', renderCurrentVoteChart);
+        const providerFilter = document.getElementById('providerFilter');
+        if (providerFilter) {
+          providerFilter.addEventListener('change', renderSingleProviderChart);
+          providerFilter.addEventListener('change', renderCurrentVoteChart);
+        } else {
+          console.warn('⚠️ providerFilter element not found');
+        }
         
         console.log('🎉 Dashboard initialization complete!');
       }).catch(error => {
