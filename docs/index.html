@@ -314,10 +314,21 @@
       ? 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs'
       : '.';
 
-    async function fetchJsonSafe(url) {
+    async function fetchJsonSafe(url, timeoutMs = 10000) {
       try {
         console.log('Fetching:', url);
-        const res = await fetch(url);
+        
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs);
+        });
+        
+        // Race between fetch and timeout
+        const res = await Promise.race([
+          fetch(url),
+          timeoutPromise
+        ]);
+        
         if (!res.ok) {
           console.warn('Missing file', url, res.status, res.statusText);
           return null;
@@ -347,6 +358,8 @@
       try {
         console.log('Starting data load. BASE_URL:', BASE_URL);
         console.log('Current location:', location.href);
+        
+        updateLoadingProgress('Loading provider list...');
 
         const remoteUrl = 'https://raw.githubusercontent.com/TowoLabs/ftso-signal-providers/next/bifrost-wallet.providerlist.json';
         let listRes = await fetchJsonSafe(remoteUrl);
@@ -372,10 +385,12 @@
           window.disabledSongbird = new Set();
         }
 
+        updateLoadingProgress('Loading data manifest...');
         const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
         if (!manifestRes) throw new Error('Manifest missing');
         const manifest = manifestRes;
 
+        updateLoadingProgress('Loading historical data...');
         const flareUrls = manifest.flare.map(name => `${BASE_URL}/daily_snapshots/${name}`);
         const songbirdUrls = manifest.songbird.map(name => `${BASE_URL}/daily_snapshots/${name}`);
 
@@ -392,6 +407,7 @@
           }))
         }));
 
+        updateLoadingProgress('Loading current data...');
         let currentManifest = { flare: [], songbird: [] };
         try {
           const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`);
@@ -412,6 +428,7 @@
         window.flareCurrentSnapshots = flareCurrentSnapshots;
         window.songbirdCurrentSnapshots = songbirdCurrentSnapshots;
         
+        updateLoadingProgress('Computing statistics...');
         console.log('Data loading complete:');
         console.log('- Flare snapshots:', window.flareSnapshots.length);
         console.log('- Songbird snapshots:', window.songbirdSnapshots.length);
@@ -422,6 +439,13 @@
       } catch (error) {
         console.error('Error loading data:', error);
         alert(`Failed to load data: ${error.message}\n\nPlease check the browser console for more details and try refreshing the page.`);
+      }
+    }
+
+    function updateLoadingProgress(message) {
+      const progressElement = document.querySelector('#loadingIndicator p');
+      if (progressElement) {
+        progressElement.textContent = message;
       }
     }
 
@@ -1624,8 +1648,31 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       console.log('DOM loaded, starting data initialization...');
+      
+      // Set a maximum timeout for data loading (30 seconds)
+      const maxLoadTimeout = setTimeout(() => {
+        console.error('Data loading timed out after 30 seconds');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.innerHTML = `
+            <div class="bg-yellow-900 p-6 rounded-lg border border-yellow-600 text-center">
+              <h3 class="text-lg font-semibold text-yellow-300 mb-2">⏱️ Loading Timeout</h3>
+              <p class="text-yellow-400 text-sm mb-4">Data loading took too long. The dashboard may load with partial data.</p>
+              <button onclick="location.reload()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 mr-2">
+                Retry
+              </button>
+              <button onclick="document.getElementById('loadingIndicator').style.display='none'" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                Continue Anyway
+              </button>
+            </div>
+          `;
+        }
+      }, 30000);
+      
       loadData().then(() => {
         console.log('Data loaded successfully, initializing UI...');
+        clearTimeout(maxLoadTimeout);
+        
         // Hide loading indicator
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
@@ -1646,12 +1693,14 @@
         console.log('Dashboard initialization complete!');
       }).catch(error => {
         console.error('Failed to initialize dashboard:', error);
+        clearTimeout(maxLoadTimeout);
+        
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
           loadingIndicator.innerHTML = `
             <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center">
               <h3 class="text-lg font-semibold text-red-300 mb-2">⚠️ Loading Failed</h3>
-              <p class="text-red-400 text-sm mb-4">Failed to load dashboard data</p>
+              <p class="text-red-400 text-sm mb-4">Failed to load dashboard data: ${error.message}</p>
               <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
                 Retry
               </button>
