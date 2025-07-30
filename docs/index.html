@@ -130,15 +130,12 @@
         <div class="space-y-2">
           <h3 class="font-semibold text-sm text-gray-300">Data Metrics</h3>
           <label class="block">
-            <span class="text-sm">KPI Selector:</span>
+            <span class="text-sm">Timeframe:</span>
             <select id="kpiSelector" class="w-full mt-1 p-2 bg-gray-700 border border-gray-600 rounded text-sm">
               <option value="latest">Latest</option>
               <option value="7-day" selected>7-Day Average</option>
               <option value="30-day">30-Day Average</option>
-              <option value="peak">Peak Performance</option>
-              <option value="volatility">Volatility Score</option>
-              <option value="trend">Trend Analysis</option>
-              <option value="efficiency">Efficiency Rating</option>
+              <option value="cumulative">Cumulative</option>
             </select>
           </label>
         </div>
@@ -192,7 +189,7 @@
               <span id="expectedReturn" class="text-green-400 font-semibold">~3.2%</span>
             </div>
           </div>
-          <button id="applyRecommendations" 
+          <button id="applyRecommendations" style="display: none;"
             class="w-full mt-2 p-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-semibold transition-colors">
             Apply Recommendations
           </button>
@@ -206,49 +203,48 @@
     <section id="multiContainer" class="border-4 border-gray-700 rounded p-4 mb-4">
       <h2 class="text-xl font-bold mb-4">Provider Performance Analysis</h2>
 
-      <div id="multiProviderChartContainer" class="relative overflow-x-auto mb-4">
-        <div id="trendChartControls" class="absolute top-0 left-0 bg-gray-800 bg-opacity-90 p-3 rounded-lg text-sm z-10 space-y-3 border border-gray-600">
-          <h3 class="font-bold text-center mb-2 text-purple-300">Chart Controls</h3>
-          
+      <!-- Horizontal Chart Controls at the top -->
+      <div id="trendChartControls" class="bg-gray-800 p-3 rounded-lg mb-4 border border-gray-600">
+        <h3 class="font-bold text-center mb-3 text-purple-300">Chart Controls</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label for="topKpi" class="block font-semibold mb-1 text-gray-300">Performance Metric:</label>
-            <select id="topKpi" class="w-44 p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+            <select id="topKpi" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm">
               <option value="latest">Latest</option>
               <option value="7-day" selected>7-Day Average</option>
               <option value="30-day">30-Day Average</option>
-              <option value="peak">Peak Performance</option>
-              <option value="volatility">Volatility Score</option>
-              <option value="trend">Trend Analysis</option>
+              <option value="cumulative">Cumulative</option>
             </select>
           </div>
           
           <div>
             <label for="numTopProviders" class="block font-semibold mb-1 text-gray-300">Top N Providers:</label>
-            <div class="flex items-center space-x-2">
-              <input id="numTopProviders" type="number" min="1" max="20" value="5" 
-                class="w-16 p-2 bg-gray-700 border border-gray-600 rounded text-sm" />
-              <span class="text-xs text-purple-300">🟣 Highlighted</span>
-            </div>
+            <input id="numTopProviders" type="number" min="1" max="20" value="5" 
+              class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm" />
           </div>
           
-          <div>
+          <div class="md:col-span-2">
             <label for="multiProviderSelect" class="block font-semibold mb-1 text-gray-300">Select Providers:</label>
-            <select id="multiProviderSelect" multiple size="6" 
-              class="w-44 p-1 bg-gray-700 border border-gray-600 rounded text-xs">
+            <select id="multiProviderSelect" multiple size="4" 
+              class="w-full p-1 bg-gray-700 border border-gray-600 rounded text-xs">
             </select>
           </div>
-          
-          <div class="text-xs text-gray-400 pt-2 border-t border-gray-600">
-            <div class="flex items-center space-x-1 mb-1">
-              <div class="w-3 h-3 bg-purple-500 rounded"></div>
-              <span>Top N Selected</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <div class="w-3 h-3 bg-blue-500 rounded"></div>
-              <span>Other Providers</span>
-            </div>
+        </div>
+        
+        <div class="flex justify-center items-center space-x-4 mt-3 text-xs text-gray-400 pt-2 border-t border-gray-600">
+          <div class="flex items-center space-x-1">
+            <div class="w-3 h-3 bg-orange-500 rounded"></div>
+            <span>Ranked Providers</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div class="w-3 h-3 bg-blue-500 rounded"></div>
+            <span>Other Selected</span>
           </div>
         </div>
+      </div>
+
+      <div id="multiProviderChartContainer" class="relative overflow-x-auto mb-4">
         <canvas id="multiProviderChart" class="w-full h-[400px]"></canvas>
       </div>
 
@@ -557,6 +553,9 @@
         const avg7 = arr.slice(-7).reduce((s, r) => s + r, 0) / Math.min(7, n);
         const avg30 = arr.slice(-30).reduce((s, r) => s + r, 0) / Math.min(30, n);
         const avgCum = arr.reduce((s, r) => s + r, 0) / n;
+        const latest = arr[arr.length - 1] || 0; // Add latest value
+        
+        // Calculate trend (linear regression slope)
         let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
         arr.forEach((y, i) => {
           const x = i + 1;
@@ -566,14 +565,29 @@
           sumX2 += x * x;
         });
         const slope = n > 1 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0;
+        
+        // Calculate volatility (standard deviation)
         const avg = sumY / n || 0;
         const variance = arr.reduce((acc, r) => acc + Math.pow(r - avg, 2), 0) / n || 0;
         const stddev = Math.sqrt(variance);
-        stats[name].trend = slope;
-        stats[name].volatility = stddev;
+        
+        stats[name].trend = slope * 1000; // Scale up trend for visibility
+        stats[name].volatility = stddev * 100; // Convert to percentage
         stats[name].avg7 = avg7;
         stats[name].avg30 = avg30;
         stats[name].avgCum = avgCum;
+        stats[name].latest = latest;
+        
+        // Debug logging for first few providers
+        if (Object.keys(stats).indexOf(name) < 3) {
+          console.log(`📊 Stats for ${name}:`, {
+            trend: stats[name].trend.toFixed(4),
+            volatility: stats[name].volatility.toFixed(4),
+            avg30: stats[name].avg30.toFixed(4),
+            latest: stats[name].latest.toFixed(4),
+            dataPoints: n
+          });
+        }
       });
 
       const vpData = {};
@@ -620,7 +634,7 @@
         const bifrostOnly = document.getElementById('bifrostOnly').checked;
         const excludeDisabled = document.getElementById('excludeDisabled').checked;
 
-        // Filter and sort providers by KPI
+        // Filter and sort ALL providers by KPI
         const names = Object.keys(providerStats)
           .filter(n => !(namesOnly && n.startsWith('0x')))
           .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
@@ -636,14 +650,6 @@
                 return providerStats[name].avg7 || 0;
               case '30-day':
                 return providerStats[name].avg30 || 0;
-              case 'peak':
-                return Math.max(...(providerStats[name].history || [0]));
-              case 'volatility':
-                return -(providerStats[name].volatility || 0); // Lower volatility is better
-              case 'trend':
-                return providerStats[name].trend || 0;
-              case 'efficiency':
-                return (providerStats[name].avg30 || 0) / Math.max(providerStats[name].volatility || 1, 0.1);
               case 'cumulative':
                 return providerStats[name].avgCum || 0;
               default:
@@ -653,12 +659,18 @@
           return getMetric(b) - getMetric(a);
         });
 
-        // Only show top N in the Names list
-        const top = sorted.slice(0, num);
+        // Show ALL providers in the Names list, not just top N
         const multiSelect = document.getElementById('multiProviderSelect');
-        multiSelect.innerHTML = top.map(n => `<option value="${n}">${n}</option>`).join('');
-        // Optionally, select all by default
-        Array.from(multiSelect.options).forEach(opt => opt.selected = true);
+        multiSelect.innerHTML = sorted.map((n, index) => {
+          const rank = index < num ? `#${index + 1}: ` : '';
+          return `<option value="${n}">${rank}${n}</option>`;
+        }).join('');
+        
+        // Select only top N by default
+        const top = sorted.slice(0, num);
+        Array.from(multiSelect.options).forEach(opt => {
+          opt.selected = top.includes(opt.value);
+        });
 
         renderMultiProviderChart();
       }
@@ -703,7 +715,32 @@
         .filter(([n]) => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
         .filter(([n]) => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
         .map(([name, s]) => {
-          const score = (s.avg30 || 0) + (s.trend || 0) + ((s.headroom || 0) / 100) - (s.volatility || 0) - (s.zeroCount || 0) * 0.1;
+          // Improved scoring algorithm
+          const basePerformance = (s.avg30 || 0) * 100; // Convert to percentage
+          const recentPerformance = (s.avg7 || 0) * 100;
+          const trendBonus = Math.max(0, (s.trend || 0)) * 5; // Positive trend bonus
+          const stabilityScore = Math.max(0, 5 - (s.volatility || 0)); // Lower volatility is better
+          const headroomBonus = Math.max(0, (s.headroom || 0) / 10); // Scale headroom
+          const consistencyBonus = Math.max(0, 2 - (s.zeroCount || 0) * 0.2); // Penalize zero rewards
+          
+          // Weight recent performance more if trending upward
+          const trendAdjustedPerformance = (s.trend || 0) > 0 
+            ? (basePerformance * 0.6 + recentPerformance * 0.4) 
+            : (basePerformance * 0.8 + recentPerformance * 0.2);
+            
+          const score = trendAdjustedPerformance + trendBonus + stabilityScore + headroomBonus + consistencyBonus;
+          
+          // Debug logging for top few providers
+          console.log(`🎯 Score for ${name}:`, {
+            base: basePerformance.toFixed(2),
+            recent: recentPerformance.toFixed(2),
+            trend: trendBonus.toFixed(2),
+            stability: stabilityScore.toFixed(2),
+            headroom: headroomBonus.toFixed(2),
+            consistency: consistencyBonus.toFixed(2),
+            total: score.toFixed(2)
+          });
+          
           return { name, score };
         });
       entries.sort((a, b) => b.score - a.score);
@@ -848,6 +885,7 @@
     function renderChart() {
       const kpiElement = document.getElementById('kpiSelector');
       const timeframe = kpiElement ? kpiElement.value : '7-day';
+      const numTop = parseInt(document.getElementById('numTopProviders').value) || 5;
       const filteredProviders = getFilteredProviders();
 
       const rewardRates = {};
@@ -879,10 +917,16 @@
 
       // Sort data by reward rate (highest to lowest)
       data = data.sort((a, b) => b.average - a.average);
+      
+      // Only show top N providers
+      data = data.slice(0, numTop);
 
       const ctx = document.getElementById('rewardRateChart').getContext('2d');
-      const labels = data.map(d => d.name);
+      const labels = data.map((d, index) => `#${index + 1}: ${d.name}`);
       const values = data.map(d => parseFloat(d.average) * 100);
+
+      // Create orange color array
+      const orangeColors = data.map(() => '#F97316'); // Orange color
 
       if (rewardChart) rewardChart.destroy();
 
@@ -893,17 +937,17 @@
           datasets: [{
             label: 'Reward Rate (%)',
             data: values,
-            backgroundColor: 'purple'
+            backgroundColor: orangeColors
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            title: { display: true, text: `Flare Reward Rate - ${timeframe}` },
+            title: { display: true, text: `Top ${numTop} Providers - ${timeframe}` },
             legend: { display: false }
           },
           scales: {
-            x: { ticks: { maxRotation: 45, minRotation: 45 }, title: { display: true, text: 'Provider' } },
+            x: { ticks: { maxRotation: 45, minRotation: 45 }, title: { display: true, text: 'Provider (Ranked)' } },
             y: { title: { display: true, text: 'Reward Rate (%)' } }
           }
         }
@@ -1149,7 +1193,7 @@
       const kpi = document.getElementById('topKpi').value;
       const numTop = parseInt(document.getElementById('numTopProviders').value) || 5;
       
-      // Determine top N providers based on current KPI
+      // Determine top N providers based on current KPI for ranking
       const namesOnly = document.getElementById('namedOnly').checked;
       const bifrostOnly = document.getElementById('bifrostOnly').checked;
       const excludeDisabled = document.getElementById('excludeDisabled').checked;
@@ -1169,14 +1213,8 @@
               return providerStats[name].avg7 || 0;
             case '30-day':
               return providerStats[name].avg30 || 0;
-            case 'peak':
-              return Math.max(...(providerStats[name].history || [0]));
-            case 'volatility':
-              return -(providerStats[name].volatility || 0); // Lower volatility is better
-            case 'trend':
-              return providerStats[name].trend || 0;
-            case 'efficiency':
-              return (providerStats[name].avg30 || 0) / Math.max(providerStats[name].volatility || 1, 0.1);
+            case 'cumulative':
+              return providerStats[name].avgCum || 0;
             default:
               return providerStats[name].avg30 || 0;
           }
@@ -1184,16 +1222,21 @@
         return getMetric(b) - getMetric(a);
       });
       
-      const topNProviders = new Set(sortedNames.slice(0, numTop));
+      // Create ranking map
+      const rankingMap = {};
+      sortedNames.forEach((name, index) => {
+        rankingMap[name] = index + 1;
+      });
+      
       const dates = window.flareSnapshots.map(s => s.date);
       
       const datasets = selected.map((name, idx) => {
-        const isTopN = topNProviders.has(name);
-        const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
-        const baseColor = colors[idx % colors.length];
+        const colors = ['#F97316', '#3B82F6', '#10B981', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F59E0B'];
+        const color = colors[idx % colors.length];
         
-        // Use purple for Top N providers, otherwise use the standard colors
-        const color = isTopN ? '#8B5CF6' : baseColor;
+        // Get rank for this provider
+        const rank = rankingMap[name] || 999;
+        const rankLabel = rank <= numTop ? `#${rank}` : '';
         
         const data = dates.map(d => {
           const snap = window.flareSnapshots.find(s => s.date === d);
@@ -1202,11 +1245,11 @@
         });
         
         return { 
-          label: `${name}${isTopN ? ' ⭐' : ''}`, 
+          label: `${rankLabel ? rankLabel + ': ' : ''}${name}`, 
           data, 
           borderColor: color,
           backgroundColor: color + '20', // Add transparency
-          borderWidth: isTopN ? 3 : 2, // Thicker line for Top N
+          borderWidth: 2,
           fill: false,
           tension: 0.1
         };
@@ -1243,9 +1286,7 @@
                   return `Date: ${context[0].label}`;
                 },
                 label: function(context) {
-                  const isTopN = context.dataset.label.includes('⭐');
-                  const rank = isTopN ? ' (Top N)' : '';
-                  return `${context.dataset.label.replace(' ⭐', '')}: ${context.parsed.y.toFixed(2)}%${rank}`;
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
                 }
               }
             }
