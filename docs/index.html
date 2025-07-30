@@ -70,11 +70,15 @@
 
     <!-- Loading Indicator -->
     <div id="loadingIndicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-      <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 text-center">
+      <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 text-center max-w-md">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
         <h3 class="text-lg font-semibold text-purple-300 mb-2">Loading FTSO Dashboard</h3>
         <p class="text-gray-400 text-sm">Fetching provider data and snapshots...</p>
         <div class="text-xs text-gray-500 mt-2">v2025.07.30 - Timeout Fix Active</div>
+        <button id="skipLoadingBtn" onclick="forceHideLoading()" 
+          class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm hidden">
+          Skip Loading (Use Cached Data)
+        </button>
       </div>
     </div>
 
@@ -321,28 +325,35 @@
 
     async function fetchJsonSafe(url, timeoutMs = 10000) {
       try {
-        console.log('Fetching:', url);
+        console.log('🔄 Fetching:', url);
         
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs);
+        // Create an AbortController for more reliable timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`⏰ Timeout reached for: ${url}`);
+          controller.abort();
+        }, timeoutMs);
+        
+        const res = await fetch(url, { 
+          signal: controller.signal,
+          cache: 'no-cache' // Force fresh data
         });
         
-        // Race between fetch and timeout
-        const res = await Promise.race([
-          fetch(url),
-          timeoutPromise
-        ]);
+        clearTimeout(timeoutId);
         
         if (!res.ok) {
-          console.warn('Missing file', url, res.status, res.statusText);
+          console.warn('❌ Missing file', url, res.status, res.statusText);
           return null;
         }
         const data = await res.json();
-        console.log('Successfully loaded:', url, 'Size:', JSON.stringify(data).length);
+        console.log('✅ Successfully loaded:', url, 'Size:', JSON.stringify(data).length);
         return data;
       } catch (err) {
-        console.error('Error fetching', url, err);
+        if (err.name === 'AbortError') {
+          console.error('🚫 Request aborted (timeout):', url);
+        } else {
+          console.error('💥 Error fetching', url, err);
+        }
         return null;
       }
     }
@@ -361,17 +372,22 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
-        console.log('Starting data load. BASE_URL:', BASE_URL);
-        console.log('Current location:', location.href);
+        console.log('🚀 Starting data load. BASE_URL:', BASE_URL);
+        console.log('📍 Current location:', location.href);
+        console.log('📅 Timestamp:', new Date().toISOString());
         
         updateLoadingProgress('Loading provider list...');
+        console.log('📋 Step 1: Loading provider list');
 
         const remoteUrl = 'https://raw.githubusercontent.com/TowoLabs/ftso-signal-providers/next/bifrost-wallet.providerlist.json';
+        console.log('🌐 Attempting remote provider list:', remoteUrl);
         let listRes = await fetchJsonSafe(remoteUrl);
         if (!listRes) {
-          console.log('Falling back to local bifrost list');
+          console.log('🔄 Falling back to local bifrost list');
           listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`);
         }
+        console.log('📋 Provider list result:', listRes ? 'Success' : 'Failed');
+        
         if (listRes?.providers) {
           const flare = listRes.providers.filter(p => p.chainId === 14);
           const songbird = listRes.providers.filter(p => p.chainId === 19);
@@ -379,6 +395,7 @@
           window.bifrostSongbird = songbird.map(p => p.name);
           window.disabledFlare = new Set(flare.filter(p => p.disabled).map(p => p.name));
           window.disabledSongbird = new Set(songbird.filter(p => p.disabled).map(p => p.name));
+          console.log('✅ Bifrost providers loaded:', flare.length, 'Flare,', songbird.length, 'Songbird');
         } else {
           window.bifrostFlare = Array.isArray(listRes?.flare)
             ? listRes.flare.map(p => typeof p === 'string' ? p : p.name)
@@ -388,20 +405,31 @@
             : [];
           window.disabledFlare = new Set();
           window.disabledSongbird = new Set();
+          console.log('⚠️ Using fallback provider format');
         }
 
         updateLoadingProgress('Loading data manifest...');
+        console.log('📋 Step 2: Loading manifest');
         const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`);
-        if (!manifestRes) throw new Error('Manifest missing');
+        if (!manifestRes) {
+          console.error('💥 CRITICAL: Manifest missing');
+          throw new Error('Manifest missing');
+        }
         const manifest = manifestRes;
+        console.log('✅ Manifest loaded:', manifest.flare?.length, 'Flare files,', manifest.songbird?.length, 'Songbird files');
 
         updateLoadingProgress('Loading historical data...');
+        console.log('📋 Step 3: Loading historical snapshots');
         const flareUrls = manifest.flare.map(name => `${BASE_URL}/daily_snapshots/${name}`);
         const songbirdUrls = manifest.songbird.map(name => `${BASE_URL}/daily_snapshots/${name}`);
+        console.log('📁 Will load', flareUrls.length, 'Flare files and', songbirdUrls.length, 'Songbird files');
 
+        console.log('⏳ Loading Flare data...');
         const flareData = await Promise.all(flareUrls.map(url => fetchJsonSafe(url)));
         const flareSnapshots = flareData.filter(Boolean).map(s => ({ date: s.date, providers: s.providers }));
+        console.log('✅ Flare data loaded:', flareSnapshots.length, 'snapshots');
 
+        console.log('⏳ Loading Songbird data...');
         const songbirdData = await Promise.all(songbirdUrls.map(url => fetchJsonSafe(url)));
         const songbirdSnapshots = songbirdData.filter(Boolean).map(s => ({
           date: s.date,
@@ -411,15 +439,19 @@
             SGB_vote_power_pct: p.vote_power_pct
           }))
         }));
+        console.log('✅ Songbird data loaded:', songbirdSnapshots.length, 'snapshots');
 
         updateLoadingProgress('Loading current data...');
+        console.log('📋 Step 4: Loading current vote power');
         let currentManifest = { flare: [], songbird: [] };
         try {
           const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`);
           if (currentRes) currentManifest = currentRes;
+          console.log('✅ Current manifest loaded:', currentManifest.flare?.length, 'Flare,', currentManifest.songbird?.length, 'Songbird');
         } catch (err) {
-          console.warn('No current vote power manifest found');
+          console.warn('⚠️ No current vote power manifest found');
         }
+        
         const flareCurrentUrls = currentManifest.flare.map(path => `${BASE_URL}/current_vote_power/${path}`);
         const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u)));
         const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ timestamp: s.timestamp, providers: s.providers }));
@@ -434,16 +466,19 @@
         window.songbirdCurrentSnapshots = songbirdCurrentSnapshots;
         
         updateLoadingProgress('Computing statistics...');
-        console.log('Data loading complete:');
+        console.log('📋 Step 5: Computing statistics');
+        console.log('📊 Final data summary:');
         console.log('- Flare snapshots:', window.flareSnapshots.length);
         console.log('- Songbird snapshots:', window.songbirdSnapshots.length);
         console.log('- Flare current:', window.flareCurrentSnapshots.length);
         console.log('- Songbird current:', window.songbirdCurrentSnapshots.length);
         
         computeProviderStats();
+        console.log('🎉 Data loading complete!');
       } catch (error) {
-        console.error('Error loading data:', error);
-        alert(`Failed to load data: ${error.message}\n\nPlease check the browser console for more details and try refreshing the page.`);
+        console.error('💥 FATAL ERROR loading data:', error);
+        console.error('💥 Error stack:', error.stack);
+        throw error; // Re-throw to trigger the catch block in DOMContentLoaded
       }
     }
 
@@ -451,6 +486,30 @@
       const progressElement = document.querySelector('#loadingIndicator p');
       if (progressElement) {
         progressElement.textContent = message;
+      }
+    }
+
+    function forceHideLoading() {
+      console.log('🚫 User forced loading to stop');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+      }
+      // Try to initialize with whatever data we have
+      try {
+        if (window.flareSnapshots && window.flareSnapshots.length > 0) {
+          console.log('📊 Initializing with existing data');
+          computeProviderStats();
+          renderChart();
+          renderTable();
+          renderSingleProviderChart();
+          renderCurrentVoteChart();
+          renderMultiProviderChart();
+        } else {
+          console.log('⚠️ No data available, showing empty dashboard');
+        }
+      } catch (error) {
+        console.error('Error initializing forced dashboard:', error);
       }
     }
 
@@ -1652,30 +1711,41 @@
     document.getElementById('queryButton').addEventListener('click', sendQuery);
 
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, starting data initialization...');
+      console.log('🚀 DOM loaded, starting data initialization...');
       
-      // Set a maximum timeout for data loading (30 seconds)
+      // Show skip button after 10 seconds
+      setTimeout(() => {
+        const skipBtn = document.getElementById('skipLoadingBtn');
+        if (skipBtn) {
+          skipBtn.classList.remove('hidden');
+          console.log('⏰ Skip button now available');
+        }
+      }, 10000);
+      
+      // Set a maximum timeout for data loading (15 seconds)
       const maxLoadTimeout = setTimeout(() => {
-        console.error('Data loading timed out after 30 seconds');
+        console.error('💥 Data loading timed out after 15 seconds');
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
           loadingIndicator.innerHTML = `
-            <div class="bg-yellow-900 p-6 rounded-lg border border-yellow-600 text-center">
+            <div class="bg-yellow-900 p-6 rounded-lg border border-yellow-600 text-center max-w-md">
               <h3 class="text-lg font-semibold text-yellow-300 mb-2">⏱️ Loading Timeout</h3>
-              <p class="text-yellow-400 text-sm mb-4">Data loading took too long. The dashboard may load with partial data.</p>
-              <button onclick="location.reload()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 mr-2">
-                Retry
-              </button>
-              <button onclick="document.getElementById('loadingIndicator').style.display='none'" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                Continue Anyway
-              </button>
+              <p class="text-yellow-400 text-sm mb-4">Data loading took too long. Check browser console for details.</p>
+              <div class="space-y-2">
+                <button onclick="location.reload()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+                  🔄 Retry
+                </button>
+                <button onclick="forceHideLoading()" class="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                  ➡️ Continue Anyway
+                </button>
+              </div>
             </div>
           `;
         }
-      }, 30000);
+      }, 15000);
       
       loadData().then(() => {
-        console.log('Data loaded successfully, initializing UI...');
+        console.log('✅ Data loaded successfully, initializing UI...');
         clearTimeout(maxLoadTimeout);
         
         // Hide loading indicator
@@ -1695,20 +1765,26 @@
         document.getElementById('providerFilter').addEventListener('change', renderSingleProviderChart);
         document.getElementById('providerFilter').addEventListener('change', renderCurrentVoteChart);
         
-        console.log('Dashboard initialization complete!');
+        console.log('🎉 Dashboard initialization complete!');
       }).catch(error => {
-        console.error('Failed to initialize dashboard:', error);
+        console.error('💥 Failed to initialize dashboard:', error);
         clearTimeout(maxLoadTimeout);
         
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
           loadingIndicator.innerHTML = `
-            <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center">
+            <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center max-w-md">
               <h3 class="text-lg font-semibold text-red-300 mb-2">⚠️ Loading Failed</h3>
               <p class="text-red-400 text-sm mb-4">Failed to load dashboard data: ${error.message}</p>
-              <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                Retry
-              </button>
+              <div class="text-xs text-gray-400 mb-4">Check browser console (F12) for detailed error information</div>
+              <div class="space-y-2">
+                <button onclick="location.reload()" class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                  🔄 Retry
+                </button>
+                <button onclick="forceHideLoading()" class="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                  ➡️ Try Anyway
+                </button>
+              </div>
             </div>
           `;
         }
