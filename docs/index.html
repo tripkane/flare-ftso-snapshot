@@ -1557,7 +1557,7 @@
         console.log('🔄 Processing Flare current snapshots...');
         window.flareCurrentSnapshots.forEach(s => {
           timestampsSet.add(s.timestamp);
-          const p = s.providers.find(pr => pr.name === provider);
+          const p = s.providers.find(pr => pr && pr.name === provider);
           if (p) flareMap[s.timestamp] = Number(p.vote_power_pct);
         });
         console.log('✅ Flare timestamps found:', timestampsSet.size);
@@ -1568,7 +1568,7 @@
         console.log('🔄 Processing Songbird current snapshots...');
         window.songbirdCurrentSnapshots.forEach(s => {
           timestampsSet.add(s.timestamp);
-          const p = s.providers.find(pr => pr.name === provider);
+          const p = s.providers.find(pr => pr && pr.name === provider);
           if (p) songbirdMap[s.timestamp] = Number(p.vote_power_pct);
         });
         console.log('✅ Total timestamps after Songbird:', timestampsSet.size);
@@ -1897,39 +1897,6 @@
         { name: top[0].name, pct: 65, score: top[0].score },
         { name: top[1].name, pct: 35, score: top[1].score }
       ];
-    }
-
-    // Enhanced recommendation function
-    function recommendProviders() {
-      const recommendations = enhancedRecommendProviders();
-      
-      const bifrostOnly = document.getElementById('bifrostOnly').checked;
-      const excludeDisabled = document.getElementById('excludeDisabled').checked;
-      const entries = Object.entries(providerStats)
-        .filter(([n]) => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
-        .filter(([n]) => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
-        .map(([name, s]) => {
-          const score = (s.avg30 || 0) + (s.trend || 0) + ((s.headroom || 0) / 100) - (s.volatility || 0) - (s.zeroCount || 0) * 0.1;
-          return { name, score };
-        });
-      entries.sort((a, b) => b.score - a.score);
-
-      const excludeSelect = document.getElementById('excludeProviders');
-      excludeSelect.innerHTML = entries.map(e => `<option value="${e.name}" ${userExcludedProviders.has(e.name) ? 'selected' : ''}>${e.name}</option>`).join('');
-
-      const summary = document.getElementById('recommendationSummary');
-      summary.innerHTML = recommendations
-        .map(t => {
-          return `
-            <div class="bg-gradient-to-r from-purple-600 to-purple-700 p-3 rounded-lg flex-1 text-center min-w-[120px] shadow-lg">
-              <div class="text-sm font-semibold text-purple-100">${t.name}</div>
-              <div class="text-2xl font-extrabold text-white">${t.pct.toFixed(0)}%</div>
-              <div class="text-xs text-purple-200">Score: ${t.score.toFixed(1)}</div>
-            </div>
-          `;
-        })
-        .join('');
-      renderRecommendationTable(recommendations);
     }
 
     // Remove any previous event listeners to avoid duplicates
