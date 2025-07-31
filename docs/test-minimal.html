@@ -61,7 +61,7 @@
                         throw new Error(`Data fetch failed: ${dataResponse.status} ${dataResponse.statusText}`);
                     }
                     
-                    const data = await response.json();
+                    const data = await dataResponse.json();
                     console.log('✅ Data file loaded:', data);
                     
                     updateStatus('✅ SUCCESS: Both manifest and data loaded!');
