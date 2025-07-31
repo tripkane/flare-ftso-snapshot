@@ -406,7 +406,7 @@
         console.log('📋 Step 3: Loading historical snapshots');
         
         // Limit to the most recent files to prevent timeout
-        const maxFiles = 30; // Only load last 30 files
+        const maxFiles = 5; // Only load last 5 files for faster loading
         const flareUrls = (manifest.flare || []).slice(-maxFiles).map(name => `${BASE_URL}/daily_snapshots/${name}`);
         const songbirdUrls = (manifest.songbird || []).slice(-maxFiles).map(name => `${BASE_URL}/daily_snapshots/${name}`);
         console.log('📁 Will load', flareUrls.length, 'Flare files and', songbirdUrls.length, 'Songbird files');
@@ -489,7 +489,7 @@
         }
         
         // Limit current data loading too
-        const maxCurrentFiles = 10;
+        const maxCurrentFiles = 3;
         const flareCurrentUrls = (currentManifest.flare || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
         const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
         const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ 
@@ -2005,11 +2005,11 @@
           skipBtn.classList.remove('hidden');
           console.log('⏰ Skip button now available');
         }
-      }, 5000);
+      }, 3000); // Reduced from 5 seconds to 3 seconds
       
-      // Set a maximum timeout for data loading (10 seconds)
+      // Set a maximum timeout for data loading (5 seconds)
       const maxLoadTimeout = setTimeout(() => {
-        console.error('💥 Data loading timed out after 10 seconds');
+        console.error('💥 Data loading timed out after 5 seconds');
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
           loadingIndicator.innerHTML = `
@@ -2027,7 +2027,7 @@
             </div>
           `;
         }
-      }, 10000);
+      }, 5000); // Reduced from 10 seconds to 5 seconds
       
       loadData().then(() => {
         console.log('✅ Data loaded successfully, initializing UI...');
