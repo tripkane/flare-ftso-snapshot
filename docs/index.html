@@ -370,12 +370,12 @@
         
         // Set sensible defaults even if provider list fails
         if (listRes?.providers) {
-          const flare = listRes.providers.filter(p => p.chainId === 14);
-          const songbird = listRes.providers.filter(p => p.chainId === 19);
-          window.bifrostFlare = flare.map(p => p.name);
-          window.bifrostSongbird = songbird.map(p => p.name);
-          window.disabledFlare = new Set(flare.filter(p => p.disabled).map(p => p.name));
-          window.disabledSongbird = new Set(songbird.filter(p => p.disabled).map(p => p.name));
+          const flare = listRes.providers.filter(p => p && p.chainId === 14);
+          const songbird = listRes.providers.filter(p => p && p.chainId === 19);
+          window.bifrostFlare = flare.filter(p => p.name).map(p => p.name);
+          window.bifrostSongbird = songbird.filter(p => p.name).map(p => p.name);
+          window.disabledFlare = new Set(flare.filter(p => p.disabled && p.name).map(p => p.name));
+          window.disabledSongbird = new Set(songbird.filter(p => p.disabled && p.name).map(p => p.name));
           console.log('✅ Bifrost providers loaded:', flare.length, 'Flare,', songbird.length, 'Songbird');
         } else {
           // Fallback defaults
@@ -413,14 +413,17 @@
 
         console.log('⏳ Loading Flare data...');
         const flareData = await Promise.all(flareUrls.map(url => fetchJsonSafe(url, 3000))); // Reduced individual timeout
-        const flareSnapshots = flareData.filter(Boolean).map(s => ({ date: s.date, providers: s.providers }));
+        const flareSnapshots = flareData.filter(Boolean).map(s => ({ 
+          date: s.date, 
+          providers: (s.providers || []).filter(p => p && p.name) 
+        }));
         console.log('✅ Flare data loaded:', flareSnapshots.length, 'snapshots');
 
         console.log('⏳ Loading Songbird data...');
         const songbirdData = await Promise.all(songbirdUrls.map(url => fetchJsonSafe(url, 3000))); // Reduced individual timeout
         const songbirdSnapshots = songbirdData.filter(Boolean).map(s => ({
           date: s.date,
-          providers: s.providers.map(p => ({
+          providers: (s.providers || []).filter(p => p && p.name).map(p => ({
             SGB_provider: p.name,
             SGB_vote_power_locked_pct: p.vote_power_pct_locked,
             SGB_vote_power_pct: p.vote_power_pct
@@ -491,7 +494,7 @@
         const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
         const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ 
           timestamp: s.timestamp, 
-          providers: s.providers.map(p => ({
+          providers: (s.providers || []).filter(p => p && p.name).map(p => ({
             name: p.name,
             vote_power_pct: p.vote_power || p.vote_power_percentage || 0
           }))
@@ -501,7 +504,7 @@
         const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
         const songbirdCurrentSnapshots = songbirdCurrentData.filter(Boolean).map(s => ({ 
           timestamp: s.timestamp, 
-          providers: s.providers.map(p => ({
+          providers: (s.providers || []).filter(p => p && p.name).map(p => ({
             name: p.name,
             vote_power_pct: p.vote_power || p.vote_power_percentage || 0
           }))
@@ -607,12 +610,18 @@
       const lockedMap = {};
       if (latest) {
         latest.providers.forEach(p => {
-          lockedMap[p.name] = parseFloat(p.vote_power_pct_locked);
+          if (p && p.name) {
+            lockedMap[p.name] = parseFloat(p.vote_power_pct_locked);
+          }
         });
       }
 
       window.flareSnapshots.forEach(snap => {
         snap.providers.forEach(p => {
+          if (!p || !p.name) {
+            console.warn('⚠️ Invalid provider object:', p);
+            return; // Skip invalid providers
+          }
           const name = p.name;
           if (!stats[name]) {
             stats[name] = { rewardRates: [], locked: lockedMap[name] || 0, zeroCount: 0 };
@@ -671,6 +680,10 @@
         console.log('📊 Processing current vote power data for', window.flareCurrentSnapshots.length, 'snapshots');
         window.flareCurrentSnapshots.forEach(snap => {
           snap.providers.forEach(p => {
+            if (!p || !p.name) {
+              console.warn('⚠️ Invalid current vote power provider object:', p);
+              return; // Skip invalid providers
+            }
             if (!vpData[p.name]) vpData[p.name] = [];
             vpData[p.name].push(parseFloat(p.vote_power_pct) || 0);
           });
