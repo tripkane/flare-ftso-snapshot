@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTSO Dashboard - Simple</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">FTSO Dashboard - Simple Version</h1>
+        
+        <div id="status" class="mb-4 p-4 bg-blue-800 rounded">
+            <p>Loading data...</p>
+        </div>
+        
+        <div id="charts" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" style="display: none;">
+            <div class="bg-gray-800 p-4 rounded">
+                <h3 class="text-lg font-bold mb-2">Vote Power Distribution</h3>
+                <canvas id="voteChart" width="400" height="200"></canvas>
+            </div>
+            <div class="bg-gray-800 p-4 rounded">
+                <h3 class="text-lg font-bold mb-2">Provider Performance</h3>
+                <canvas id="rewardChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <div id="table" class="bg-gray-800 p-4 rounded" style="display: none;">
+            <h3 class="text-lg font-bold mb-2">Provider Data</h3>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-700">
+                        <th class="text-left p-2">Provider</th>
+                        <th class="text-left p-2">Vote Power %</th>
+                        <th class="text-left p-2">Reward Rate</th>
+                        <th class="text-left p-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let voteChart = null;
+        let rewardChart = null;
+        
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = `<p>${message}</p>`;
+        }
+        
+        async function loadData() {
+            try {
+                updateStatus('Loading manifest...');
+                console.log('🔄 Starting data load...');
+                
+                const manifestResponse = await fetch('./daily_snapshots/manifest.json');
+                console.log('📄 Manifest response:', manifestResponse.status);
+                if (!manifestResponse.ok) {
+                    throw new Error('Failed to load manifest');
+                }
+                const manifest = await manifestResponse.json();
+                console.log('✅ Manifest loaded:', manifest);
+                
+                updateStatus(`Loading latest data (${manifest.flare.length} files available)...`);
+                
+                // Load the most recent file
+                const latestFile = manifest.flare[manifest.flare.length - 1];
+                console.log('📁 Loading file:', latestFile);
+                const dataResponse = await fetch(`./daily_snapshots/${latestFile}`);
+                console.log('📄 Data response:', dataResponse.status);
+                if (!dataResponse.ok) {
+                    throw new Error('Failed to load data file');
+                }
+                const data = await dataResponse.json();
+                console.log('✅ Data loaded:', data);
+                
+                updateStatus('Processing data...');
+                
+                // Filter and sort providers - updated for correct field name
+                const providers = data.providers
+                    .filter(p => p && p.name && p.vote_power_pct > 0)
+                    .sort((a, b) => parseFloat(b.vote_power_pct) - parseFloat(a.vote_power_pct))
+                    .slice(0, 20); // Top 20 providers
+                
+                updateStatus('Creating charts...');
+                
+                // Create vote power chart
+                createVoteChart(providers);
+                
+                // Create reward chart
+                createRewardChart(providers);
+                
+                // Create table
+                createTable(providers);
+                
+                // Show results
+                document.getElementById('charts').style.display = 'grid';
+                document.getElementById('table').style.display = 'block';
+                updateStatus(`✅ Dashboard loaded successfully! Showing data for ${data.date} with ${providers.length} providers.`);
+                document.getElementById('status').className = 'mb-4 p-4 bg-green-800 rounded';
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                updateStatus(`❌ Failed to load dashboard: ${error.message}`);
+                document.getElementById('status').className = 'mb-4 p-4 bg-red-800 rounded';
+            }
+        }
+        
+        function createVoteChart(providers) {
+            const ctx = document.getElementById('voteChart').getContext('2d');
+            
+            if (voteChart) {
+                voteChart.destroy();
+            }
+            
+            voteChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: providers.slice(0, 10).map(p => p.name),
+                    datasets: [{
+                        data: providers.slice(0, 10).map(p => parseFloat(p.vote_power_pct)),
+                        backgroundColor: [
+                            '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444',
+                            '#EC4899', '#6366F1', '#84CC16', '#F97316', '#14B8A6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#E5E7EB' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createRewardChart(providers) {
+            const ctx = document.getElementById('rewardChart').getContext('2d');
+            
+            if (rewardChart) {
+                rewardChart.destroy();
+            }
+            
+            rewardChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: providers.slice(0, 10).map(p => p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name),
+                    datasets: [{
+                        label: 'Reward Rate %',
+                        data: providers.slice(0, 10).map(p => (parseFloat(p.reward_rate) * 100).toFixed(2)),
+                        backgroundColor: '#8B5CF6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#E5E7EB' }
+                        },
+                        x: {
+                            ticks: { color: '#E5E7EB' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#E5E7EB' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createTable(providers) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            providers.forEach(provider => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="p-2 font-medium">${provider.name}</td>
+                    <td class="p-2">${provider.vote_power_pct}%</td>
+                    <td class="p-2">${(parseFloat(provider.reward_rate) * 100).toFixed(2)}%</td>
+                    <td class="p-2">
+                        <span class="px-2 py-1 rounded text-xs ${provider.registered === 'Yes' ? 'bg-green-600' : 'bg-yellow-600'}">
+                            ${provider.registered || 'Unknown'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Start loading when page is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Starting simple dashboard...');
+            loadData();
+        });
+    </script>
+</body>
+</html>

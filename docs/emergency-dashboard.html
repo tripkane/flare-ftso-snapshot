@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTSO Flare Dashboard - EMERGENCY FIX</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-6">
+        <h1 class="text-4xl font-bold mb-6 text-center">🔥 FTSO Flare Dashboard</h1>
+        
+        <div id="status" class="mb-6 p-4 bg-blue-800 rounded-lg text-center">
+            <p class="text-lg">🔄 Loading data...</p>
+        </div>
+        
+        <div id="error" class="hidden mb-6 p-4 bg-red-800 rounded-lg">
+            <h3 class="font-bold">❌ Error</h3>
+            <p id="errorMsg"></p>
+            <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-red-600 rounded">🔄 Retry</button>
+        </div>
+        
+        <div id="success" class="hidden mb-6 p-4 bg-green-800 rounded-lg">
+            <h3 class="font-bold text-xl">✅ Dashboard Loaded Successfully!</h3>
+            <p id="dataInfo"></p>
+        </div>
+        
+        <div id="content" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-4">📊 Vote Power Distribution</h3>
+                <canvas id="voteChart" width="400" height="300"></canvas>
+            </div>
+            
+            <!-- Table -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-4">🏆 Top Providers</h3>
+                <div class="overflow-y-auto max-h-96">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-gray-700">
+                            <tr>
+                                <th class="text-left p-2">Rank</th>
+                                <th class="text-left p-2">Provider</th>
+                                <th class="text-left p-2">Vote Power %</th>
+                                <th class="text-left p-2">Reward Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let chart = null;
+        
+        function showError(message) {
+            document.getElementById('status').classList.add('hidden');
+            document.getElementById('errorMsg').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+        
+        function showSuccess(info) {
+            document.getElementById('status').classList.add('hidden');
+            document.getElementById('dataInfo').textContent = info;
+            document.getElementById('success').classList.remove('hidden');
+            document.getElementById('content').classList.remove('hidden');
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = `<p class="text-lg">🔄 ${message}</p>`;
+        }
+        
+        function createChart(providers) {
+            const ctx = document.getElementById('voteChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const top10 = providers.slice(0, 10);
+            
+            chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: top10.map(p => p.name),
+                    datasets: [{
+                        data: top10.map(p => p.vote_power_pct),
+                        backgroundColor: [
+                            '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B',
+                            '#EF4444', '#EC4899', '#6366F1', '#84CC16',
+                            '#F97316', '#14B8A6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createTable(providers) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = providers.slice(0, 20).map((p, i) => `
+                <tr class="border-b border-gray-700 hover:bg-gray-700">
+                    <td class="p-2">${i + 1}</td>
+                    <td class="p-2 font-semibold">${p.name}</td>
+                    <td class="p-2">${p.vote_power_pct}%</td>
+                    <td class="p-2">${p.reward_rate ? (p.reward_rate * 100).toFixed(2) + '%' : 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadDashboard() {
+            try {
+                updateStatus('Loading manifest...');
+                console.log('🔄 Loading manifest...');
+                
+                const manifestRes = await fetch('./daily_snapshots/manifest.json');
+                if (!manifestRes.ok) throw new Error('Manifest not found');
+                
+                const manifest = await manifestRes.json();
+                console.log('✅ Manifest loaded:', manifest.flare.length, 'files');
+                
+                updateStatus('Loading latest data...');
+                const latestFile = manifest.flare[manifest.flare.length - 1];
+                console.log('📁 Loading:', latestFile);
+                
+                const dataRes = await fetch(`./daily_snapshots/${latestFile}`);
+                if (!dataRes.ok) throw new Error('Data file not found');
+                
+                const data = await dataRes.json();
+                console.log('✅ Data loaded:', data.providers.length, 'providers');
+                
+                // Process data
+                const providers = data.providers
+                    .filter(p => p && p.name && p.vote_power_pct > 0)
+                    .sort((a, b) => parseFloat(b.vote_power_pct) - parseFloat(a.vote_power_pct));
+                
+                // Create visualizations
+                createChart(providers);
+                createTable(providers);
+                
+                showSuccess(`Loaded ${providers.length} providers from ${data.date}`);
+                console.log('🎉 Dashboard ready!');
+                
+            } catch (error) {
+                console.error('💥 Error:', error);
+                showError(error.message);
+            }
+        }
+        
+        // Start loading when page loads
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

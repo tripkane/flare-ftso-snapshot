@@ -235,7 +235,7 @@
         <div class="mb-4">
           <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
           <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
-            <option value="">Select a provider...</option>
+            <!-- Options will be populated dynamically -->
           </select>
         </div>
         <div id="singleChartContainer" style="width: 100%;"></div>
@@ -430,23 +430,92 @@
         }] : [];
         console.log('✅ Songbird data loaded:', songbirdSnapshots.length, 'snapshots');
 
-        updateLoadingProgress('Skipping current data...');
-        console.log('📋 Step 4: Loading current vote power - SKIPPED');
+        updateLoadingProgress('Loading current data...');
+        console.log('📋 Step 4: Loading current vote power');
+        let currentManifest = { flare: [], songbird: [] };
+        try {
+          const currentRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/manifest.json`, 3000);
+          if (currentRes && (currentRes.flare?.length > 0 || currentRes.songbird?.length > 0)) {
+            currentManifest = currentRes;
+            console.log('✅ Current manifest loaded:', currentRes.flare?.length, 'Flare,', currentRes.songbird?.length, 'Songbird');
+          } else {
+            console.warn('⚠️ Current vote power manifest empty or missing - scanning for recent files');
+            // Generate recent file patterns to try
+            const today = new Date();
+            const recentFiles = [];
+            
+            // Try today and last few days
+            for (let i = 0; i < 3; i++) {
+              const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+              const dateStr = date.toISOString().split('T')[0];
+              
+              // Try various hour patterns for the date
+              for (let hour = 23; hour >= 0; hour -= 2) {
+                const hourStr = hour.toString().padStart(2, '0');
+                recentFiles.push(`flare_vp_${dateStr}T${hourStr}-*-*Z.json`);
+                recentFiles.push(`songbird_vp_${dateStr}T${hourStr}-*-*Z.json`);
+              }
+            }
+            
+            // Try some specific recent patterns we know exist
+            const knownPatterns = [
+              'flare_vp_2025-07-30T19-26-08Z.json',
+              'flare_vp_2025-07-30T18-42-05Z.json', 
+              'flare_vp_2025-07-30T17-29-43Z.json',
+              'songbird_vp_2025-07-30T19-26-15Z.json',
+              'songbird_vp_2025-07-30T18-42-12Z.json',
+              'songbird_vp_2025-07-30T17-29-50Z.json'
+            ];
+            
+            // Test files in order of preference
+            for (const filename of knownPatterns) {
+              const testRes = await fetchJsonSafe(`${BASE_URL}/current_vote_power/${filename}`, 2000);
+              if (testRes) {
+                console.log('✅ Found current file:', filename);
+                if (filename.startsWith('flare_')) {
+                  currentManifest.flare.push(filename);
+                } else if (filename.startsWith('songbird_')) {
+                  currentManifest.songbird.push(filename);
+                }
+                if (currentManifest.flare.length >= 3 && currentManifest.songbird.length >= 3) break;
+              }
+            }
+            
+            console.log('📁 Discovered files:', currentManifest.flare.length, 'Flare,', currentManifest.songbird.length, 'Songbird');
+          }
+        } catch (err) {
+          console.warn('⚠️ Error loading current vote power manifest:', err);
+        }
         
-        // Skip current vote power loading completely
-        window.flareCurrentSnapshots = [];
-        window.songbirdCurrentSnapshots = [];
-        console.log('⚠️ Current vote power loading disabled for troubleshooting');
+        // Limit current data loading too
+        const maxCurrentFiles = 3;
+        const flareCurrentUrls = (currentManifest.flare || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
+        const flareCurrentData = await Promise.all(flareCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
+        const flareCurrentSnapshots = flareCurrentData.filter(Boolean).map(s => ({ 
+          timestamp: s.timestamp, 
+          providers: (s.providers || []).filter(p => p && p.name).map(p => ({
+            name: p.name,
+            vote_power_pct: p.vote_power || p.vote_power_percentage || 0
+          }))
+        }));
 
-        updateLoadingProgress('Computing statistics...');
-        console.log('📋 Step 5: Computing statistics');
-        
-        // Set the data on window
+        const songbirdCurrentUrls = (currentManifest.songbird || []).slice(-maxCurrentFiles).map(path => `${BASE_URL}/current_vote_power/${path}`);
+        const songbirdCurrentData = await Promise.all(songbirdCurrentUrls.map(u => fetchJsonSafe(u, 2000)));
+        const songbirdCurrentSnapshots = songbirdCurrentData.filter(Boolean).map(s => ({ 
+          timestamp: s.timestamp, 
+          providers: (s.providers || []).filter(p => p && p.name).map(p => ({
+            name: p.name,
+            vote_power_pct: p.vote_power || p.vote_power_percentage || 0
+          }))
+        }));
+
         window.flareSnapshots = flareSnapshots;
         window.songbirdSnapshots = songbirdSnapshots;
-        window.flareCurrentSnapshots = [];
-        window.songbirdCurrentSnapshots = [];
+        window.flareCurrentSnapshots = flareCurrentSnapshots;
+        window.songbirdCurrentSnapshots = songbirdCurrentSnapshots;
         
+        updateLoadingProgress('Computing statistics...');
+        console.log('📋 Step 5: Computing statistics');
         console.log('📊 Final data summary:');
         console.log('- Flare snapshots:', window.flareSnapshots.length);
         console.log('- Songbird snapshots:', window.songbirdSnapshots.length);
@@ -457,11 +526,19 @@
         console.log('🎉 Data loading complete!');
       } catch (error) {
         console.error('💥 FATAL ERROR loading data:', error);
-        // Emergency fallback
-        window.flareSnapshots = [];
-        window.songbirdSnapshots = [];
-        window.flareCurrentSnapshots = [];
-        window.songbirdCurrentSnapshots = [];
+        console.error('💥 Error stack:', error.stack);
+        
+        // Emergency fallback - don't throw error, just initialize with empty data
+        window.flareSnapshots = window.flareSnapshots || [];
+        window.songbirdSnapshots = window.songbirdSnapshots || [];
+        window.flareCurrentSnapshots = window.flareCurrentSnapshots || [];
+        window.songbirdCurrentSnapshots = window.songbirdCurrentSnapshots || [];
+        window.bifrostFlare = window.bifrostFlare || [];
+        window.bifrostSongbird = window.bifrostSongbird || [];
+        window.disabledFlare = window.disabledFlare || new Set();
+        window.disabledSongbird = window.disabledSongbird || new Set();
+        
+        console.log('🚨 Using emergency fallback data');
         computeProviderStats();
       }
     }
@@ -1193,17 +1270,9 @@
 
       // Sort providers alphabetically
       const sortedProviders = Object.keys(providerMap).sort((a, b) => a.localeCompare(b));
-      console.log('📋 Available providers:', sortedProviders.length, sortedProviders.slice(0, 5));
 
       const providerFilter = document.getElementById('providerFilter');
       const currentValue = providerFilter.value;
-      
-      if (sortedProviders.length === 0) {
-        console.warn('⚠️ No providers found in providerMap');
-        providerFilter.innerHTML = '<option value="">No providers available</option>';
-        return; // Exit early if no providers
-      }
-      
       providerFilter.innerHTML = sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
       if (!sortedProviders.includes(currentValue)) {
         providerFilter.value = sortedProviders[0] || '';
@@ -1211,7 +1280,6 @@
         providerFilter.value = currentValue;
       }
       const selectedProvider = providerFilter.value;
-      console.log('🎯 Selected provider after population:', selectedProvider);
 
       const flareData = providerMap[selectedProvider]?.flare || [];
       const songbirdData = providerMap[selectedProvider]?.songbird || [];
@@ -1456,35 +1524,25 @@
     }
 
     function renderCurrentVoteChart() {
-      console.log('🔍 renderCurrentVoteChart called - TEMPORARILY DISABLED');
-      const container = document.getElementById('currentVpChartContainer');
-      if (container) {
-        container.innerHTML = `
-          <div class="bg-blue-800 p-4 rounded-lg text-center">
-            <h4 class="text-lg font-semibold text-blue-300 mb-2">📊 Current Vote Power Chart</h4>
-            <p class="text-blue-400 text-sm">Temporarily disabled for troubleshooting</p>
-          </div>
-        `;
-      }
-      return;
+      console.log('🔍 renderCurrentVoteChart called');
+      console.log('📊 Flare current snapshots:', window.flareCurrentSnapshots?.length || 0);
+      console.log('📊 Songbird current snapshots:', window.songbirdCurrentSnapshots?.length || 0);
+      
+      if (!window.flareCurrentSnapshots && !window.songbirdCurrentSnapshots) {
+        console.warn('⚠️ No current snapshot data available');
+        const container = document.getElementById('currentVpChartContainer');
+        if (container) {
+          container.innerHTML = `
+            <div class="bg-yellow-800 p-4 rounded-lg text-center">
+              <div class="text-lg font-semibold text-yellow-300">⚠️ Current Vote Power Data Not Available</div>
+              <div class="text-sm text-yellow-400 mt-1">Recent current vote power snapshots could not be loaded. This may be due to missing or outdated data files.</div>
+            </div>
           `;
         }
         return;
       }
       const provider = document.getElementById('providerFilter').value;
       console.log('🎯 Selected provider:', provider);
-      
-      if (!provider) {
-        console.warn('⚠️ No provider selected for current vote power chart');
-        const container = document.getElementById('currentVpChartContainer');
-        container.innerHTML = `
-          <div class="bg-yellow-800 p-4 rounded-lg text-center">
-            <h4 class="text-lg font-semibold text-yellow-300 mb-2">📊 Provider Selection Required</h4>
-            <p class="text-yellow-400 text-sm">Please select a provider from the dropdown to view current vote power data</p>
-          </div>
-        `;
-        return;
-      }
       
       const container = document.getElementById('currentVpChartContainer');
       const range = document.getElementById('currentVpRange');
@@ -1567,12 +1625,6 @@
         const flareSlope = computeSlope(flareNonNull);
         const sgbSlope = computeSlope(sgbNonNull);
 
-        // Validate baseLabels before processing
-        if (baseLabels.length === 0) {
-          console.warn('⚠️ No base labels available for current chart');
-          return;
-        }
-        
         const step = baseLabels.length>1 ? (new Date(baseLabels[1]) - new Date(baseLabels[0])) : 3600*1000;
         const futureLabels = [];
         const flareFuture = [];
@@ -1580,16 +1632,7 @@
         const lastFlare = [...flareData].reverse().find(v => v !== null);
         const lastSgb = [...sgbData].reverse().find(v => v !== null);
         for(let i=1;i<=6;i++){
-          const lastLabel = baseLabels[baseLabels.length-1];
-          if (!lastLabel) {
-            console.warn('⚠️ Invalid last label, skipping future projection');
-            break;
-          }
-          const ts = new Date(lastLabel);
-          if (isNaN(ts.getTime())) {
-            console.warn('⚠️ Invalid timestamp:', lastLabel);
-            break;
-          }
+          const ts = new Date(baseLabels[baseLabels.length-1]);
           ts.setTime(ts.getTime() + step*i);
           futureLabels.push(ts.toISOString());
           if (lastFlare !== undefined && flareNonNull.length >= 2) {

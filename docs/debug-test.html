@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Dashboard</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function testDashboard() {
+            const output = document.getElementById('output');
+            
+            try {
+                output.innerHTML += '<p>🔄 Testing manifest load...</p>';
+                
+                const manifestResponse = await fetch('./daily_snapshots/manifest.json');
+                output.innerHTML += `<p>Manifest response: ${manifestResponse.status}</p>`;
+                
+                if (!manifestResponse.ok) {
+                    throw new Error(`Manifest failed: ${manifestResponse.status}`);
+                }
+                
+                const manifest = await manifestResponse.json();
+                output.innerHTML += `<p>✅ Manifest loaded: ${manifest.flare.length} flare files</p>`;
+                
+                // Test loading the first data file
+                const firstFile = manifest.flare[0];
+                output.innerHTML += `<p>🔄 Testing data file: ${firstFile}</p>`;
+                
+                const dataResponse = await fetch(`./daily_snapshots/${firstFile}`);
+                output.innerHTML += `<p>Data response: ${dataResponse.status}</p>`;
+                
+                if (!dataResponse.ok) {
+                    throw new Error(`Data file failed: ${dataResponse.status}`);
+                }
+                
+                const data = await dataResponse.json();
+                output.innerHTML += `<p>✅ Data loaded: ${data.providers?.length || 'unknown'} providers</p>`;
+                output.innerHTML += `<p>✅ Sample provider: ${data.providers?.[0]?.name || 'none'}</p>`;
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        testDashboard();
+    </script>
+</body>
+</html>

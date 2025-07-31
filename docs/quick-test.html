@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Dashboard Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <h1 class="text-3xl mb-4">Dashboard Quick Test</h1>
+    <div id="status" class="mb-4 p-4 bg-blue-800 rounded">Loading...</div>
+    <div id="data" class="bg-gray-800 p-4 rounded"></div>
+    
+    <script>
+        async function quickTest() {
+            const status = document.getElementById('status');
+            const data = document.getElementById('data');
+            
+            try {
+                status.innerHTML = 'Loading manifest...';
+                
+                const manifestRes = await fetch('./daily_snapshots/manifest.json');
+                const manifest = await manifestRes.json();
+                
+                status.innerHTML = `Manifest loaded: ${manifest.flare.length} files`;
+                console.log('Manifest:', manifest);
+                
+                // Get the latest file
+                const latestFile = manifest.flare[manifest.flare.length - 1];
+                status.innerHTML = `Loading latest file: ${latestFile}`;
+                
+                const dataRes = await fetch(`./daily_snapshots/${latestFile}`);
+                const fileData = await dataRes.json();
+                
+                status.innerHTML = `✅ Data loaded successfully!`;
+                status.className = 'mb-4 p-4 bg-green-800 rounded';
+                
+                // Show some data
+                const topProviders = fileData.providers.slice(0, 10);
+                data.innerHTML = `
+                    <h3 class="text-xl mb-2">Top 10 Providers (${fileData.date})</h3>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-600">
+                                <th class="text-left p-2">Rank</th>
+                                <th class="text-left p-2">Name</th>
+                                <th class="text-left p-2">Vote Power %</th>
+                                <th class="text-left p-2">Reward Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${topProviders.map(p => `
+                                <tr class="border-b border-gray-700">
+                                    <td class="p-2">${p.rank}</td>
+                                    <td class="p-2">${p.name}</td>
+                                    <td class="p-2">${p.vote_power_pct}%</td>
+                                    <td class="p-2">${(p.reward_rate * 100).toFixed(2)}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                status.innerHTML = `❌ Error: ${error.message}`;
+                status.className = 'mb-4 p-4 bg-red-800 rounded';
+                console.error('Error:', error);
+            }
+        }
+        
+        quickTest();
+    </script>
+</body>
+</html>

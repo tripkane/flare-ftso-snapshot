@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTSO Dashboard - Fixed Version</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-6">
+        <h1 class="text-4xl font-bold mb-6 text-center">FTSO Flare Dashboard</h1>
+        
+        <div id="status" class="mb-6 p-4 bg-blue-800 rounded text-center">
+            <div class="loading-spinner mb-4"></div>
+            <p>Initializing dashboard...</p>
+        </div>
+        
+        <div id="content" style="display: none;">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-800 p-4 rounded">
+                    <h3 class="text-xl font-bold mb-4">Top Providers by Vote Power</h3>
+                    <canvas id="voteChart" width="400" height="300"></canvas>
+                </div>
+                <div class="bg-gray-800 p-4 rounded">
+                    <h3 class="text-xl font-bold mb-4">Reward Rates</h3>
+                    <canvas id="rewardChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+            
+            <div class="bg-gray-800 p-4 rounded">
+                <h3 class="text-xl font-bold mb-4">Provider Details</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-600">
+                                <th class="text-left p-2">Rank</th>
+                                <th class="text-left p-2">Provider</th>
+                                <th class="text-left p-2">Vote Power</th>
+                                <th class="text-left p-2">Vote Power %</th>
+                                <th class="text-left p-2">Reward Rate</th>
+                                <th class="text-left p-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let voteChart = null;
+        let rewardChart = null;
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            const colors = {
+                info: 'bg-blue-800',
+                success: 'bg-green-800', 
+                error: 'bg-red-800',
+                warning: 'bg-yellow-800'
+            };
+            
+            status.className = `mb-6 p-4 ${colors[type]} rounded text-center`;
+            status.innerHTML = type === 'info' ? 
+                `<div class="loading-spinner mb-4"></div><p>${message}</p>` :
+                `<p>${message}</p>`;
+        }
+        
+        async function fetchWithRetry(url, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    console.log(`Fetching ${url} (attempt ${i + 1})`);
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                }
+            }
+        }
+        
+        async function loadDashboard() {
+            try {
+                updateStatus('Loading manifest...');
+                console.log('🔄 Loading manifest');
+                
+                const manifest = await fetchWithRetry('./daily_snapshots/manifest.json');
+                console.log('✅ Manifest loaded:', manifest);
+                
+                if (!manifest.flare || manifest.flare.length === 0) {
+                    throw new Error('No Flare data files found in manifest');
+                }
+                
+                updateStatus(`Loading latest snapshot (${manifest.flare.length} files available)...`);
+                
+                // Get the latest file
+                const latestFile = manifest.flare[manifest.flare.length - 1];
+                console.log('📁 Loading latest file:', latestFile);
+                
+                const data = await fetchWithRetry(`./daily_snapshots/${latestFile}`);
+                console.log('✅ Data loaded:', data);
+                
+                if (!data.providers || data.providers.length === 0) {
+                    throw new Error('No provider data found');
+                }
+                
+                updateStatus('Processing data...');
+                
+                // Filter and process providers
+                const providers = data.providers
+                    .filter(p => p && p.name && typeof p.vote_power_pct === 'number' && p.vote_power_pct > 0)
+                    .sort((a, b) => b.vote_power_pct - a.vote_power_pct)
+                    .slice(0, 20);
+                
+                console.log('📊 Processed providers:', providers.length);
+                
+                if (providers.length === 0) {
+                    throw new Error('No valid providers found after filtering');
+                }
+                
+                updateStatus('Creating visualizations...');
+                
+                // Create charts
+                await createCharts(providers);
+                
+                // Create table
+                createTable(providers, data.date);
+                
+                // Show success
+                updateStatus(`✅ Dashboard loaded successfully! Showing ${providers.length} providers for ${data.date}`, 'success');
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('💥 Dashboard load failed:', error);
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+                
+                // Show error details in the status
+                setTimeout(() => {
+                    updateStatus(`❌ Failed to load dashboard: ${error.message}<br><br>
+                        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">
+                            🔄 Retry
+                        </button>`, 'error');
+                }, 2000);
+            }
+        }
+        
+        async function createCharts(providers) {
+            const top10 = providers.slice(0, 10);
+            
+            // Vote power chart
+            const voteCtx = document.getElementById('voteChart').getContext('2d');
+            if (voteChart) voteChart.destroy();
+            
+            voteChart = new Chart(voteCtx, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(p => p.name.length > 15 ? p.name.substring(0, 15) + '...' : p.name),
+                    datasets: [{
+                        label: 'Vote Power %',
+                        data: top10.map(p => p.vote_power_pct),
+                        backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Vote Power %' }
+                        }
+                    }
+                }
+            });
+            
+            // Reward rate chart
+            const rewardCtx = document.getElementById('rewardChart').getContext('2d');
+            if (rewardChart) rewardChart.destroy();
+            
+            const providersWithRewards = top10.filter(p => typeof p.reward_rate === 'number' && p.reward_rate > 0);
+            
+            rewardChart = new Chart(rewardCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Reward Rate vs Vote Power',
+                        data: providersWithRewards.map(p => ({
+                            x: p.vote_power_pct,
+                            y: p.reward_rate * 100
+                        })),
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: 'rgba(34, 197, 94, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Vote Power %' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Reward Rate %' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createTable(providers, date) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = providers.map(p => `
+                <tr class="border-b border-gray-700 hover:bg-gray-750">
+                    <td class="p-2">${p.rank || '-'}</td>
+                    <td class="p-2 font-medium">${p.name}</td>
+                    <td class="p-2">${(p.vote_power || 0).toLocaleString()}</td>
+                    <td class="p-2">${p.vote_power_pct.toFixed(2)}%</td>
+                    <td class="p-2">${p.reward_rate ? (p.reward_rate * 100).toFixed(2) + '%' : 'N/A'}</td>
+                    <td class="p-2">
+                        <span class="px-2 py-1 text-xs rounded ${p.registered === 'Yes' ? 'bg-green-700 text-green-100' : 'bg-gray-600 text-gray-200'}">
+                            ${p.registered || 'Unknown'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Start loading when page is ready
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
