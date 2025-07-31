@@ -1711,7 +1711,12 @@
 
     function allocateConservative(entries) {
       // Bifrost constraint: Only 2 providers allowed
-      const top = entries.slice(0, 2);
+      const validEntries = entries.filter(e => e && e.name); // Filter out undefined entries
+      if (validEntries.length < 2) {
+        console.warn('⚠️ Not enough valid providers for conservative allocation:', validEntries.length);
+        return validEntries.map((e, i) => ({ name: e.name, pct: i === 0 ? 100 : 0, score: e.score }));
+      }
+      const top = validEntries.slice(0, 2);
       return [
         { name: top[0].name, pct: 60, score: top[0].score },
         { name: top[1].name, pct: 40, score: top[1].score }
@@ -1720,7 +1725,12 @@
 
     function allocateAggressive(entries) {
       // Bifrost constraint: Only 2 providers allowed
-      const top = entries.slice(0, 2);
+      const validEntries = entries.filter(e => e && e.name); // Filter out undefined entries
+      if (validEntries.length < 2) {
+        console.warn('⚠️ Not enough valid providers for aggressive allocation:', validEntries.length);
+        return validEntries.map((e, i) => ({ name: e.name, pct: i === 0 ? 100 : 0, score: e.score }));
+      }
+      const top = validEntries.slice(0, 2);
       return [
         { name: top[0].name, pct: 70, score: top[0].score },
         { name: top[1].name, pct: 30, score: top[1].score }
@@ -1729,7 +1739,12 @@
 
     function allocateDiversified(entries) {
       // Bifrost constraint: Only 2 providers allowed - equal split for maximum diversification
-      const top = entries.slice(0, 2);
+      const validEntries = entries.filter(e => e && e.name); // Filter out undefined entries
+      if (validEntries.length < 2) {
+        console.warn('⚠️ Not enough valid providers for diversified allocation:', validEntries.length);
+        return validEntries.map((e, i) => ({ name: e.name, pct: i === 0 ? 100 : 0, score: e.score }));
+      }
+      const top = validEntries.slice(0, 2);
       return [
         { name: top[0].name, pct: 50, score: top[0].score },
         { name: top[1].name, pct: 50, score: top[1].score }
@@ -1738,7 +1753,12 @@
 
     function allocateBalanced(entries) {
       // Bifrost constraint: Only 2 providers allowed
-      const top = entries.slice(0, 2);
+      const validEntries = entries.filter(e => e && e.name); // Filter out undefined entries
+      if (validEntries.length < 2) {
+        console.warn('⚠️ Not enough valid providers for balanced allocation:', validEntries.length);
+        return validEntries.map((e, i) => ({ name: e.name, pct: i === 0 ? 100 : 0, score: e.score }));
+      }
+      const top = validEntries.slice(0, 2);
       return [
         { name: top[0].name, pct: 65, score: top[0].score },
         { name: top[1].name, pct: 35, score: top[1].score }
