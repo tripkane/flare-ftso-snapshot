@@ -603,33 +603,94 @@
       });
 
       const vpData = {};
-      window.flareCurrentSnapshots.forEach(snap => {
-        snap.providers.forEach(p => {
-          if (!vpData[p.name]) vpData[p.name] = [];
-          vpData[p.name].push(parseFloat(p.vote_power_pct));
+      if (window.flareCurrentSnapshots && window.flareCurrentSnapshots.length > 0) {
+        console.log('📊 Processing current vote power data for', window.flareCurrentSnapshots.length, 'snapshots');
+        window.flareCurrentSnapshots.forEach(snap => {
+          snap.providers.forEach(p => {
+            if (!p || !p.name) {
+              console.warn('⚠️ Invalid current vote power provider object:', p);
+              return; // Skip invalid providers
+            }
+            if (!vpData[p.name]) vpData[p.name] = [];
+            vpData[p.name].push(parseFloat(p.vote_power) || 0);
+          });
         });
-      });
+        console.log('📊 Current vote power data processed for', Object.keys(vpData).length, 'providers');
+      } else {
+        console.warn('⚠️ No current vote power data available for headroom calculation');
+      }
 
       Object.keys(vpData).forEach(name => {
         const arr = vpData[name];
         const n = arr.length;
         const current = arr[n - 1];
-        let slope = 0;
-        if (n > 1) {
-          let sx = 0, sy = 0, sxy = 0, sx2 = 0;
-          arr.forEach((y, i) => {
-            const x = i;
-            sx += x;
-            sy += y;
-            sxy += x * y;
-            sx2 += x * x;
-          });
-          slope = (n * sxy - sx * sy) / (n * sx2 - sx * sx);
+        
+        // Set locked vote power from the latest current data
+        if (stats[name] && current !== undefined && !isNaN(current)) {
+          stats[name].flr_locked = current; // FLR locked vote power
         }
-        const projection = current + slope * 84;
-        const locked = stats[name] ? stats[name].locked : 0;
-        if (stats[name]) {
-          stats[name].headroom = locked - projection;
+      });
+
+      // Process SGB current vote power data
+      const sgbVpData = {};
+      if (window.songbirdCurrentSnapshots && window.songbirdCurrentSnapshots.length > 0) {
+        console.log('📊 Processing SGB current vote power data for', window.songbirdCurrentSnapshots.length, 'snapshots');
+        window.songbirdCurrentSnapshots.forEach(snap => {
+          snap.providers.forEach(p => {
+            if (!p || !p.name) {
+              console.warn('⚠️ Invalid SGB current vote power provider object:', p);
+              return; // Skip invalid providers
+            }
+            if (!sgbVpData[p.name]) sgbVpData[p.name] = [];
+            sgbVpData[p.name].push(parseFloat(p.vote_power) || 0);
+          });
+        });
+        console.log('📊 SGB current vote power data processed for', Object.keys(sgbVpData).length, 'providers');
+      } else {
+        console.warn('⚠️ No SGB current vote power data available for headroom calculation');
+      }
+
+      Object.keys(sgbVpData).forEach(name => {
+        const arr = sgbVpData[name];
+        const n = arr.length;
+        const current = arr[n - 1];
+        
+        // Set SGB locked vote power from the latest current data
+        if (stats[name] && current !== undefined && !isNaN(current)) {
+          stats[name].sgb_locked = current; // SGB locked vote power
+        }
+      });
+
+      // Calculate headroom using locked vote power from daily snapshots
+      Object.keys(stats).forEach(name => {
+        let flrLocked = 0;
+        let sgbLocked = 0;
+        
+        // Get FLR locked vote power from latest daily snapshot
+        if (window.flareSnapshots && window.flareSnapshots.length > 0) {
+          const latestFlareSnapshot = window.flareSnapshots[window.flareSnapshots.length - 1];
+          const flrProvider = latestFlareSnapshot.providers.find(p => p.name === name);
+          if (flrProvider && flrProvider.vote_power_pct_locked !== undefined) {
+            flrLocked = parseFloat(flrProvider.vote_power_pct_locked) || 0;
+          }
+        }
+        
+        // Get SGB locked vote power from latest daily snapshot  
+        if (window.songbirdSnapshots && window.songbirdSnapshots.length > 0) {
+          const latestSgbSnapshot = window.songbirdSnapshots[window.songbirdSnapshots.length - 1];
+          const sgbProvider = latestSgbSnapshot.providers.find(p => p.name === name);
+          if (sgbProvider && sgbProvider.vote_power_pct_locked !== undefined) {
+            sgbLocked = parseFloat(sgbProvider.vote_power_pct_locked) || 0;
+          }
+        }
+        
+        // Calculate headroom as 2.5% - max(FLR_locked, SGB_locked), minimum 0
+        const maxLocked = Math.max(flrLocked, sgbLocked);
+        if (flrLocked > 0 || sgbLocked > 0) { // Only if we have actual data
+          stats[name].headroom = Math.max(0, 2.5 - maxLocked);
+          stats[name].flr_locked = flrLocked;
+          stats[name].sgb_locked = sgbLocked;
+          console.log(`🎯 ${name}: FLR=${flrLocked.toFixed(4)}%, SGB=${sgbLocked.toFixed(4)}%, max=${maxLocked.toFixed(4)}%, headroom=${stats[name].headroom.toFixed(4)}%`);
         }
       });
 
@@ -1603,7 +1664,13 @@
           const headroom = ((s.headroom || 0) / 100) * 0.15;
           const reliability = Math.max(0, 1 - (s.zeroCount || 0) * 0.1) * 0.05;
           
-          const score = performance + stability + trend + headroom + reliability;
+          // SEVERE PENALTY for providers with 0% or negative headroom
+          let headroomPenalty = 0;
+          if ((s.headroom || 0) <= 0) {
+            headroomPenalty = -1000; // Massive penalty to ensure they never get recommended
+          }
+          
+          const score = performance + stability + trend + headroom + reliability + headroomPenalty;
           return { name, score, stats: s };
         });
         
