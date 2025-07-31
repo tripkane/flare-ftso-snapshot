@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTSO Debug</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">FTSO Debug Test</h1>
+        
+        <div id="status" class="mb-4 p-4 bg-blue-800 rounded">
+            <p>Debugging error...</p>
+        </div>
+        
+        <div id="console" class="bg-black p-4 rounded text-green-400 font-mono text-xs max-h-96 overflow-y-scroll">
+            <p>Console output:</p>
+        </div>
+    </div>
+
+    <script>
+        const consoleDiv = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToConsole(type, ...args) {
+            const line = document.createElement('div');
+            line.className = type === 'error' ? 'text-red-400' : 'text-green-400';
+            line.textContent = `[${type.toUpperCase()}] ${args.join(' ')}`;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        console.log = (...args) => {
+            originalLog(...args);
+            addToConsole('log', ...args);
+        };
+        
+        console.error = (...args) => {
+            originalError(...args);
+            addToConsole('error', ...args);
+        };
+        
+        // Test the exact same code pattern from the main dashboard
+        async function testError() {
+            try {
+                console.log('🚀 Starting debug test...');
+                
+                // Test fetching manifest
+                const response = await fetch('./daily_snapshots/manifest.json');
+                if (!response.ok) {
+                    throw new Error(`Manifest fetch failed: ${response.status}`);
+                }
+                const manifest = await response.json();
+                console.log('✅ Manifest loaded with', manifest.flare?.length, 'files');
+                
+                // Test loading one data file
+                if (manifest.flare && manifest.flare.length > 0) {
+                    const latestFile = manifest.flare[manifest.flare.length - 1];
+                    console.log('🔄 Loading file:', latestFile);
+                    
+                    const dataResponse = await fetch(`./daily_snapshots/${latestFile}`);
+                    if (!dataResponse.ok) {
+                        throw new Error(`Data fetch failed: ${dataResponse.status}`);
+                    }
+                    const data = await dataResponse.json();
+                    console.log('✅ Data loaded with', data.providers?.length, 'providers');
+                    
+                    // Test the exact provider processing that might cause the error
+                    console.log('🔄 Testing provider processing...');
+                    
+                    // This is the pattern from loadData that might fail
+                    const processedProviders = (data.providers || []).filter(p => p && p.name);
+                    console.log('✅ Filtered providers:', processedProviders.length);
+                    
+                    // Test provider stats processing 
+                    console.log('🔄 Testing provider stats...');
+                    const stats = {};
+                    processedProviders.forEach((p, index) => {
+                        console.log(`Processing provider ${index + 1}/${processedProviders.length}: ${p.name}`);
+                        
+                        // The exact pattern that might cause "Cannot read properties of undefined"
+                        if (!p || !p.name) {
+                            console.log('⚠️ Invalid provider:', p);
+                            return;
+                        }
+                        
+                        const name = p.name;
+                        console.log(`✅ Name extracted: "${name}"`);
+                        
+                        if (!stats[name]) {
+                            stats[name] = { rewardRates: [], locked: 0, zeroCount: 0 };
+                        }
+                        
+                        // This is where the error might occur - accessing properties
+                        const rate = parseFloat(p.reward_rate) || 0;
+                        console.log(`✅ Rate for ${name}: ${rate}`);
+                        
+                        stats[name].rewardRates.push({ date: data.date, rate });
+                    });
+                    
+                    console.log('✅ Provider stats computed for', Object.keys(stats).length, 'providers');
+                    
+                    // Test Object.entries() which is used in recommendProviders
+                    console.log('🔄 Testing Object.entries...');
+                    const entries = Object.entries(stats);
+                    console.log('✅ Object.entries worked:', entries.length, 'entries');
+                    
+                    entries.forEach(([name, s], index) => {
+                        console.log(`Entry ${index + 1}: ${name} ->`, s);
+                        // This might be where the "name" property error occurs
+                        if (s && s.name) {
+                            console.log(`✅ Entry has name property: ${s.name}`);
+                        }
+                    });
+                    
+                    console.log('🎉 All tests passed!');
+                    
+                } else {
+                    throw new Error('No files in manifest');
+                }
+                
+            } catch (error) {
+                console.error('💥 Test failed:', error.message);
+                console.error('💥 Stack:', error.stack);
+            }
+        }
+        
+        // Global error handlers
+        window.addEventListener('error', (e) => {
+            console.error('💥 GLOBAL ERROR:', e.error?.message || e.message);
+            console.error('💥 Stack:', e.error?.stack);
+            console.error('💥 File:', e.filename, 'Line:', e.lineno);
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('💥 UNHANDLED PROMISE REJECTION:', e.reason);
+        });
+        
+        // Run test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOM loaded, starting debug test...');
+            testError();
+        });
+        
+    </script>
+</body>
+</html>
