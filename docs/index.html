@@ -1987,6 +1987,17 @@
     document.addEventListener('DOMContentLoaded', () => {
       console.log('🚀 DOM loaded, starting data initialization...');
       
+      // Add global error handler
+      window.addEventListener('error', (e) => {
+        console.error('💥 GLOBAL ERROR:', e.error);
+        console.error('💥 Stack:', e.error?.stack);
+        console.error('💥 File:', e.filename, 'Line:', e.lineno);
+      });
+      
+      window.addEventListener('unhandledrejection', (e) => {
+        console.error('💥 UNHANDLED PROMISE REJECTION:', e.reason);
+      });
+      
       // Show skip button after 5 seconds
       setTimeout(() => {
         const skipBtn = document.getElementById('skipLoadingBtn');
@@ -2029,13 +2040,41 @@
         }
         
         // Initialize recommendation strategy display
-        updateRecommendationStrategy();
+        try {
+          updateRecommendationStrategy();
+        } catch (error) {
+          console.error('💥 Error in updateRecommendationStrategy:', error);
+        }
         
-        renderChart();
-        renderTable();
-        renderSingleProviderChart();
-        renderCurrentVoteChart();
-        renderMultiProviderChart();
+        try {
+          renderChart();
+        } catch (error) {
+          console.error('💥 Error in renderChart:', error);
+        }
+        
+        try {
+          renderTable();
+        } catch (error) {
+          console.error('💥 Error in renderTable:', error);
+        }
+        
+        try {
+          renderSingleProviderChart();
+        } catch (error) {
+          console.error('💥 Error in renderSingleProviderChart:', error);
+        }
+        
+        try {
+          renderCurrentVoteChart();
+        } catch (error) {
+          console.error('💥 Error in renderCurrentVoteChart:', error);
+        }
+        
+        try {
+          renderMultiProviderChart();
+        } catch (error) {
+          console.error('💥 Error in renderMultiProviderChart:', error);
+        }
         const providerFilter = document.getElementById('providerFilter');
         if (providerFilter) {
           providerFilter.addEventListener('change', renderSingleProviderChart);
