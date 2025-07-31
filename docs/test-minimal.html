@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTSO Dashboard - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">FTSO Dashboard - Minimal Test</h1>
+        
+        <div id="status" class="mb-4 p-4 bg-blue-800 rounded">
+            <p>Initializing...</p>
+        </div>
+        
+        <div id="results" class="bg-gray-800 p-4 rounded">
+            <p>Results will appear here...</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Starting minimal test...');
+        
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        // Simple function to update status
+        function updateStatus(message) {
+            console.log('📋', message);
+            status.innerHTML = `<p>${message}</p>`;
+        }
+        
+        // Test basic data loading
+        async function testDataLoad() {
+            try {
+                updateStatus('Testing manifest load...');
+                
+                const manifestUrl = './daily_snapshots/manifest.json';
+                console.log('🔄 Fetching manifest:', manifestUrl);
+                
+                const response = await fetch(manifestUrl);
+                if (!response.ok) {
+                    throw new Error(`Manifest fetch failed: ${response.status} ${response.statusText}`);
+                }
+                
+                const manifest = await response.json();
+                console.log('✅ Manifest loaded:', manifest);
+                
+                updateStatus('Manifest loaded successfully! Testing data file...');
+                
+                // Try to load one data file
+                if (manifest.flare && manifest.flare.length > 0) {
+                    const dataFile = manifest.flare[manifest.flare.length - 1]; // Latest file
+                    const dataUrl = `./daily_snapshots/${dataFile}`;
+                    
+                    console.log('🔄 Fetching data file:', dataUrl);
+                    const dataResponse = await fetch(dataUrl);
+                    
+                    if (!dataResponse.ok) {
+                        throw new Error(`Data fetch failed: ${dataResponse.status} ${dataResponse.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ Data file loaded:', data);
+                    
+                    updateStatus('✅ SUCCESS: Both manifest and data loaded!');
+                    results.innerHTML = `
+                        <h3 class="text-lg font-bold mb-2">Test Results:</h3>
+                        <p><strong>Manifest files:</strong> ${manifest.flare?.length || 0} Flare, ${manifest.songbird?.length || 0} Songbird</p>
+                        <p><strong>Latest file:</strong> ${dataFile}</p>
+                        <p><strong>Providers in file:</strong> ${data.providers?.length || 0}</p>
+                        <p class="text-green-400 mt-2">✅ Basic data loading works!</p>
+                    `;
+                } else {
+                    throw new Error('No Flare files in manifest');
+                }
+                
+            } catch (error) {
+                console.error('💥 Test failed:', error);
+                updateStatus('❌ FAILED: ' + error.message);
+                results.innerHTML = `
+                    <h3 class="text-lg font-bold mb-2 text-red-400">Error Details:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Stack:</strong> ${error.stack}</p>
+                    <p class="text-red-400 mt-2">❌ Basic data loading failed!</p>
+                `;
+            }
+        }
+        
+        // Run test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 DOM loaded, starting test...');
+            testDataLoad();
+        });
+        
+    </script>
+</body>
+</html>
