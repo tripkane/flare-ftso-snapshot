@@ -1002,7 +1002,7 @@
       let registeredInLatest = new Set();
       if (latestSnapshot) {
         latestSnapshot.providers.forEach(provider => {
-          if (provider.registered && provider.registered.toLowerCase() === "yes") {
+          if (provider && provider.name && provider.registered && provider.registered.toLowerCase() === "yes") {
             registeredInLatest.add(provider.name);
           }
         });
@@ -1012,6 +1012,9 @@
 
       const filtered = window.flareSnapshots.flatMap(snapshot =>
         snapshot.providers.filter(provider => {
+          // Skip invalid providers
+          if (!provider || !provider.name) return false;
+          
           if (providersOverLimit.has(provider.name)) return false;
           const isRegistered = provider.registered && provider.registered.toLowerCase() === "yes";
           const isRegisteredLatest = registeredInLatest.has(provider.name);
@@ -1037,6 +1040,9 @@
       const excludeDisabled = document.getElementById('excludeDisabled').checked;
         const filtered = window.songbirdSnapshots.flatMap(snapshot =>
           snapshot.providers.filter(provider => {
+            // Skip invalid providers
+            if (!provider || !provider.SGB_provider) return false;
+            
             if (providersOverLimit.has(provider.SGB_provider)) return false;
             if (namesOnly && provider.SGB_provider.startsWith('0x')) return false;
             if (bifrostOnly && window.bifrostSongbird && !window.bifrostSongbird.includes(provider.SGB_provider)) return false;
@@ -1058,6 +1064,7 @@
       // Flare
       window.flareSnapshots.forEach(snapshot => {
         snapshot.providers.forEach(provider => {
+          if (!provider || !provider.name) return; // Skip invalid providers
           const votePower = parseFloat(provider.vote_power_pct_locked);
           if (votePower > maxVotePower) {
             overLimit.add(provider.name);
@@ -1068,6 +1075,7 @@
       // Songbird
       window.songbirdSnapshots.forEach(snapshot => {
         snapshot.providers.forEach(provider => {
+          if (!provider || !provider.SGB_provider) return; // Skip invalid providers
           const votePower = parseFloat(provider.SGB_vote_power_locked_pct);
           if (votePower > maxVotePower) {
             overLimit.add(provider.SGB_provider);
@@ -1086,6 +1094,7 @@
 
       const rewardRates = {};
       filteredProviders.forEach(provider => {
+        if (!provider || !provider.name) return; // Skip invalid providers
         if (!rewardRates[provider.name]) rewardRates[provider.name] = [];
         rewardRates[provider.name].push(parseFloat(provider.reward_rate) || 0);
       });
@@ -1171,6 +1180,7 @@
       // Build a lookup for SGB: {date|provider: providerObj}
       const sgbMap = {};
       filteredSongbird.forEach(provider => {
+        if (!provider || !provider.SGB_provider) return; // Skip invalid providers
         const key = `${provider.date}|${provider.SGB_provider}`;
         sgbMap[key] = provider;
       });
@@ -1178,6 +1188,7 @@
       // Compute reward rate averages per provider
       const rewardMap = {};
       filteredFlare.forEach(p => {
+        if (!p || !p.name) return; // Skip invalid providers
         if (!rewardMap[p.name]) rewardMap[p.name] = [];
         rewardMap[p.name].push(parseFloat(p.reward_rate) || 0);
       });
@@ -1192,6 +1203,7 @@
 
       // Only iterate Flare providers (left join)
       filteredFlare.forEach(provider => {
+        if (!provider || !provider.name) return; // Skip invalid providers
         const key = `${provider.date}|${provider.name}`;
         const sgb = sgbMap[key];
 
@@ -1247,11 +1259,13 @@
       // Build provider map
       const providerMap = {};
       filteredFlare.forEach(p => {
+        if (!p || !p.name) return; // Skip invalid providers
         if (!providerMap[p.name]) providerMap[p.name] = { flare: [], songbird: [] };
         providerMap[p.name].flare.push(p);
       });
       filteredSongbird.forEach(p => {
-        if (!providerMap[p.SGB_provider]) providerMap[p.SGB_provider] = providerMap[p.SGB_provider] || { flare: [], songbird: [] };
+        if (!p || !p.SGB_provider) return; // Skip invalid providers
+        if (!providerMap[p.SGB_provider]) providerMap[p.SGB_provider] = { flare: [], songbird: [] };
         providerMap[p.SGB_provider].songbird.push(p);
       });
 
