@@ -2033,78 +2033,155 @@
         console.log('✅ Data loaded successfully, initializing UI...');
         clearTimeout(maxLoadTimeout);
         
+        // Hide loading indicator first
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+        
+        // Initialize UI components one by one with detailed error logging
+        console.log('🎯 Step 1: updateRecommendationStrategy');
+        try {
+          updateRecommendationStrategy();
+          console.log('✅ updateRecommendationStrategy completed');
+        } catch (error) {
+          console.error('💥 Error in updateRecommendationStrategy:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 2: renderChart');
+        try {
+          renderChart();
+          console.log('✅ renderChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 3: renderTable');
+        try {
+          renderTable();
+          console.log('✅ renderTable completed');
+        } catch (error) {
+          console.error('💥 Error in renderTable:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 4: renderSingleProviderChart');
+        try {
+          renderSingleProviderChart();
+          console.log('✅ renderSingleProviderChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderSingleProviderChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 5: renderCurrentVoteChart');
+        try {
+          renderCurrentVoteChart();
+          console.log('✅ renderCurrentVoteChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderCurrentVoteChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 6: renderMultiProviderChart');
+        try {
+          renderMultiProviderChart();
+          console.log('✅ renderMultiProviderChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderMultiProviderChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 7: Setting up event listeners');
+        try {
+          const providerFilter = document.getElementById('providerFilter');
+          if (providerFilter) {
+            providerFilter.addEventListener('change', renderSingleProviderChart);
+            providerFilter.addEventListener('change', renderCurrentVoteChart);
+            console.log('✅ Event listeners attached');
+          } else {
+            console.warn('⚠️ providerFilter element not found');
+          }
+        } catch (error) {
+          console.error('💥 Error setting up event listeners:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎉 Dashboard initialization complete!');
+      }).catch(error => {
+        console.error('💥 CRITICAL: loadData() failed:', error.message);
+        console.error('💥 Full error:', error);
+        console.error('💥 Stack trace:', error.stack);
+        clearTimeout(maxLoadTimeout);
+        
+        // Don't show the loading failed dialog - just log and continue
+        console.log('🚨 Attempting to continue with fallback initialization...');
+        
         // Hide loading indicator
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
           loadingIndicator.style.display = 'none';
         }
         
-        // Initialize recommendation strategy display
+        // Try to initialize UI with empty data
         try {
-          updateRecommendationStrategy();
-        } catch (error) {
-          console.error('💥 Error in updateRecommendationStrategy:', error);
-        }
-        
-        try {
-          renderChart();
-        } catch (error) {
-          console.error('💥 Error in renderChart:', error);
-        }
-        
-        try {
-          renderTable();
-        } catch (error) {
-          console.error('💥 Error in renderTable:', error);
-        }
-        
-        try {
-          renderSingleProviderChart();
-        } catch (error) {
-          console.error('💥 Error in renderSingleProviderChart:', error);
-        }
-        
-        try {
-          renderCurrentVoteChart();
-        } catch (error) {
-          console.error('💥 Error in renderCurrentVoteChart:', error);
-        }
-        
-        try {
-          renderMultiProviderChart();
-        } catch (error) {
-          console.error('💥 Error in renderMultiProviderChart:', error);
-        }
-        const providerFilter = document.getElementById('providerFilter');
-        if (providerFilter) {
-          providerFilter.addEventListener('change', renderSingleProviderChart);
-          providerFilter.addEventListener('change', renderCurrentVoteChart);
-        } else {
-          console.warn('⚠️ providerFilter element not found');
-        }
-        
-        console.log('🎉 Dashboard initialization complete!');
-      }).catch(error => {
-        console.error('💥 Failed to initialize dashboard:', error);
-        clearTimeout(maxLoadTimeout);
-        
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        if (loadingIndicator) {
-          loadingIndicator.innerHTML = `
-            <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center max-w-md">
-              <h3 class="text-lg font-semibold text-red-300 mb-2">⚠️ Loading Failed</h3>
-              <p class="text-red-400 text-sm mb-4">Failed to load dashboard data: ${error.message}</p>
-              <div class="text-xs text-gray-400 mb-4">Check browser console (F12) for detailed error information</div>
-              <div class="space-y-2">
-                <button onclick="location.reload()" class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                  🔄 Retry
-                </button>
-                <button onclick="forceHideLoading()" class="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                  ➡️ Try Anyway
-                </button>
+          console.log('🔧 Fallback: Initializing empty provider stats...');
+          window.flareSnapshots = [];
+          window.songbirdSnapshots = [];
+          window.flareCurrentSnapshots = [];
+          window.songbirdCurrentSnapshots = [];
+          window.bifrostFlare = [];
+          window.bifrostSongbird = [];
+          window.disabledFlare = new Set();
+          window.disabledSongbird = new Set();
+          
+          console.log('🔧 Fallback: Computing empty stats...');
+          computeProviderStats();
+          
+          console.log('🔧 Fallback: Trying to render UI...');
+          try { renderChart(); } catch (e) { console.error('Fallback renderChart failed:', e.message); }
+          try { renderTable(); } catch (e) { console.error('Fallback renderTable failed:', e.message); }
+          try { renderSingleProviderChart(); } catch (e) { console.error('Fallback renderSingleProviderChart failed:', e.message); }
+          try { renderCurrentVoteChart(); } catch (e) { console.error('Fallback renderCurrentVoteChart failed:', e.message); }
+          try { renderMultiProviderChart(); } catch (e) { console.error('Fallback renderMultiProviderChart failed:', e.message); }
+          
+          console.log('🎯 Fallback initialization completed');
+          
+          // Show a warning message instead of failure
+          const container = document.querySelector('.container');
+          if (container) {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'bg-yellow-900 p-4 rounded-lg border border-yellow-600 mb-4';
+            warningDiv.innerHTML = `
+              <h3 class="text-lg font-semibold text-yellow-300 mb-2">⚠️ Data Loading Issue</h3>
+              <p class="text-yellow-400 text-sm">Unable to load some data. Dashboard is running with limited functionality.</p>
+              <p class="text-xs text-gray-400 mt-2">Error: ${error.message}</p>
+            `;
+            container.insertBefore(warningDiv, container.firstChild);
+          }
+          
+        } catch (fallbackError) {
+          console.error('💥 Even fallback failed:', fallbackError.message);
+          console.error('💥 Fallback stack:', fallbackError.stack);
+          
+          // Last resort - show the error dialog
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          if (loadingIndicator) {
+            loadingIndicator.innerHTML = `
+              <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center max-w-md">
+                <h3 class="text-lg font-semibold text-red-300 mb-2">⚠️ Critical Error</h3>
+                <p class="text-red-400 text-sm mb-4">Dashboard failed to initialize: ${error.message}</p>
+                <div class="text-xs text-gray-400 mb-4">Fallback also failed: ${fallbackError.message}</div>
+                <div class="space-y-2">
+                  <button onclick="location.reload()" class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                    🔄 Retry
+                  </button>
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          }
         }
       });
     });
