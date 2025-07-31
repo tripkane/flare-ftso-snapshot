@@ -122,7 +122,7 @@
           <h3 class="font-semibold text-sm text-gray-300">Power Limits</h3>
           <label class="block">
             <span class="text-sm">Max Voting Power (%):</span>
-            <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="100"
+            <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="2.5"
               class="w-full mt-1 p-2 bg-gray-700 border border-gray-600 rounded text-sm" />
           </label>
         </div>
@@ -132,8 +132,8 @@
     <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4 bg-gradient-to-r from-gray-800 to-gray-750">
       <div class="flex justify-between items-center mb-4">
         <div>
-          <h2 class="text-xl font-bold text-purple-300">?? Smart Provider Recommendations</h2>
-          <p class="text-sm text-blue-300 mt-1">?? Bifrost Wallet: Maximum 2 providers allowed</p>
+          <h2 class="text-xl font-bold text-purple-300">🤖 Smart Provider Recommendations</h2>
+          <p class="text-sm text-blue-300 mt-1">ℹ️ Bifrost Wallet: Maximum 2 providers allowed</p>
         </div>
         <div class="flex items-center space-x-3">
           <div class="text-sm">
@@ -299,7 +299,7 @@
 
     async function fetchJsonSafe(url, timeoutMs = 8000) {
       try {
-        console.log('?? Fetching:', url);
+        console.log('🔄 Fetching:', url);
         
         // Create an AbortController for more reliable timeout
         const controller = new AbortController();
@@ -324,9 +324,9 @@
         return data;
       } catch (err) {
         if (err.name === 'AbortError') {
-          console.error('?? Request aborted (timeout):', url);
+          console.error('🚫 Request aborted (timeout):', url);
         } else {
-          console.error('?? Error fetching', url, err);
+          console.error('💥 Error fetching', url, err);
         }
         return null;
       }
@@ -346,7 +346,7 @@
     // Example: Load both Flare and Songbird, transform Songbird fields
     async function loadData() {
       try {
-        console.log('?? Starting data load. BASE_URL:', BASE_URL);
+        console.log('🚀 Starting data load. BASE_URL:', BASE_URL);
         console.log('� Current location:', location.href);
         console.log('� Timestamp:', new Date().toISOString());
         
