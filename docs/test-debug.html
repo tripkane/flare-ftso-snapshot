@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+    .test { margin: 10px 0; padding: 10px; border: 1px solid #444; }
+    .success { background: #004400; }
+    .error { background: #440000; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Debug Test</h1>
+  <div id="results"></div>
+
+  <script>
+    const results = document.getElementById('results');
+    
+    function addResult(test, success, message) {
+      const div = document.createElement('div');
+      div.className = `test ${success ? 'success' : 'error'}`;
+      div.innerHTML = `<strong>${test}:</strong> ${message}`;
+      results.appendChild(div);
+    }
+
+    async function runTests() {
+      // Test 1: Basic JavaScript
+      try {
+        console.log('Test 1: Basic JavaScript');
+        addResult('Basic JavaScript', true, 'JavaScript is working');
+      } catch (e) {
+        addResult('Basic JavaScript', false, e.message);
+      }
+
+      // Test 2: Fetch manifest
+      try {
+        console.log('Test 2: Fetching manifest');
+        const response = await fetch('./daily_snapshots/manifest.json');
+        if (response.ok) {
+          const data = await response.json();
+          addResult('Manifest Fetch', true, `Loaded ${data.flare?.length || 0} flare files, ${data.songbird?.length || 0} songbird files`);
+        } else {
+          addResult('Manifest Fetch', false, `HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (e) {
+        addResult('Manifest Fetch', false, e.message);
+      }
+
+      // Test 3: Fetch provider list
+      try {
+        console.log('Test 3: Fetching provider list');
+        const response = await fetch('./bifrost-wallet.providerlist.json');
+        if (response.ok) {
+          const data = await response.json();
+          addResult('Provider List', true, `Loaded ${data.providers?.length || 0} providers`);
+        } else {
+          addResult('Provider List', false, `HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (e) {
+        addResult('Provider List', false, e.message);
+      }
+
+      // Test 4: Fetch a sample data file
+      try {
+        console.log('Test 4: Fetching sample data file');
+        const response = await fetch('./daily_snapshots/2025-07/flare_snapshot_2025-07-29.json');
+        if (response.ok) {
+          const data = await response.json();
+          addResult('Sample Data File', true, `Loaded data for ${data.date}, ${data.providers?.length || 0} providers`);
+        } else {
+          addResult('Sample Data File', false, `HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (e) {
+        addResult('Sample Data File', false, e.message);
+      }
+
+      // Test 5: Check for external libraries
+      try {
+        if (typeof Chart !== 'undefined') {
+          addResult('Chart.js', true, 'Chart.js loaded successfully');
+        } else {
+          addResult('Chart.js', false, 'Chart.js not available');
+        }
+      } catch (e) {
+        addResult('Chart.js', false, e.message);
+      }
+
+      console.log('All tests completed');
+    }
+
+    // Run tests when page loads
+    window.addEventListener('load', runTests);
+  </script>
+</body>
+</html>

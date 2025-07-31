@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FTSO Flare Dashboard</title>
+  <!-- Cache buster: July 30, 2025 - Force browser refresh -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <!-- Favicon fallback to prevent 404 -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <style>
+    /* Style the DataTables dropdown */
+    .dataTables_length select {
+      background-color: #1f2937; /* Dark gray background */
+      color: #ffffff; /* White text */
+      border: 1px solid #374151; /* Border color */
+      padding: 4px; /* Add some padding */
+      border-radius: 4px; /* Rounded corners */
+    }
+
+    /* Style the dropdown options */
+    .dataTables_length select option {
+      background-color: #1f2937; /* Dark gray background for options */
+      color: #ffffff; /* White text for options */
+    }
+
+    /* Fix for dropdown menu when opened */
+    select:focus {
+      outline: none; /* Remove default focus outline */
+      box-shadow: 0 0 5px #374151; /* Add a subtle shadow for focus */
+    }
+
+    /* Table container for scrolling - let DataTables handle overflow */
+    #tableContainer {
+      max-height: 600px;
+    }
+
+    /* Sticky table headers */
+    #dataTable thead th {
+      position: sticky;
+      top: 0;
+      background-color: #374151; /* Same as bg-gray-700 */
+      z-index: 10;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 font-sans">
+  <header class="py-4 bg-gray-800 border-b border-gray-700 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <img src="assets/logo.png" alt="Dashboard Logo" class="h-12 w-auto" />
+      <h1 class="text-2xl font-bold">FTSO Flare Dashboard</h1>
+    </div>
+    <!-- The query interface previously posted questions to a local LLM server.
+         It is hidden by default because the dashboard now works without any
+         backend service. -->
+    <div id="queryBar" class="flex items-center space-x-2 hidden">
+      <input id="queryInput" type="text" placeholder="Ask about snapshots..." class="p-2 bg-gray-700 border border-gray-600 rounded-l text-sm w-64" />
+      <button id="queryButton" class="px-3 py-2 bg-purple-600 text-white rounded-r">Ask</button>
+    </div>
+  </header>
+
+  <main class="container mx-auto p-4">
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 text-center max-w-md">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+        <h3 class="text-lg font-semibold text-purple-300 mb-2">Loading FTSO Dashboard</h3>
+        <p class="text-gray-400 text-sm">Fetching provider data and snapshots...</p>
+        <div class="text-xs text-gray-500 mt-2">v2025.07.30 - Emergency Loading Fix</div>
+        <button id="skipLoadingBtn" onclick="forceHideLoading()" 
+          class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm hidden">
+          Skip Loading (Use Cached Data)
+        </button>
+      </div>
+    </div>
+
+    <!-- Consolidated Top Filter Bar -->
+    <section id="topFilterSection" class="border-4 border-gray-700 rounded p-4 mb-6 bg-gray-800">
+      <h2 class="text-lg font-bold mb-4 text-center">Dashboard Filters & Controls</h2>
+      
+      <!-- Row 1: Registration & Display Filters -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="space-y-2">
+          <h3 class="font-semibold text-sm text-gray-300">Registration Filters</h3>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="registeredLatestOnly" class="rounded" />
+            <span class="text-sm">Latest Snapshot Only</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="registeredOnly" class="rounded" />
+            <span class="text-sm">Registered at Each Date</span>
+          </label>
+        </div>
+        
+        <div class="space-y-2">
+          <h3 class="font-semibold text-sm text-gray-300">Display Options</h3>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="namedOnly" class="rounded" checked />
+            <span class="text-sm">Names Only</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="bifrostOnly" class="rounded" checked />
+            <span class="text-sm">Bifrost Delegation</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="excludeDisabled" class="rounded" checked />
+            <span class="text-sm">Exclude Disabled</span>
+          </label>
+        </div>
+        
+        <div class="space-y-2">
+          <h3 class="font-semibold text-sm text-gray-300">Power Limits</h3>
+          <label class="block">
+            <span class="text-sm">Max Voting Power (%):</span>
+            <input type="number" id="maxVotePowerInput" min="0" max="100" step="0.1" value="2.5"
+              class="w-full mt-1 p-2 bg-gray-700 border border-gray-600 rounded text-sm" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section id="recommendationSection" class="border-4 border-gray-700 rounded p-4 mb-4 bg-gradient-to-r from-gray-800 to-gray-750">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-xl font-bold text-purple-300">🎯 Smart Provider Recommendations</h2>
+          <p class="text-sm text-blue-300 mt-1">💡 Bifrost Wallet: Maximum 2 providers allowed</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div class="text-sm">
+            <span class="text-gray-400">Strategy:</span>
+            <select id="strategySelector" class="ml-2 p-1 bg-gray-700 border border-gray-600 rounded text-sm">
+              <option value="balanced" selected>Balanced</option>
+              <option value="conservative">Conservative</option>
+              <option value="aggressive">Aggressive</option>
+              <option value="diversified">Diversified (50/50)</option>
+            </select>
+          </div>
+          <div class="text-sm">
+            <span class="text-gray-400">Confidence:</span>
+            <span id="confidenceScore" class="ml-1 px-2 py-1 bg-green-600 text-white text-xs rounded font-semibold">85%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div id="recommendationSummary" class="flex flex-wrap gap-3 mb-4"></div>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div>
+          <label for="excludeProviders" class="font-semibold text-gray-300 block mb-2">Exclude Providers:</label>
+          <select id="excludeProviders" multiple size="4" 
+            class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+          </select>
+        </div>
+        <div class="space-y-2">
+          <div class="text-sm text-gray-400">
+            <div class="flex justify-between">
+              <span>Risk Level:</span>
+              <span id="riskLevel" class="text-yellow-400 font-semibold">Moderate</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Diversification:</span>
+              <span id="diversificationScore" class="text-blue-400 font-semibold">Good</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Expected Return:</span>
+              <span id="expectedReturn" class="text-green-400 font-semibold">~3.2%</span>
+            </div>
+          </div>
+          <button id="applyRecommendations" style="display: none;"
+            class="w-full mt-2 p-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-semibold transition-colors">
+            Apply Recommendations
+          </button>
+        </div>
+      </div>
+      
+      <table id="recommendationTable" class="w-full text-sm text-center mt-4 border-collapse"></table>
+    </section>
+
+    <!-- Multi-provider chart and table -->
+    <section id="multiContainer" class="border-4 border-gray-700 rounded p-4 mb-4">
+      <h2 class="text-xl font-bold mb-4">Provider Performance Analysis</h2>
+
+      <!-- Horizontal Chart Controls at the top -->
+      <div id="trendChartControls" class="bg-gray-800 p-3 rounded-lg mb-4 border border-gray-600">
+        <h3 class="font-bold text-center mb-3 text-purple-300">Chart Controls</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label for="topKpi" class="block font-semibold mb-1 text-gray-300">Timeframe:</label>
+            <select id="topKpi" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+              <option value="latest">Latest</option>
+              <option value="7-day" selected>7-Day Average</option>
+              <option value="30-day">30-Day Average</option>
+              <option value="cumulative">Cumulative</option>
+            </select>
+          </div>
+          
+          <div>
+            <label for="numTopProviders" class="block font-semibold mb-1 text-gray-300">Top N Providers:</label>
+            <input id="numTopProviders" type="number" min="1" max="20" value="5" 
+              class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm" />
+          </div>
+          
+          <div class="md:col-span-2">
+            <label for="multiProviderSelect" class="block font-semibold mb-1 text-gray-300">Select Providers:</label>
+            <select id="multiProviderSelect" multiple size="4" 
+              class="w-full p-1 bg-gray-700 border border-gray-600 rounded text-xs">
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="multiProviderChartContainer" class="relative overflow-x-auto mb-4">
+        <canvas id="multiProviderChart" class="w-full h-[400px]"></canvas>
+      </div>
+
+      <!-- Reward Rate Chart -->
+      <div id="chartContainer" class="overflow-x-auto mb-4">
+        <canvas id="rewardRateChart" class="w-full h-[400px]"></canvas>
+      </div>
+
+      </section>
+
+      <section id="providerSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+        <div class="mb-4">
+          <label for="providerFilter" class="font-bold mr-2">Filter Provider:</label>
+          <select id="providerFilter" class="p-2 bg-gray-800 border border-gray-700 rounded min-w-[200px]">
+            <option value="">Select a provider...</option>
+          </select>
+        </div>
+        <div id="singleChartContainer" style="width: 100%;"></div>
+        <div id="currentVpChartSection" class="mt-4">
+          <div id="currentVpChartContainer" style="width: 100%;"></div>
+          <input id="currentVpRange" type="range" min="0" max="0" value="0" class="w-full mt-2" />
+        </div>
+      </section>
+
+      <section id="tableSection" class="border-4 border-gray-700 rounded p-4 mb-4">
+        <h2 class="text-xl font-bold">Full Data Table</h2>
+        <div id="tableContainer" class="max-h-[600px]">
+          <table id="dataTable" class="display w-full border-collapse mt-4 bg-gray-800 text-gray-100">
+            <thead>
+              <tr class="bg-gray-700">
+                <th class="p-2 border border-gray-600">Date</th>
+                <th class="p-2 border border-gray-600">Provider</th>
+                <th class="p-2 border border-gray-600">Current Voting Power %</th>
+                <th class="p-2 border border-gray-600">Locked Voting Power %</th>
+                <th class="p-2 border border-gray-600">Current Voting Power % (SGB)</th>
+                <th class="p-2 border border-gray-600">Locked Voting Power % (SGB)</th>
+                <th class="p-2 border border-gray-600">Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">7-Day Avg Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">30-Day Avg Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">Cumulative Avg Reward Rate (%)</th>
+                <th class="p-2 border border-gray-600">Headroom (%)</th>
+                <th class="p-2 border border-gray-600">Trend Slope</th>
+                <th class="p-2 border border-gray-600">Reward Volatility (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be dynamically populated by renderTable() -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <div id="miniChartsContainer" style="overflow-y: auto; max-height: 1200px; width: 100%;">
+      <!-- Mini charts will be injected here -->
+    </div>
+  </main>
+
+  <script>
+
+    let rewardChart;
+    let singleVoteChart;
+    let singleRewardChart;
+    let currentVoteChart;
+    let dataTable;
+    let multiProviderChart;
+    let userExcludedProviders = new Set();
+
+    // Base URL for snapshot files
+    // Use a relative path when served via HTTP(S) so data loads from the
+    // deployed site. When opened directly from the file system, fall back to
+    // GitHub raw URLs because browsers restrict `file:` fetches.
+    const BASE_URL = location.protocol === 'file:'
+      ? 'https://raw.githubusercontent.com/tripkane/flare-ftso-snapshot/main/docs'
+      : '.';
+
+    async function fetchJsonSafe(url, timeoutMs = 8000) {
+      try {
+        console.log('🔄 Fetching:', url);
+        
+        // Create an AbortController for more reliable timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log(`⏰ Timeout reached for: ${url}`);
+          controller.abort();
+        }, timeoutMs);
+        
+        const res = await fetch(url, { 
+          signal: controller.signal,
+          cache: 'no-cache', // Force fresh data load
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) {
+          console.warn('❌ Missing file', url, res.status, res.statusText);
+          return null;
+        }
+        const data = await res.json();
+        console.log('✅ Successfully loaded:', url, 'Size:', JSON.stringify(data).length);
+        return data;
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.error('🚫 Request aborted (timeout):', url);
+        } else {
+          console.error('💥 Error fetching', url, err);
+        }
+        return null;
+      }
+    }
+
+
+    // Small debounce utility
+    function debounce(func, delay) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+
+    // Example: Load both Flare and Songbird, transform Songbird fields
+    async function loadData() {
+      try {
+        console.log('🚀 Starting data load. BASE_URL:', BASE_URL);
+        console.log('📍 Current location:', location.href);
+        console.log('📅 Timestamp:', new Date().toISOString());
+        console.log('🔄 Force deployment trigger:', Date.now());
+        
+        updateLoadingProgress('Loading provider list...');
+        console.log('📋 Step 1: Loading provider list');
+
+        const remoteUrl = 'https://raw.githubusercontent.com/TowoLabs/ftso-signal-providers/next/bifrost-wallet.providerlist.json';
+        console.log('🌐 Attempting remote provider list:', remoteUrl);
+        let listRes = await fetchJsonSafe(remoteUrl, 5000); // Reduced timeout for provider list
+        if (!listRes) {
+          console.log('🔄 Falling back to local bifrost list');
+          listRes = await fetchJsonSafe(`${BASE_URL}/bifrost-wallet.providerlist.json`, 5000);
+        }
+        console.log('📋 Provider list result:', listRes ? 'Success' : 'Failed');
+        
+        // Set sensible defaults even if provider list fails
+        if (listRes?.providers) {
+          const flare = listRes.providers.filter(p => p && p.chainId === 14);
+          const songbird = listRes.providers.filter(p => p && p.chainId === 19);
+          window.bifrostFlare = flare.filter(p => p.name).map(p => p.name);
+          window.bifrostSongbird = songbird.filter(p => p.name).map(p => p.name);
+          window.disabledFlare = new Set(flare.filter(p => p.disabled && p.name).map(p => p.name));
+          window.disabledSongbird = new Set(songbird.filter(p => p.disabled && p.name).map(p => p.name));
+          console.log('✅ Bifrost providers loaded:', flare.length, 'Flare,', songbird.length, 'Songbird');
+        } else {
+          // Fallback defaults
+          window.bifrostFlare = [];
+          window.bifrostSongbird = [];
+          window.disabledFlare = new Set();
+          window.disabledSongbird = new Set();
+          console.log('⚠️ Using empty provider fallback');
+        }
+
+        updateLoadingProgress('Loading data manifest...');
+        console.log('📋 Step 2: Loading manifest');
+        const manifestRes = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/manifest.json`, 5000);
+        if (!manifestRes) {
+          console.error('💥 CRITICAL: Manifest missing - using emergency fallback');
+          // Emergency fallback - try to initialize with minimal data
+          window.flareSnapshots = [];
+          window.songbirdSnapshots = [];
+          window.flareCurrentSnapshots = [];
+          window.songbirdCurrentSnapshots = [];
+          computeProviderStats();
+          return; // Exit early with empty data
+        }
+        const manifest = manifestRes;
+        console.log('✅ Manifest loaded:', manifest.flare?.length, 'Flare files,', manifest.songbird?.length, 'Songbird files');
+
+        updateLoadingProgress('Loading historical data...');
+        console.log('📋 Step 3: Loading historical snapshots');
+        
+        // SIMPLIFIED: Load only the latest file to prevent timeout
+        const latestFlareFile = manifest.flare[manifest.flare.length - 1];
+        const latestSongbirdFile = manifest.songbird[manifest.songbird.length - 1];
+        console.log('📁 Loading only latest files:', latestFlareFile, latestSongbirdFile);
+
+        console.log('⏳ Loading latest Flare data...');
+        const flareData = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/${latestFlareFile}`, 5000);
+        const flareSnapshots = flareData ? [{ 
+          date: flareData.date, 
+          providers: (flareData.providers || []).filter(p => p && p.name) 
+        }] : [];
+        console.log('✅ Flare data loaded:', flareSnapshots.length, 'snapshots');
+
+        console.log('⏳ Loading latest Songbird data...');
+        const songbirdData = await fetchJsonSafe(`${BASE_URL}/daily_snapshots/${latestSongbirdFile}`, 5000);
+        const songbirdSnapshots = songbirdData ? [{
+          date: songbirdData.date,
+          providers: (songbirdData.providers || []).filter(p => p && p.name).map(p => ({
+            SGB_provider: p.name,
+            SGB_vote_power_locked_pct: p.vote_power_pct_locked,
+            SGB_vote_power_pct: p.vote_power_pct
+          }))
+        }] : [];
+        console.log('✅ Songbird data loaded:', songbirdSnapshots.length, 'snapshots');
+
+        updateLoadingProgress('Skipping current data...');
+        console.log('📋 Step 4: Loading current vote power - SKIPPED');
+        
+        // Skip current vote power loading completely
+        window.flareCurrentSnapshots = [];
+        window.songbirdCurrentSnapshots = [];
+        console.log('⚠️ Current vote power loading disabled for troubleshooting');
+
+        updateLoadingProgress('Computing statistics...');
+        console.log('📋 Step 5: Computing statistics');
+        
+        // Set the data on window
+        window.flareSnapshots = flareSnapshots;
+        window.songbirdSnapshots = songbirdSnapshots;
+        window.flareCurrentSnapshots = [];
+        window.songbirdCurrentSnapshots = [];
+        
+        console.log('📊 Final data summary:');
+        console.log('- Flare snapshots:', window.flareSnapshots.length);
+        console.log('- Songbird snapshots:', window.songbirdSnapshots.length);
+        console.log('- Flare current:', window.flareCurrentSnapshots.length);
+        console.log('- Songbird current:', window.songbirdCurrentSnapshots.length);
+        
+        computeProviderStats();
+        console.log('🎉 Data loading complete!');
+      } catch (error) {
+        console.error('💥 FATAL ERROR loading data:', error);
+        // Emergency fallback
+        window.flareSnapshots = [];
+        window.songbirdSnapshots = [];
+        window.flareCurrentSnapshots = [];
+        window.songbirdCurrentSnapshots = [];
+        computeProviderStats();
+      }
+    }
+
+    function updateLoadingProgress(message) {
+      const progressElement = document.querySelector('#loadingIndicator p');
+      if (progressElement) {
+        progressElement.textContent = message;
+      }
+    }
+
+    function forceHideLoading() {
+      console.log('🚫 User forced loading to stop');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+      }
+      // Try to initialize with whatever data we have
+      try {
+        if (window.flareSnapshots && window.flareSnapshots.length > 0) {
+          console.log('📊 Initializing with existing data');
+          computeProviderStats();
+          renderChart();
+          renderTable();
+          renderSingleProviderChart();
+          renderCurrentVoteChart();
+          renderMultiProviderChart();
+        } else {
+          console.log('⚠️ No data available, showing empty dashboard');
+        }
+      } catch (error) {
+        console.error('Error initializing forced dashboard:', error);
+      }
+    }
+
+    // Utility function to safely add event listeners
+    function safeAddEventListener(elementId, event, handler) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.addEventListener(event, handler);
+        console.log(`✅ Event listener added to ${elementId}`);
+      } else {
+        console.warn(`⚠️ Element not found: ${elementId}`);
+      }
+    }
+
+    let providerStats = {};
+
+    function computeProviderStats() {
+      console.log('📊 Computing provider stats...');
+      
+      // Initialize with empty data if needed
+      if (!window.flareSnapshots || !Array.isArray(window.flareSnapshots)) {
+        console.warn('⚠️ No flareSnapshots available, initializing empty');
+        window.flareSnapshots = [];
+      }
+      
+      if (!window.flareSnapshots.length) {
+        console.warn('⚠️ Empty flareSnapshots, setting minimal provider stats');
+        providerStats = {};
+        updateMultiProviderOptions();
+        recommendProviders();
+        return;
+      }
+      
+      const stats = {};
+      const latest = window.flareSnapshots[window.flareSnapshots.length - 1];
+      const lockedMap = {};
+      if (latest) {
+        latest.providers.forEach(p => {
+          if (p && p.name) {
+            lockedMap[p.name] = parseFloat(p.vote_power_pct_locked);
+          }
+        });
+      }
+
+      window.flareSnapshots.forEach(snap => {
+        snap.providers.forEach(p => {
+          if (!p || !p.name) {
+            console.warn('⚠️ Invalid provider object:', p);
+            return; // Skip invalid providers
+          }
+          const name = p.name;
+          if (!stats[name]) {
+            stats[name] = { rewardRates: [], locked: lockedMap[name] || 0, zeroCount: 0 };
+          }
+          const rate = parseFloat(p.reward_rate) || 0;
+          stats[name].rewardRates.push({ date: snap.date, rate });
+          if (rate === 0) stats[name].zeroCount += 1;
+        });
+      });
+
+      Object.keys(stats).forEach(name => {
+        const arr = stats[name].rewardRates.map(r => r.rate);
+        const n = arr.length;
+        const avg7 = arr.slice(-7).reduce((s, r) => s + r, 0) / Math.min(7, n);
+        const avg30 = arr.slice(-30).reduce((s, r) => s + r, 0) / Math.min(30, n);
+        const avgCum = arr.reduce((s, r) => s + r, 0) / n;
+        const latest = arr[arr.length - 1] || 0; // Add latest value
+        
+        // Calculate trend (linear regression slope)
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        arr.forEach((y, i) => {
+          const x = i + 1;
+          sumX += x;
+          sumY += y;
+          sumXY += x * y;
+          sumX2 += x * x;
+        });
+        const slope = n > 1 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0;
+        
+        // Calculate volatility (standard deviation)
+        const avg = sumY / n || 0;
+        const variance = arr.reduce((acc, r) => acc + Math.pow(r - avg, 2), 0) / n || 0;
+        const stddev = Math.sqrt(variance);
+        
+        stats[name].trend = slope * 1000; // Scale up trend for visibility
+        stats[name].volatility = stddev * 100; // Convert to percentage
+        stats[name].avg7 = avg7;
+        stats[name].avg30 = avg30;
+        stats[name].avgCum = avgCum;
+        stats[name].latest = latest;
+        
+        // Debug logging for first few providers
+        if (Object.keys(stats).indexOf(name) < 3) {
+          console.log(`📊 Stats for ${name}:`, {
+            trend: stats[name].trend.toFixed(4),
+            volatility: stats[name].volatility.toFixed(4),
+            avg30: stats[name].avg30.toFixed(4),
+            latest: stats[name].latest.toFixed(4),
+            dataPoints: n
+          });
+        }
+      });
+
+      const vpData = {};
+      if (window.flareCurrentSnapshots && window.flareCurrentSnapshots.length > 0) {
+        console.log('📊 Processing current vote power data for', window.flareCurrentSnapshots.length, 'snapshots');
+        window.flareCurrentSnapshots.forEach(snap => {
+          snap.providers.forEach(p => {
+            if (!p || !p.name) {
+              console.warn('⚠️ Invalid current vote power provider object:', p);
+              return; // Skip invalid providers
+            }
+            if (!vpData[p.name]) vpData[p.name] = [];
+            vpData[p.name].push(parseFloat(p.vote_power_pct) || 0);
+          });
+        });
+        console.log('📊 Current vote power data processed for', Object.keys(vpData).length, 'providers');
+      } else {
+        console.warn('⚠️ No current vote power data available for headroom calculation');
+      }
+
+      Object.keys(vpData).forEach(name => {
+        const arr = vpData[name];
+        const n = arr.length;
+        const current = arr[n - 1];
+        let slope = 0;
+        if (n > 1) {
+          let sx = 0, sy = 0, sxy = 0, sx2 = 0;
+          arr.forEach((y, i) => {
+            const x = i;
+            sx += x;
+            sy += y;
+            sxy += x * y;
+            sx2 += x * x;
+          });
+          slope = (n * sxy - sx * sy) / (n * sx2 - sx * sx);
+        }
+        const projection = current + slope * 84;
+        const locked = stats[name] ? stats[name].locked : 0;
+        if (stats[name]) {
+          stats[name].headroom = locked - projection;
+        }
+      });
+
+        providerStats = stats;
+        updateMultiProviderOptions();
+        recommendProviders();
+      }
+
+      function updateMultiProviderOptions() {
+        // Get current KPI and Top N
+        const kpi = document.getElementById('topKpi').value;
+        const num = parseInt(document.getElementById('numTopProviders').value) || 5;
+        const namesOnly = document.getElementById('namedOnly').checked;
+        const bifrostOnly = document.getElementById('bifrostOnly').checked;
+        const excludeDisabled = document.getElementById('excludeDisabled').checked;
+
+        // Filter and sort ALL providers by KPI
+        const names = Object.keys(providerStats)
+          .filter(n => !(namesOnly && n.startsWith('0x')))
+          .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+          .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+          .filter(n => !userExcludedProviders.has(n));
+
+        const sorted = names.sort((a, b) => {
+          const getMetric = (name) => {
+            switch (kpi) {
+              case 'latest':
+                return providerStats[name].latest || 0;
+              case '7-day':
+                return providerStats[name].avg7 || 0;
+              case '30-day':
+                return providerStats[name].avg30 || 0;
+              case 'cumulative':
+                return providerStats[name].avgCum || 0;
+              default:
+                return providerStats[name].avg30 || 0;
+            }
+          };
+          return getMetric(b) - getMetric(a);
+        });
+
+        // Show ALL providers in the Names list, not just top N
+        const multiSelect = document.getElementById('multiProviderSelect');
+        multiSelect.innerHTML = sorted.map((n, index) => {
+          return `<option value="${n}">${n}</option>`;
+        }).join('');
+        
+        // Select only top N by default
+        const top = sorted.slice(0, num);
+        Array.from(multiSelect.options).forEach(opt => {
+          opt.selected = top.includes(opt.value);
+        });
+
+        renderMultiProviderChart();
+      }
+
+    function updateTopProviders() {
+      const kpi = document.getElementById('topKpi').value;
+      const num = parseInt(document.getElementById('numTopProviders').value) || 5;
+      const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
+      const names = Object.keys(providerStats)
+        .filter(n => !(namesOnly && n.startsWith('0x')))
+        .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+        .filter(n => !userExcludedProviders.has(n));
+      const sorted = names.sort((a, b) => {
+        const getAvg = (name) => {
+          switch (kpi) {
+            case '7-day':
+              return providerStats[name].avg7 || 0;
+            case 'cumulative':
+              return providerStats[name].avgCum || 0;
+            default:
+              return providerStats[name].avg30 || 0;
+          }
+        };
+        return getAvg(b) - getAvg(a);
+      });
+
+      const top = sorted.slice(0, num);
+      const select = document.getElementById('multiProviderSelect');
+      Array.from(select.options).forEach(opt => {
+        opt.selected = top.includes(opt.value);
+      });
+      renderMultiProviderChart();
+    }
+
+    function recommendProviders() {
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
+      const strategy = document.getElementById('strategySelector').value;
+      
+      const entries = Object.entries(providerStats)
+        .filter(([n]) => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .filter(([n]) => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+        .filter(([n]) => !userExcludedProviders.has(n))
+        .map(([name, s]) => {
+          // 🚫 IMMEDIATE DISQUALIFICATION: Over 2.5% threshold
+          const locked = s.locked || 0;
+          if (locked > 2.5) {
+            console.log(`❌ DISQUALIFIED: ${name} - Over 2.5% threshold (${locked.toFixed(2)}%)`);
+            return { name, score: -1000, disqualified: true, reason: 'Over 2.5% threshold' };
+          }
+          
+          // 🚫 DISQUALIFICATION: Poor headroom (projection would exceed threshold)
+          if ((s.headroom || 0) < 0.5) {
+            console.log(`❌ DISQUALIFIED: ${name} - Insufficient headroom (${(s.headroom || 0).toFixed(2)}%)`);
+            return { name, score: -999, disqualified: true, reason: 'Insufficient headroom' };
+          }
+          
+          // 🚫 DISQUALIFICATION: Consistently terrible performance
+          const avg30 = (s.avg30 || 0) * 100;
+          const avg7 = (s.avg7 || 0) * 100;
+          if (avg30 < 1.0) {
+            console.log(`❌ DISQUALIFIED: ${name} - Terrible 30-day average (${avg30.toFixed(2)}%)`);
+            return { name, score: -998, disqualified: true, reason: 'Poor long-term performance' };
+          }
+          
+          // ✅ CORE SCORING COMPONENTS
+          
+          // 1. BASE PERFORMANCE (40% weight) - Reward rate quality
+          const baseScore = avg30 * 0.4; // 30-day average is foundation
+          
+          // 2. STABILITY SCORE (25% weight) - Consistency and reliability  
+          const volatilityPenalty = Math.min(10, (s.volatility || 0) * 2); // Cap volatility penalty
+          const zeroCountPenalty = (s.zeroCount || 0) * 0.5; // Penalize zero rewards
+          const stabilityScore = Math.max(0, 10 - volatilityPenalty - zeroCountPenalty) * 0.25;
+          
+          // 3. TREND COMPONENT (20% weight) - Recent performance direction
+          const trend = s.trend || 0;
+          const recent7vs30 = avg7 - avg30; // Recent vs long-term comparison
+          let trendScore = 0;
+          
+          if (trend > 0 && recent7vs30 > 0) {
+            // Positive trend AND recent improvement
+            trendScore = Math.min(5, (trend * 100 + recent7vs30)) * 0.2;
+          } else if (trend > 0) {
+            // Just positive trend
+            trendScore = Math.min(3, trend * 50) * 0.2;
+          } else if (recent7vs30 > 0.2) {
+            // Recent improvement despite negative trend
+            trendScore = Math.min(2, recent7vs30) * 0.2;
+          }
+          
+          // 4. SAFETY SCORE (15% weight) - Headroom and risk factors
+          const headroomScore = Math.min(5, Math.max(0, (s.headroom || 0) / 0.5)) * 0.15;
+          
+          // STRATEGY ADJUSTMENTS
+          let strategyMultiplier = 1.0;
+          let finalScore = baseScore + stabilityScore + trendScore + headroomScore;
+          
+          switch(strategy) {
+            case 'conservative':
+              // Favor stability and safety over trend
+              strategyMultiplier = 1.0 + (stabilityScore / finalScore) * 0.3; // Boost if stable
+              if (volatilityPenalty > 3) strategyMultiplier *= 0.8; // Penalize volatility more
+              break;
+              
+            case 'aggressive':
+              // Favor trending and recent performance
+              strategyMultiplier = 1.0 + (trendScore / finalScore) * 0.5; // Boost trending
+              if (recent7vs30 > 0.5) strategyMultiplier *= 1.2; // Boost recent improvement
+              break;
+              
+            case 'diversified':
+              // Balanced approach, slight safety preference
+              strategyMultiplier = 1.0 + (headroomScore / finalScore) * 0.2; // Boost safety
+              break;
+              
+            default: // balanced
+              // Standard scoring, slight trend preference
+              if (trendScore > 1) strategyMultiplier = 1.1;
+              break;
+          }
+          
+          finalScore *= strategyMultiplier;
+          
+          // Debug logging for qualified providers
+          console.log(`✅ QUALIFIED: ${name}`, {
+            avg30: avg30.toFixed(2),
+            avg7: avg7.toFixed(2),
+            volatility: (s.volatility || 0).toFixed(2),
+            headroom: (s.headroom || 0).toFixed(2),
+            trend: (trend * 1000).toFixed(2),
+            baseScore: baseScore.toFixed(2),
+            stabilityScore: stabilityScore.toFixed(2),
+            trendScore: trendScore.toFixed(2),
+            headroomScore: headroomScore.toFixed(2),
+            strategy: strategy,
+            multiplier: strategyMultiplier.toFixed(2),
+            finalScore: finalScore.toFixed(2)
+          });
+          
+          return { name, score: finalScore, disqualified: false };
+        });
+      
+      // Sort by score, qualified providers first
+      entries.sort((a, b) => {
+        if (a.disqualified && !b.disqualified) return 1;
+        if (!a.disqualified && b.disqualified) return -1;
+        return b.score - a.score;
+      });
+
+      const excludeSelect = document.getElementById('excludeProviders');
+      excludeSelect.innerHTML = entries.map(e => {
+        const disqualifiedMark = e.disqualified ? '❌ ' : '';
+        const reasonMark = e.disqualified ? ` (${e.reason})` : '';
+        return `<option value="${e.name}" ${userExcludedProviders.has(e.name) ? 'selected' : ''}>${disqualifiedMark}${e.name}${reasonMark}</option>`;
+      }).join('');
+
+      // Only recommend qualified providers
+      const qualifiedEntries = entries.filter(e => !e.disqualified && !userExcludedProviders.has(e.name));
+      
+      if (qualifiedEntries.length < 2) {
+        console.warn('⚠️ Insufficient qualified providers for recommendations');
+        const summary = document.getElementById('recommendationSummary');
+        summary.innerHTML = `
+          <div class="bg-red-800 p-3 rounded-lg text-center">
+            <div class="text-lg font-semibold text-red-300">⚠️ Insufficient Qualified Providers</div>
+            <div class="text-sm text-red-400 mt-1">Need at least 2 providers under 2.5% threshold with good performance</div>
+          </div>
+        `;
+        renderRecommendationTable([]);
+        return;
+      }
+      
+      const top = qualifiedEntries.slice(0, 2);
+      const total = top.reduce((sum, t) => sum + t.score, 0);
+      const summary = document.getElementById('recommendationSummary');
+      summary.innerHTML = top
+        .map(t => {
+          const pct = total > 0 ? (t.score / total) * 100 : 50;
+          t.pct = pct;
+          const stats = providerStats[t.name] || {};
+          const avg30 = ((stats.avg30 || 0) * 100).toFixed(2);
+          const headroom = (stats.headroom || 0).toFixed(1);
+          return `
+            <div class="bg-gradient-to-r from-green-600 to-green-700 p-3 rounded-lg flex-1 text-center min-w-[120px] shadow-lg">
+              <div class="text-sm font-semibold text-green-100">${t.name}</div>
+              <div class="text-2xl font-extrabold text-white">${pct.toFixed(0)}%</div>
+              <div class="text-xs text-green-200">30d: ${avg30}% | Room: ${headroom}%</div>
+            </div>
+          `;
+        })
+        .join('');
+      renderRecommendationTable(top);
+    }
+
+    function renderRecommendationTable(providers) {
+      const table = document.getElementById('recommendationTable');
+      const header = `
+        <tr class="bg-gray-700">
+          <th class="p-2 border border-gray-600">Provider</th>
+          <th class="p-2 border border-gray-600">Share (%)</th>
+          <th class="p-2 border border-gray-600">Score</th>
+          <th class="p-2 border border-gray-600">30-Day Avg (%)</th>
+          <th class="p-2 border border-gray-600">Trend</th>
+          <th class="p-2 border border-gray-600">Headroom (%)</th>
+          <th class="p-2 border border-gray-600">Volatility</th>
+        </tr>`;
+      const rows = providers.map(p => {
+        const s = providerStats[p.name] || {};
+        const score = p.score;
+        return `
+          <tr>
+            <td class="p-2 border border-gray-600">${p.name}</td>
+            <td class="p-2 border border-gray-600">${p.pct.toFixed(0)}</td>
+            <td class="p-2 border border-gray-600">${score.toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.avg30 || 0).toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.trend || 0).toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.headroom || 0).toFixed(2)}</td>
+            <td class="p-2 border border-gray-600">${(s.volatility || 0).toFixed(2)}</td>
+          </tr>`;
+      }).join('');
+      table.innerHTML = `<thead>${header}</thead><tbody>${rows}</tbody>`;
+    }
+
+    function getFilteredProviders() {
+      const registeredOnly = document.getElementById('registeredOnly').checked;
+      const registeredLatestOnly = document.getElementById('registeredLatestOnly').checked;
+      const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
+      let latestSnapshot = window.flareSnapshots[window.flareSnapshots.length - 1];
+      let registeredInLatest = new Set();
+      if (latestSnapshot) {
+        latestSnapshot.providers.forEach(provider => {
+          if (provider && provider.name && provider.registered && provider.registered.toLowerCase() === "yes") {
+            registeredInLatest.add(provider.name);
+          }
+        });
+      }
+
+      const providersOverLimit = getProvidersOverLimitCombined();
+
+      const filtered = window.flareSnapshots.flatMap(snapshot =>
+        snapshot.providers.filter(provider => {
+          // Skip invalid providers
+          if (!provider || !provider.name) return false;
+          
+          if (providersOverLimit.has(provider.name)) return false;
+          const isRegistered = provider.registered && provider.registered.toLowerCase() === "yes";
+          const isRegisteredLatest = registeredInLatest.has(provider.name);
+          if (registeredOnly && !isRegistered) return false;
+          if (registeredLatestOnly && !isRegisteredLatest) return false;
+          if (namesOnly && provider.name.startsWith('0x')) return false;
+          if (bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(provider.name)) return false;
+          if (excludeDisabled && window.disabledFlare && window.disabledFlare.has(provider.name)) return false;
+          if (userExcludedProviders.has(provider.name)) return false;
+          return true;
+        }).map(provider => ({
+          ...provider,
+          date: snapshot.date
+        }))
+      );
+      return filtered;
+    }
+
+      function getFilteredSongbirdProviders() {
+        const providersOverLimit = getProvidersOverLimitCombined();
+      const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
+        const filtered = window.songbirdSnapshots.flatMap(snapshot =>
+          snapshot.providers.filter(provider => {
+            // Skip invalid providers
+            if (!provider || !provider.SGB_provider) return false;
+            
+            if (providersOverLimit.has(provider.SGB_provider)) return false;
+            if (namesOnly && provider.SGB_provider.startsWith('0x')) return false;
+            if (bifrostOnly && window.bifrostSongbird && !window.bifrostSongbird.includes(provider.SGB_provider)) return false;
+            if (excludeDisabled && window.disabledSongbird && window.disabledSongbird.has(provider.SGB_provider)) return false;
+            if (userExcludedProviders.has(provider.SGB_provider)) return false;
+            return true;
+          }).map(provider => ({
+            ...provider,
+            date: snapshot.date
+          }))
+        );
+        return filtered;
+      }
+
+    function getProvidersOverLimitCombined() {
+      const maxVotePower = parseFloat(document.getElementById('maxVotePowerInput').value) || 2.5;
+      const overLimit = new Set();
+
+      // Flare
+      window.flareSnapshots.forEach(snapshot => {
+        snapshot.providers.forEach(provider => {
+          if (!provider || !provider.name) return; // Skip invalid providers
+          const votePower = parseFloat(provider.vote_power_pct_locked);
+          if (votePower > maxVotePower) {
+            overLimit.add(provider.name);
+          }
+        });
+      });
+
+      // Songbird
+      window.songbirdSnapshots.forEach(snapshot => {
+        snapshot.providers.forEach(provider => {
+          if (!provider || !provider.SGB_provider) return; // Skip invalid providers
+          const votePower = parseFloat(provider.SGB_vote_power_locked_pct);
+          if (votePower > maxVotePower) {
+            overLimit.add(provider.SGB_provider);
+          }
+        });
+      });
+
+      return overLimit;
+    }
+
+    function renderChart() {
+      const kpiElement = document.getElementById('topKpi');
+      const timeframe = kpiElement ? kpiElement.value : '7-day';
+      const numTop = parseInt(document.getElementById('numTopProviders').value) || 5;
+      const filteredProviders = getFilteredProviders();
+
+      const rewardRates = {};
+      filteredProviders.forEach(provider => {
+        if (!provider || !provider.name) return; // Skip invalid providers
+        if (!rewardRates[provider.name]) rewardRates[provider.name] = [];
+        rewardRates[provider.name].push(parseFloat(provider.reward_rate) || 0);
+      });
+
+      let data = Object.keys(rewardRates).map(name => {
+        const rates = rewardRates[name];
+        let average = 0;
+
+        switch (timeframe) {
+          case '7-day':
+            average = rates.slice(-7).reduce((sum, rate) => sum + rate, 0) / Math.min(7, rates.length);
+            break;
+          case '30-day':
+            average = rates.slice(-30).reduce((sum, rate) => sum + rate, 0) / Math.min(30, rates.length);
+            break;
+          case 'cumulative':
+            average = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+            break;
+          default:
+            average = rates[rates.length - 1];
+        }
+
+        return { name, average: average.toFixed(4) }; // Keep raw average to 4 decimal places for precision
+      });
+
+      // Sort data by reward rate (highest to lowest)
+      data = data.sort((a, b) => b.average - a.average);
+      
+      // Show ALL providers (don't slice to numTop)
+      // Create labels with ranking for top N only
+      const labels = data.map((d, index) => {
+        if (index < numTop) {
+          return `#${index + 1}: ${d.name}`;
+        } else {
+          return d.name;
+        }
+      });
+      
+      const values = data.map(d => parseFloat(d.average) * 100);
+
+      // Create color array: orange for top N, purple for the rest
+      const colors = data.map((d, index) => {
+        return index < numTop ? '#F97316' : '#8B5CF6'; // Orange for top N, purple for rest
+      });
+
+      const ctx = document.getElementById('rewardRateChart').getContext('2d');
+
+      if (rewardChart) rewardChart.destroy();
+
+      rewardChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Reward Rate (%)',
+            data: values,
+            backgroundColor: colors
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: `All Providers - ${timeframe} (Top ${numTop} Highlighted)` },
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { maxRotation: 45, minRotation: 45 }, title: { display: true, text: 'Provider (Ranked)' } },
+            y: { title: { display: true, text: 'Reward Rate (%)' } }
+          }
+        }
+      });
+    }
+
+    function renderTable() {
+      const table = $('#dataTable');
+      const tbody = table.find('tbody');
+      tbody.empty();
+
+      // Get filtered Flare and Songbird providers
+      const filteredFlare = getFilteredProviders();
+      const filteredSongbird = getFilteredSongbirdProviders();
+
+      // Build a lookup for SGB: {date|provider: providerObj}
+      const sgbMap = {};
+      filteredSongbird.forEach(provider => {
+        if (!provider || !provider.SGB_provider) return; // Skip invalid providers
+        const key = `${provider.date}|${provider.SGB_provider}`;
+        sgbMap[key] = provider;
+      });
+
+      // Compute reward rate averages per provider
+      const rewardMap = {};
+      filteredFlare.forEach(p => {
+        if (!p || !p.name) return; // Skip invalid providers
+        if (!rewardMap[p.name]) rewardMap[p.name] = [];
+        rewardMap[p.name].push(parseFloat(p.reward_rate) || 0);
+      });
+      const avgMap = {};
+      Object.keys(rewardMap).forEach(name => {
+        const rates = rewardMap[name];
+        const avg7 = rates.slice(-7).reduce((s, r) => s + r, 0) / Math.min(7, rates.length);
+        const avg30 = rates.slice(-30).reduce((s, r) => s + r, 0) / Math.min(30, rates.length);
+        const avgCum = rates.reduce((s, r) => s + r, 0) / rates.length;
+        avgMap[name] = { avg7: avg7 * 100, avg30: avg30 * 100, avgCum: avgCum * 100 };
+      });
+
+      // Only iterate Flare providers (left join)
+      filteredFlare.forEach(provider => {
+        if (!provider || !provider.name) return; // Skip invalid providers
+        const key = `${provider.date}|${provider.name}`;
+        const sgb = sgbMap[key];
+
+        const tr = document.createElement('tr');
+        const avg = avgMap[provider.name] || { avg7: '', avg30: '', avgCum: '' };
+        const stats = providerStats[provider.name] || {};
+        tr.innerHTML = `
+          <td class="p-2 border border-gray-600">${provider.date}</td>
+          <td class="p-2 border border-gray-600">${provider.name}</td>
+          <td class="p-2 border border-gray-600">${provider.vote_power_pct !== undefined && provider.vote_power_pct !== '' ? Number(provider.vote_power_pct).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${provider.vote_power_pct_locked !== undefined && provider.vote_power_pct_locked !== '' ? Number(provider.vote_power_pct_locked).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${sgb && sgb.SGB_vote_power_pct !== undefined && sgb.SGB_vote_power_pct !== '' ? Number(sgb.SGB_vote_power_pct).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${sgb && sgb.SGB_vote_power_locked_pct !== undefined && sgb.SGB_vote_power_locked_pct !== '' ? Number(sgb.SGB_vote_power_locked_pct).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${provider.reward_rate !== undefined && provider.reward_rate !== '' ? Number(provider.reward_rate * 100).toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${avg.avg7 !== '' ? avg.avg7.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${avg.avg30 !== '' ? avg.avg30.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${avg.avgCum !== '' ? avg.avgCum.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${stats.headroom !== undefined ? stats.headroom.toFixed(2) : ''}</td>
+          <td class="p-2 border border-gray-600">${stats.trend !== undefined ? stats.trend.toFixed(4) : ''}</td>
+          <td class="p-2 border border-gray-600">${stats.volatility !== undefined ? (stats.volatility * 100).toFixed(2) : ''}</td>
+        `;
+        tbody.append(tr);
+      });
+
+      const rows = tbody.find('tr');
+
+      if (dataTable) {
+        dataTable.clear();
+        dataTable.rows.add(rows);
+        dataTable.draw();
+      } else {
+        dataTable = table.DataTable({
+          paging: true,
+          searching: true,
+          ordering: true,
+          order: [[0, 'desc'], [1, 'asc']],
+          pageLength: 100,
+          scrollY: '500px',
+          scrollX: true,
+          scrollCollapse: true,
+          columnDefs: [
+            { targets: 0, type: 'date' },
+            { targets: [2,3,4,5,6,7,8,9,10,11,12], type: 'num' },
+          ],
+        });
+      }
+    }
+
+    function renderSingleProviderChart() {
+      const filteredFlare = getFilteredProviders();
+      const filteredSongbird = getFilteredSongbirdProviders();
+
+      // Build provider map
+      const providerMap = {};
+      filteredFlare.forEach(p => {
+        if (!p || !p.name) return; // Skip invalid providers
+        if (!providerMap[p.name]) providerMap[p.name] = { flare: [], songbird: [] };
+        providerMap[p.name].flare.push(p);
+      });
+      filteredSongbird.forEach(p => {
+        if (!p || !p.SGB_provider) return; // Skip invalid providers
+        if (!providerMap[p.SGB_provider]) providerMap[p.SGB_provider] = { flare: [], songbird: [] };
+        providerMap[p.SGB_provider].songbird.push(p);
+      });
+
+      // Sort providers alphabetically
+      const sortedProviders = Object.keys(providerMap).sort((a, b) => a.localeCompare(b));
+      console.log('📋 Available providers:', sortedProviders.length, sortedProviders.slice(0, 5));
+
+      const providerFilter = document.getElementById('providerFilter');
+      const currentValue = providerFilter.value;
+      
+      if (sortedProviders.length === 0) {
+        console.warn('⚠️ No providers found in providerMap');
+        providerFilter.innerHTML = '<option value="">No providers available</option>';
+        return; // Exit early if no providers
+      }
+      
+      providerFilter.innerHTML = sortedProviders.map(name => `<option value="${name}">${name}</option>`).join('');
+      if (!sortedProviders.includes(currentValue)) {
+        providerFilter.value = sortedProviders[0] || '';
+      } else {
+        providerFilter.value = currentValue;
+      }
+      const selectedProvider = providerFilter.value;
+      console.log('🎯 Selected provider after population:', selectedProvider);
+
+      const flareData = providerMap[selectedProvider]?.flare || [];
+      const songbirdData = providerMap[selectedProvider]?.songbird || [];
+      const dates = [...new Set(flareData.map(d => d.date).concat(songbirdData.map(d => d.date)))].sort();
+      const flareLocked = dates.map(date => {
+        const val = flareData.find(d => d.date === date)?.vote_power_pct_locked;
+        return val !== undefined && val !== null ? Number(val) : null;
+      });
+      const sgbLocked = dates.map(date => {
+        const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_locked_pct;
+        return val !== undefined && val !== null ? Number(val) : null;
+      });
+      const sgbCurrent = dates.map(date => {
+        const val = songbirdData.find(d => d.date === date)?.SGB_vote_power_pct;
+        return val !== undefined && val !== null ? Number(val) : null;
+      });
+      const rewardRate = dates.map(date => {
+        const val = flareData.find(d => d.date === date)?.reward_rate;
+        return val !== undefined && val !== null ? Number(val) * 100 : null;
+      });
+      const registered = dates.map(date => {
+        const reg = flareData.find(d => d.date === date)?.registered;
+        return reg && reg.toLowerCase() === "yes" ? 1 : 0;
+      });
+
+        const container = document.getElementById('singleChartContainer');
+        container.innerHTML = '';
+        const voteHeader = document.createElement('h3');
+        voteHeader.textContent = 'Network Voting Power';
+        voteHeader.className = 'text-lg font-bold mb-2';
+        const voteCanvas = document.createElement('canvas');
+        const rewardHeader = document.createElement('h3');
+        rewardHeader.textContent = 'Flare Reward Rate';
+        rewardHeader.className = 'text-lg font-bold mb-2 mt-4';
+        const rewardCanvas = document.createElement('canvas');
+      voteCanvas.style.width = '100%';
+      voteCanvas.style.height = '350px';
+      voteCanvas.style.marginBottom = '30px';
+      rewardCanvas.style.width = '100%';
+      rewardCanvas.style.height = '350px';
+      rewardCanvas.style.marginBottom = '30px';
+      container.appendChild(voteHeader);
+      container.appendChild(voteCanvas);
+      container.appendChild(rewardHeader);
+      container.appendChild(rewardCanvas);
+
+        if (singleVoteChart) singleVoteChart.destroy();
+        if (singleRewardChart) singleRewardChart.destroy();
+
+        const voteValues = flareLocked
+          .concat(sgbLocked)
+          .filter(v => v !== null && !isNaN(v));
+        const yAxisMaxValue = Math.max(...voteValues);
+        let yAxisMax = isFinite(yAxisMaxValue) ? yAxisMaxValue : 5;
+        yAxisMax *= 1.1; // small padding for clarity
+        const nearThreshold = voteValues.some(v => Math.abs(v - 2.5) < 0.25);
+
+      singleVoteChart = new Chart(voteCanvas.getContext('2d'), {
+        data: {
+          labels: dates,
+          datasets: (() => {
+              const datasets = [
+                { label: 'FLR Locked Voting Power', data: flareLocked, borderColor: 'orange', backgroundColor: 'orange', fill: false, type: 'line' },
+                { label: 'SGB Locked Voting Power', data: sgbLocked, borderColor: 'blue', backgroundColor: 'blue', fill: false, type: 'line' }
+              ];
+            if (nearThreshold) {
+              datasets.push({ label: '2.5% Threshold', data: Array(dates.length).fill(2.5), borderColor: 'grey', borderDash: [5,5], fill: false, type: 'line' });
+            }
+            datasets.push(
+              { label: 'Registered', data: registered.map(r => r ? yAxisMax : 0), backgroundColor: 'rgba(0,255,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 },
+              { label: 'Not Registered', data: registered.map(r => r ? 0 : yAxisMax), backgroundColor: 'rgba(255,0,0,0.15)', type: 'bar', stack: 'registration', borderWidth: 0, order: -1, barPercentage: 1, categoryPercentage: 1 }
+            );
+            return datasets;
+          })()
+       },
+       options: {
+         responsive: true,
+          plugins: {
+            title: { display: true, text: selectedProvider + ' - Network Voting Power' },
+            legend: { position: 'top' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Voting Power (%)' }, min: 0, max: yAxisMax }
+          }
+        }
+      });
+
+      singleRewardChart = new Chart(rewardCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            { label: 'Reward Rate (%)', data: rewardRate, borderColor: 'purple', backgroundColor: 'purple', fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: selectedProvider + ' - Flare Reward Rate' },
+            legend: { display: false }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Reward Rate (%)' } }
+          }
+        }
+      });
+
+      const legendDiv = document.getElementById('masterLegend') || document.createElement('div');
+      legendDiv.id = 'masterLegend';
+      legendDiv.innerHTML = `
+        <div class="flex gap-4 mb-2">
+          <span><span style="color:orange;">&#9632;</span> FLR Locked Voting Power</span>
+          <span><span style="color:blue;">&#9632;</span> SGB Locked Voting Power</span>
+          <span><span style="color:purple;">&#9632;</span> Reward Rate</span>
+          ${nearThreshold ? '<span><span style="color:grey;">&#9632;</span> 2.5% Threshold</span>' : ''}
+          <span><span style="color:green;">&#11044;</span> Registered</span>
+          <span><span style="color:red;">&#11044;</span> Not Registered</span>
+        </div>`;
+      if (!document.getElementById('masterLegend')) {
+        container.parentNode.insertBefore(legendDiv, container);
+      }
+    }
+
+    function renderMultiProviderChart() {
+      const select = document.getElementById('multiProviderSelect');
+      const selected = Array.from(select.selectedOptions).map(o => o.value);
+      const kpi = document.getElementById('topKpi').value;
+      const numTop = parseInt(document.getElementById('numTopProviders').value) || 5;
+      
+      // Determine top N providers based on current KPI for ranking
+      const namesOnly = document.getElementById('namedOnly').checked;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
+      
+      const allNames = Object.keys(providerStats)
+        .filter(n => !(namesOnly && n.startsWith('0x')))
+        .filter(n => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .filter(n => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+        .filter(n => !userExcludedProviders.has(n));
+        
+      const sortedNames = allNames.sort((a, b) => {
+        const getMetric = (name) => {
+          switch (kpi) {
+            case 'latest':
+              return providerStats[name].latest || 0;
+            case '7-day':
+              return providerStats[name].avg7 || 0;
+            case '30-day':
+              return providerStats[name].avg30 || 0;
+            case 'cumulative':
+              return providerStats[name].avgCum || 0;
+            default:
+              return providerStats[name].avg30 || 0;
+          }
+        };
+        return getMetric(b) - getMetric(a);
+      });
+      
+      // Create ranking map
+      const rankingMap = {};
+      sortedNames.forEach((name, index) => {
+        rankingMap[name] = index + 1;
+      });
+      
+      const dates = window.flareSnapshots.map(s => s.date);
+      
+      const datasets = selected.map((name, idx) => {
+        const colors = ['#F97316', '#3B82F6', '#10B981', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F59E0B'];
+        const color = colors[idx % colors.length];
+        
+        // Get rank for this provider
+        const rank = rankingMap[name] || 999;
+        const rankLabel = rank <= numTop ? `#${rank}` : '';
+        
+        const data = dates.map(d => {
+          const snap = window.flareSnapshots.find(s => s.date === d);
+          const p = snap?.providers.find(pr => pr.name === name);
+          return p ? parseFloat(p.reward_rate) * 100 : null;
+        });
+        
+        return { 
+          label: `${rankLabel ? rankLabel + ': ' : ''}${name}`, 
+          data, 
+          borderColor: color,
+          backgroundColor: color + '20', // Add transparency
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1
+        };
+      });
+      
+      const ctx = document.getElementById('multiProviderChart').getContext('2d');
+      if (multiProviderChart) multiProviderChart.destroy();
+      
+      multiProviderChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+          responsive: true,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: { 
+            title: { 
+              display: true, 
+              text: `Provider Performance Trends - ${kpi.charAt(0).toUpperCase() + kpi.slice(1)} Metric`,
+              font: { size: 16, weight: 'bold' }
+            },
+            legend: {
+              display: true,
+              labels: {
+                usePointStyle: true,
+                font: { size: 12 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  return `Date: ${context[0].label}`;
+                },
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+                }
+              }
+            }
+          },
+          scales: { 
+            x: { 
+              title: { display: true, text: 'Date' },
+              grid: { color: '#374151' }
+            }, 
+            y: { 
+              title: { display: true, text: 'Reward Rate (%)' },
+              grid: { color: '#374151' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderCurrentVoteChart() {
+      console.log('🔍 renderCurrentVoteChart called - TEMPORARILY DISABLED');
+      const container = document.getElementById('currentVpChartContainer');
+      if (container) {
+        container.innerHTML = `
+          <div class="bg-blue-800 p-4 rounded-lg text-center">
+            <h4 class="text-lg font-semibold text-blue-300 mb-2">📊 Current Vote Power Chart</h4>
+            <p class="text-blue-400 text-sm">Temporarily disabled for troubleshooting</p>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    function renderCurrentVoteChartOriginal() {
+      const provider = document.getElementById('providerFilter').value;
+      console.log('🎯 Selected provider:', provider);
+      
+      if (!provider) {
+        console.warn('⚠️ No provider selected for current vote power chart');
+        const container = document.getElementById('currentVpChartContainer');
+        container.innerHTML = `
+          <div class="bg-yellow-800 p-4 rounded-lg text-center">
+            <h4 class="text-lg font-semibold text-yellow-300 mb-2">📊 Provider Selection Required</h4>
+            <p class="text-yellow-400 text-sm">Please select a provider from the dropdown to view current vote power data</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const container = document.getElementById('currentVpChartContainer');
+      const range = document.getElementById('currentVpRange');
+      container.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      container.appendChild(canvas);
+
+      const timestampsSet = new Set();
+      const flareMap = {};
+      if (window.flareCurrentSnapshots) {
+        console.log('🔄 Processing Flare current snapshots...');
+        window.flareCurrentSnapshots.forEach(s => {
+          timestampsSet.add(s.timestamp);
+          const p = s.providers.find(pr => pr && pr.name === provider);
+          if (p) flareMap[s.timestamp] = Number(p.vote_power_pct);
+        });
+        console.log('✅ Flare timestamps found:', timestampsSet.size);
+        console.log('✅ Flare data points for provider:', Object.keys(flareMap).length);
+      }
+      const songbirdMap = {};
+      if (window.songbirdCurrentSnapshots) {
+        console.log('🔄 Processing Songbird current snapshots...');
+        window.songbirdCurrentSnapshots.forEach(s => {
+          timestampsSet.add(s.timestamp);
+          const p = s.providers.find(pr => pr && pr.name === provider);
+          if (p) songbirdMap[s.timestamp] = Number(p.vote_power_pct);
+        });
+        console.log('✅ Total timestamps after Songbird:', timestampsSet.size);
+        console.log('✅ Songbird data points for provider:', Object.keys(songbirdMap).length);
+      }
+
+      const timestamps = Array.from(timestampsSet).sort();
+      const flareValues = timestamps.map(t => flareMap[t] ?? null);
+      const sgbValues = timestamps.map(t => songbirdMap[t] ?? null);
+
+      if (timestamps.length === 0) {
+        canvas.remove();
+        container.innerHTML = `
+          <div class="bg-yellow-800 p-4 rounded-lg text-center">
+            <h4 class="text-lg font-semibold text-yellow-300 mb-2">📊 Current Vote Power Data Not Available</h4>
+            <p class="text-yellow-400 text-sm mb-2">No current voting power data found for "${provider}"</p>
+            <div class="text-xs text-yellow-500">
+              <p>• Flare snapshots: ${window.flareCurrentSnapshots?.length || 0}</p>
+              <p>• Songbird snapshots: ${window.songbirdCurrentSnapshots?.length || 0}</p>
+              <p>• Provider data available: ${Object.keys(flareMap).length + Object.keys(songbirdMap).length} entries</p>
+            </div>
+            <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm">
+              🔄 Retry Loading
+            </button>
+          </div>
+        `;
+        range.max = 0;
+        range.value = 0;
+        return;
+      }
+
+      function formatHour(ts) {
+        return new Date(ts).toISOString().slice(0, 13).replace('T', ' ');
+      }
+
+      range.max = Math.max(timestamps.length - 1, 0);
+      if (!range.value) range.value = Math.max(timestamps.length - 100, 0);
+
+      function updateCurrentChart() {
+        const start = parseInt(range.value) || 0;
+        const baseLabels = timestamps.slice(start);
+        const flareData = flareValues.slice(start);
+        const sgbData = sgbValues.slice(start);
+
+        function computeSlope(arr) {
+          const n = arr.length;
+          if (n < 2) return 0;
+          let sx=0, sy=0, sxy=0, sx2=0;
+          arr.forEach((y,i)=>{ sx+=i; sy+=y; sxy+=i*y; sx2+=i*i; });
+          return (n*sxy - sx*sy)/(n*sx2 - sx*sx);
+        }
+
+        const flareNonNull = flareData.filter(v => v !== null);
+        const sgbNonNull = sgbData.filter(v => v !== null);
+        const flareSlope = computeSlope(flareNonNull);
+        const sgbSlope = computeSlope(sgbNonNull);
+
+        // Validate baseLabels before processing
+        if (baseLabels.length === 0) {
+          console.warn('⚠️ No base labels available for current chart');
+          return;
+        }
+        
+        const step = baseLabels.length>1 ? (new Date(baseLabels[1]) - new Date(baseLabels[0])) : 3600*1000;
+        const futureLabels = [];
+        const flareFuture = [];
+        const sgbFuture = [];
+        const lastFlare = [...flareData].reverse().find(v => v !== null);
+        const lastSgb = [...sgbData].reverse().find(v => v !== null);
+        for(let i=1;i<=6;i++){
+          const lastLabel = baseLabels[baseLabels.length-1];
+          if (!lastLabel) {
+            console.warn('⚠️ Invalid last label, skipping future projection');
+            break;
+          }
+          const ts = new Date(lastLabel);
+          if (isNaN(ts.getTime())) {
+            console.warn('⚠️ Invalid timestamp:', lastLabel);
+            break;
+          }
+          ts.setTime(ts.getTime() + step*i);
+          futureLabels.push(ts.toISOString());
+          if (lastFlare !== undefined && flareNonNull.length >= 2) {
+            flareFuture.push(lastFlare + flareSlope*i);
+          }
+          if (lastSgb !== undefined && sgbNonNull.length >= 2) {
+            sgbFuture.push(lastSgb + sgbSlope*i);
+          }
+        }
+        const labels = baseLabels.concat(futureLabels);
+        const flareAll = Array(flareData.length-1).fill(null);
+        const sgbAll = Array(sgbData.length-1).fill(null);
+        flareAll.push(flareData[flareData.length-1]);
+        sgbAll.push(sgbData[sgbData.length-1]);
+        flareAll.push(...flareFuture);
+        sgbAll.push(...sgbFuture);
+
+        if (currentVoteChart) currentVoteChart.destroy();
+
+        const datasets = [
+          {
+            label: 'Flare Current VP',
+            data: flareData,
+            borderColor: 'orange',
+            backgroundColor: 'orange',
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            spanGaps: true
+          }
+        ];
+        if (flareFuture.length) {
+          datasets.push({
+            label: 'Flare Projection',
+            data: flareAll,
+            borderColor: 'orange',
+            borderDash: [5,5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            spanGaps: true
+          });
+        }
+        datasets.push({
+          label: 'Songbird Current VP',
+          data: sgbData,
+          borderColor: 'blue',
+          backgroundColor: 'blue',
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          spanGaps: true
+        });
+        if (sgbFuture.length) {
+          datasets.push({
+            label: 'Songbird Projection',
+            data: sgbAll,
+            borderColor: 'blue',
+            borderDash: [5,5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            spanGaps: true
+          });
+        }
+
+        currentVoteChart = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels.map(formatHour),
+            datasets
+          },
+          options: {
+            responsive: true,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+              title: { display: true, text: provider + ' - Current Vote Power' },
+              tooltip: {
+                callbacks: {
+                  title: ctx => ctx[0].label,
+                  label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Time' },
+                ticks: {
+                  autoSkip: false,
+                  maxRotation: 0,
+                  minRotation: 0,
+                  callback: function (value, index) {
+                    return formatHour(labels[index]);
+                  }
+                }
+              },
+              y: { title: { display: true, text: 'Vote Power (%)' } }
+            }
+          }
+        });
+      }
+
+      range.oninput = updateCurrentChart;
+      updateCurrentChart();
+    }
+
+    const debouncedRenderChart = debounce(renderChart, 300);
+    const debouncedRenderTable = debounce(renderTable, 300);
+
+    function updateRecommendationStrategy() {
+      const strategy = document.getElementById('strategySelector').value;
+      const riskLevel = document.getElementById('riskLevel');
+      const diversificationScore = document.getElementById('diversificationScore');
+      const expectedReturn = document.getElementById('expectedReturn');
+      
+      // Update display based on strategy (Bifrost: 2 providers max)
+      switch(strategy) {
+        case 'conservative':
+          riskLevel.textContent = 'Low';
+          riskLevel.className = 'text-green-400 font-semibold';
+          diversificationScore.textContent = 'Moderate (60/40)';
+          expectedReturn.textContent = '~2.8%';
+          break;
+        case 'aggressive':
+          riskLevel.textContent = 'High';
+          riskLevel.className = 'text-red-400 font-semibold';
+          diversificationScore.textContent = 'Low (70/30)';
+          expectedReturn.textContent = '~4.1%';
+          break;
+        case 'diversified':
+          riskLevel.textContent = 'Very Low';
+          riskLevel.className = 'text-green-500 font-semibold';
+          diversificationScore.textContent = 'Max (50/50)';
+          expectedReturn.textContent = '~2.9%';
+          break;
+        default: // balanced
+          riskLevel.textContent = 'Moderate';
+          riskLevel.className = 'text-yellow-400 font-semibold';
+          diversificationScore.textContent = 'Good (65/35)';
+          expectedReturn.textContent = '~3.2%';
+      }
+    }
+
+    function calculateConfidenceScore(providers, strategy) {
+      if (!providers || providers.length === 0) return 0;
+      
+      let confidenceScore = 85; // Base confidence
+      
+      // Adjust based on data quality
+      const hasGoodData = providers.every(p => providerStats[p.name]?.avg30 > 0);
+      if (!hasGoodData) confidenceScore -= 15;
+      
+      // Adjust based on strategy
+      switch(strategy) {
+        case 'conservative':
+          confidenceScore += 5; // More predictable
+          break;
+        case 'aggressive':
+          confidenceScore -= 10; // Higher uncertainty
+          break;
+        case 'diversified':
+          confidenceScore += 8; // Risk mitigation
+          break;
+      }
+      
+      // Adjust based on market conditions (volatility)
+      const avgVolatility = providers.reduce((sum, p) => sum + (providerStats[p.name]?.volatility || 0), 0) / providers.length;
+      if (avgVolatility > 5) confidenceScore -= 10;
+      else if (avgVolatility < 2) confidenceScore += 5;
+      
+      return Math.max(0, Math.min(100, Math.round(confidenceScore)));
+    }
+
+    function enhancedRecommendProviders() {
+      const strategy = document.getElementById('strategySelector').value;
+      const bifrostOnly = document.getElementById('bifrostOnly').checked;
+      const excludeDisabled = document.getElementById('excludeDisabled').checked;
+      
+      const entries = Object.entries(providerStats)
+        .filter(([n]) => !(bifrostOnly && window.bifrostFlare && !window.bifrostFlare.includes(n)))
+        .filter(([n]) => !(excludeDisabled && window.disabledFlare && window.disabledFlare.has(n)))
+        .filter(([n]) => !userExcludedProviders.has(n))
+        .map(([name, s]) => {
+          // Enhanced scoring algorithm
+          const performance = (s.avg30 || 0) * 0.4;
+          const stability = Math.max(0, 5 - (s.volatility || 0)) * 0.25;
+          const trend = (s.trend || 0) * 0.15;
+          const headroom = ((s.headroom || 0) / 100) * 0.15;
+          const reliability = Math.max(0, 1 - (s.zeroCount || 0) * 0.1) * 0.05;
+          
+          const score = performance + stability + trend + headroom + reliability;
+          return { name, score, stats: s };
+        });
+        
+      entries.sort((a, b) => b.score - a.score);
+
+      // Apply strategy-specific allocation
+      let recommendations = [];
+      switch(strategy) {
+        case 'conservative':
+          recommendations = allocateConservative(entries);
+          break;
+        case 'aggressive':
+          recommendations = allocateAggressive(entries);
+          break;
+        case 'diversified':
+          recommendations = allocateDiversified(entries);
+          break;
+        default: // balanced
+          recommendations = allocateBalanced(entries);
+      }
+      
+      // Update confidence score
+      const confidence = calculateConfidenceScore(recommendations, strategy);
+      const confidenceElement = document.getElementById('confidenceScore');
+      confidenceElement.textContent = `${confidence}%`;
+      
+      // Color code confidence
+      if (confidence >= 80) {
+        confidenceElement.className = 'ml-1 px-2 py-1 bg-green-600 text-white text-xs rounded font-semibold';
+      } else if (confidence >= 60) {
+        confidenceElement.className = 'ml-1 px-2 py-1 bg-yellow-600 text-white text-xs rounded font-semibold';
+      } else {
+        confidenceElement.className = 'ml-1 px-2 py-1 bg-red-600 text-white text-xs rounded font-semibold';
+      }
+      
+      return recommendations;
+    }
+
+    function allocateConservative(entries) {
+      // Bifrost constraint: Only 2 providers allowed
+      const top = entries.slice(0, 2);
+      return [
+        { name: top[0].name, pct: 60, score: top[0].score },
+        { name: top[1].name, pct: 40, score: top[1].score }
+      ];
+    }
+
+    function allocateAggressive(entries) {
+      // Bifrost constraint: Only 2 providers allowed
+      const top = entries.slice(0, 2);
+      return [
+        { name: top[0].name, pct: 70, score: top[0].score },
+        { name: top[1].name, pct: 30, score: top[1].score }
+      ];
+    }
+
+    function allocateDiversified(entries) {
+      // Bifrost constraint: Only 2 providers allowed - equal split for maximum diversification
+      const top = entries.slice(0, 2);
+      return [
+        { name: top[0].name, pct: 50, score: top[0].score },
+        { name: top[1].name, pct: 50, score: top[1].score }
+      ];
+    }
+
+    function allocateBalanced(entries) {
+      // Bifrost constraint: Only 2 providers allowed
+      const top = entries.slice(0, 2);
+      return [
+        { name: top[0].name, pct: 65, score: top[0].score },
+        { name: top[1].name, pct: 35, score: top[1].score }
+      ];
+    }
+
+    // Remove any previous event listeners to avoid duplicates
+    const providerFilter = document.getElementById('providerFilter');
+    const newProviderFilter = providerFilter.cloneNode(true);
+    providerFilter.parentNode.replaceChild(newProviderFilter, providerFilter);
+    newProviderFilter.addEventListener('change', function () {
+      renderSingleProviderChart();
+      renderCurrentVoteChart();
+    });
+
+    document.getElementById('maxVotePowerInput').addEventListener('input', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+    });
+    document.getElementById('registeredLatestOnly').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+    });
+    document.getElementById('registeredOnly').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+    });
+    document.getElementById('namedOnly').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+      renderSingleProviderChart();
+      renderCurrentVoteChart();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
+    });
+    document.getElementById('excludeDisabled').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
+    });
+    document.getElementById('excludeProviders').addEventListener('change', () => {
+      const select = document.getElementById('excludeProviders');
+      userExcludedProviders = new Set(Array.from(select.selectedOptions).map(o => o.value));
+      debouncedRenderChart();
+      debouncedRenderTable();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
+    });
+    document.getElementById('bifrostOnly').addEventListener('change', () => {
+      debouncedRenderChart();
+      debouncedRenderTable();
+      renderSingleProviderChart();
+      renderCurrentVoteChart();
+      updateMultiProviderOptions();
+      renderMultiProviderChart();
+      recommendProviders();
+    });
+    // Removed timeframe listener - element doesn't exist
+    document.getElementById('multiProviderSelect').addEventListener('change', renderMultiProviderChart);
+    document.getElementById('numTopProviders').addEventListener('input', () => {
+      updateTopProviders();
+      debouncedRenderChart(); // Update bar chart when Top N changes
+    });
+    document.getElementById('topKpi').addEventListener('change', () => {
+      updateTopProviders();
+      debouncedRenderChart(); // Update bar chart when timeframe changes
+    });
+    document.getElementById('strategySelector').addEventListener('change', () => {
+      updateRecommendationStrategy();
+      recommendProviders();
+    });
+    
+    document.getElementById('applyRecommendations').addEventListener('click', () => {
+      // This could integrate with wallet connections in the future
+      const strategy = document.getElementById('strategySelector').value;
+      const recommendations = enhancedRecommendProviders();
+      const allocText = recommendations.map(r => `${r.name}: ${r.pct}%`).join('\n');
+      alert(`Apply ${strategy} strategy to Bifrost Wallet?\n\n${allocText}\n\nNote: Bifrost allows maximum 2 providers.\nThis feature will be available when wallet integration is implemented.`);
+    });
+
+    // Query functionality disabled when no LLM backend is used.
+    async function sendQuery() {
+      alert('Query service not available.');
+    }
+
+    document.getElementById('queryButton').addEventListener('click', sendQuery);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🚀 DOM loaded, starting data initialization...');
+      
+      // Add global error handler
+      window.addEventListener('error', (e) => {
+        console.error('💥 GLOBAL ERROR:', e.error);
+        console.error('💥 Stack:', e.error?.stack);
+        console.error('💥 File:', e.filename, 'Line:', e.lineno);
+      });
+      
+      window.addEventListener('unhandledrejection', (e) => {
+        console.error('💥 UNHANDLED PROMISE REJECTION:', e.reason);
+      });
+      
+      // Show skip button after 5 seconds
+      setTimeout(() => {
+        const skipBtn = document.getElementById('skipLoadingBtn');
+        if (skipBtn) {
+          skipBtn.classList.remove('hidden');
+          console.log('⏰ Skip button now available');
+        }
+      }, 3000); // Reduced from 5 seconds to 3 seconds
+      
+      // Set a maximum timeout for data loading (5 seconds)
+      const maxLoadTimeout = setTimeout(() => {
+        console.error('💥 Data loading timed out after 5 seconds');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.innerHTML = `
+            <div class="bg-yellow-900 p-6 rounded-lg border border-yellow-600 text-center max-w-md">
+              <h3 class="text-lg font-semibold text-yellow-300 mb-2">⏱️ Loading Timeout</h3>
+              <p class="text-yellow-400 text-sm mb-4">Data loading took too long. Check browser console for details.</p>
+              <div class="space-y-2">
+                <button onclick="location.reload()" class="w-full px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+                  🔄 Retry
+                </button>
+                <button onclick="forceHideLoading()" class="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                  ➡️ Continue Anyway
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }, 5000); // Reduced from 10 seconds to 5 seconds
+      
+      loadData().then(() => {
+        console.log('✅ Data loaded successfully, initializing UI...');
+        clearTimeout(maxLoadTimeout);
+        
+        // Hide loading indicator first
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+        
+        // Initialize UI components one by one with detailed error logging
+        console.log('🎯 Step 1: updateRecommendationStrategy');
+        try {
+          updateRecommendationStrategy();
+          console.log('✅ updateRecommendationStrategy completed');
+        } catch (error) {
+          console.error('💥 Error in updateRecommendationStrategy:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 2: renderChart');
+        try {
+          renderChart();
+          console.log('✅ renderChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 3: renderTable');
+        try {
+          renderTable();
+          console.log('✅ renderTable completed');
+        } catch (error) {
+          console.error('💥 Error in renderTable:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 4: renderSingleProviderChart');
+        try {
+          renderSingleProviderChart();
+          console.log('✅ renderSingleProviderChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderSingleProviderChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 5: renderCurrentVoteChart');
+        try {
+          renderCurrentVoteChart();
+          console.log('✅ renderCurrentVoteChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderCurrentVoteChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 6: renderMultiProviderChart');
+        try {
+          renderMultiProviderChart();
+          console.log('✅ renderMultiProviderChart completed');
+        } catch (error) {
+          console.error('💥 Error in renderMultiProviderChart:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎯 Step 7: Setting up event listeners');
+        try {
+          const providerFilter = document.getElementById('providerFilter');
+          if (providerFilter) {
+            providerFilter.addEventListener('change', renderSingleProviderChart);
+            providerFilter.addEventListener('change', renderCurrentVoteChart);
+            console.log('✅ Event listeners attached');
+          } else {
+            console.warn('⚠️ providerFilter element not found');
+          }
+        } catch (error) {
+          console.error('💥 Error setting up event listeners:', error.message);
+          console.error('💥 Stack:', error.stack);
+        }
+        
+        console.log('🎉 Dashboard initialization complete!');
+      }).catch(error => {
+        console.error('💥 CRITICAL: loadData() failed:', error.message);
+        console.error('💥 Full error:', error);
+        console.error('💥 Stack trace:', error.stack);
+        clearTimeout(maxLoadTimeout);
+        
+        // Don't show the loading failed dialog - just log and continue
+        console.log('🚨 Attempting to continue with fallback initialization...');
+        
+        // Hide loading indicator
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) {
+          loadingIndicator.style.display = 'none';
+        }
+        
+        // Try to initialize UI with empty data
+        try {
+          console.log('🔧 Fallback: Initializing empty provider stats...');
+          window.flareSnapshots = [];
+          window.songbirdSnapshots = [];
+          window.flareCurrentSnapshots = [];
+          window.songbirdCurrentSnapshots = [];
+          window.bifrostFlare = [];
+          window.bifrostSongbird = [];
+          window.disabledFlare = new Set();
+          window.disabledSongbird = new Set();
+          
+          console.log('🔧 Fallback: Computing empty stats...');
+          computeProviderStats();
+          
+          console.log('🔧 Fallback: Trying to render UI...');
+          try { renderChart(); } catch (e) { console.error('Fallback renderChart failed:', e.message); }
+          try { renderTable(); } catch (e) { console.error('Fallback renderTable failed:', e.message); }
+          try { renderSingleProviderChart(); } catch (e) { console.error('Fallback renderSingleProviderChart failed:', e.message); }
+          try { renderCurrentVoteChart(); } catch (e) { console.error('Fallback renderCurrentVoteChart failed:', e.message); }
+          try { renderMultiProviderChart(); } catch (e) { console.error('Fallback renderMultiProviderChart failed:', e.message); }
+          
+          console.log('🎯 Fallback initialization completed');
+          
+          // Show a warning message instead of failure
+          const container = document.querySelector('.container');
+          if (container) {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'bg-yellow-900 p-4 rounded-lg border border-yellow-600 mb-4';
+            warningDiv.innerHTML = `
+              <h3 class="text-lg font-semibold text-yellow-300 mb-2">⚠️ Data Loading Issue</h3>
+              <p class="text-yellow-400 text-sm">Unable to load some data. Dashboard is running with limited functionality.</p>
+              <p class="text-xs text-gray-400 mt-2">Error: ${error.message}</p>
+            `;
+            container.insertBefore(warningDiv, container.firstChild);
+          }
+          
+        } catch (fallbackError) {
+          console.error('💥 Even fallback failed:', fallbackError.message);
+          console.error('💥 Fallback stack:', fallbackError.stack);
+          
+          // Last resort - show the error dialog
+          const loadingIndicator = document.getElementById('loadingIndicator');
+          if (loadingIndicator) {
+            loadingIndicator.innerHTML = `
+              <div class="bg-red-900 p-6 rounded-lg border border-red-600 text-center max-w-md">
+                <h3 class="text-lg font-semibold text-red-300 mb-2">⚠️ Critical Error</h3>
+                <p class="text-red-400 text-sm mb-4">Dashboard failed to initialize: ${error.message}</p>
+                <div class="text-xs text-gray-400 mb-4">Fallback also failed: ${fallbackError.message}</div>
+                <div class="space-y-2">
+                  <button onclick="location.reload()" class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                    🔄 Retry
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+        }
+      });
+    });
+
+
+  </script>
+</body>
+
+</html>
